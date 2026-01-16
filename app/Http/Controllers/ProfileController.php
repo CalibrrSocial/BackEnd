@@ -242,6 +242,12 @@ class ProfileController extends Controller
                     $data['high_school'] = $pi['highSchool'] ?? $pi['high_school'] ?? $user->high_school;
                     // Track whether client explicitly sent this field to avoid overwriting with stale values
                     $classYearProvided = array_key_exists('classYear', $pi) || array_key_exists('class_year', $pi);
+                    \Log::info('ClassYear debug', [
+                        'classYearProvided' => $classYearProvided,
+                        'pi_classYear' => $pi['classYear'] ?? 'not_set',
+                        'pi_class_year' => $pi['class_year'] ?? 'not_set',
+                        'personalInfo_keys' => array_keys($pi)
+                    ]);
                     if ($classYearProvided) {
                         $data['class_year'] = $pi['classYear'] ?? $pi['class_year'];
                     }
