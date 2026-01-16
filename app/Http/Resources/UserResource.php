@@ -71,11 +71,12 @@ class UserResource extends JsonResource
     }
 
     $ghostMode = $this->ghost_mode_flag == 1 ? true : false;
-    $liked = DB::table('profile_likes')->where('user_id', $user_id)->first();
-    if ($liked) {
-      $like = true;
-    } else {
-      $like = false;
+    // Whether the authenticated viewer liked this user
+    $viewerId = auth()->check() ? auth()->id() : null;
+    $like = false;
+    if ($viewerId && $viewerId != $user_id) {
+      $liked = DB::table('profile_likes')->where('user_id', $viewerId)->where('profile_id', $user_id)->first();
+      $like = $liked ? true : false;
     }
     $visited = DB::table('profile_visit_analytics')->where('visited_profile_id', $user_id)->get();
     $count_visit = count($visited);

@@ -182,9 +182,8 @@ class AuthController extends Controller
     {
         $clients = DB::table('oauth_clients')->select('*')->where('provider', 'users')->orderByRaw('id DESC')->first();
         if (auth()->attempt($data)) {
-
-            $path = env('APP_URL') . '/oauth/token';
-            $response = Http::asForm()->post($path, [
+            // Issue token via internal request to avoid external host resolution issues
+            $tokenRequest = \Illuminate\Http\Request::create('/oauth/token', 'POST', [
                 'grant_type' => 'password',
                 'client_id' => $clients->id,
                 'client_secret' => $clients->secret,
@@ -192,8 +191,16 @@ class AuthController extends Controller
                 'password' => $data['password'],
                 'scope' => '',
             ]);
-            $result['token'] = $response->json()['access_token'];
-            $result['refresh_token'] = $response->json()['refresh_token'];
+            $response = app()->handle($tokenRequest);
+            $json = json_decode($response->getContent(), true) ?: [];
+            if (!isset($json['access_token']) || !isset($json['refresh_token'])) {
+                return response()->json([
+                    'message' => 'fail',
+                    'details' => 'Token issuance failed',
+                ], Response::HTTP_BAD_REQUEST);
+            }
+            $result['token'] = $json['access_token'];
+            $result['refresh_token'] = $json['refresh_token'];
 
             $user = Auth::user();
             $user_data = new UserResource($user);
@@ -248,18 +255,19 @@ class AuthController extends Controller
 
     public function refresh(Request $request)
     {
-        $path = env('APP_URL') . '/oauth/token';
         $clients = DB::table('oauth_clients')->select('*')->where('provider', 'users')->orderByRaw('id DESC')->first();
-        $response = Http::asForm()->post($path, [
+        $tokenRequest = \Illuminate\Http\Request::create('/oauth/token', 'POST', [
             'grant_type' => 'refresh_token',
             'refresh_token' => $request->refreshToken,
             'client_id' => $clients->id,
             'client_secret' => $clients->secret,
             'scope' => '',
         ]);
-        if (isset($response->json()['refresh_token'])) {
+        $response = app()->handle($tokenRequest);
+        $json = json_decode($response->getContent(), true) ?: [];
+        if (isset($json['refresh_token'])) {
             return response()->json([
-                'refresh_token' => $response->json()['refresh_token'],
+                'refresh_token' => $json['refresh_token'],
             ]);
         } else {
             return response()->json([

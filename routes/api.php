@@ -48,6 +48,9 @@ Route::group(['prefix' => 'profile'], function () {
     Route::get('/{id}/likes', [ProfileController::class, 'getLikes'])->name('getLikes');
     Route::post('/{id}/likes', [ProfileController::class, 'likeProfile'])->name('likeProfile');
     Route::delete('/{id}/likes', [ProfileController::class, 'unlikeProfile'])->name('unlikeProfile');
+    // Likes lists
+    Route::get('/{id}/likes/received', [ProfileController::class, 'likesReceived']);
+    Route::get('/{id}/likes/sent', [ProfileController::class, 'likesSent']);
 
     //Report Information
     Route::get('/{id}/reports', [ProfileController::class, 'getUserReports'])->name('getUserReports');

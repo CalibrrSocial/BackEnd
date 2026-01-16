@@ -17,6 +17,7 @@ use App\Models\ProfileLike;
 use App\Models\SocialSiteInfo;
 use App\Models\LocationInfo;
 use Symfony\Component\HttpFoundation\Response;
+use App\Services\LambdaNotificationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -1614,24 +1615,44 @@ class ProfileController extends Controller
     {
         if (!$id) {
             return 0;
-        } else {
-            if ($this->checkAuth($id)) {
-                $user = ProfileLike::Where('profile_id', $id)->get();
-                if ($user) {
-                    return count($user);
-                } else {
-                    return response()->json([
-                        'message' => 'fail',
-                        'details' => 'User is not regiter'
-                    ], Response::HTTP_BAD_REQUEST);
-                }
-            } else {
-                return response()->json([
-                    'message' => 'fail',
-                    'details' => 'Authorization'
-                ], Response::HTTP_BAD_REQUEST);
-            }
         }
+        // Anyone authenticated can view counts; do not restrict to self
+        $count = ProfileLike::where('profile_id', $id)->count();
+        return $count;
+    }
+
+    // GET /profile/{id}/likes/received
+    public function likesReceived(Request $request, $id)
+    {
+        $page = max(1, (int)$request->query('cursor', 1));
+        $perPage = max(1, min(100, (int)$request->query('limit', 20)));
+        $p = DB::table('profile_likes')
+            ->join('users', 'profile_likes.user_id', '=', 'users.id')
+            ->where('profile_likes.profile_id', $id)
+            ->orderBy('profile_likes.id', 'desc')
+            ->select('users.id as id', 'users.first_name as firstName', 'users.last_name as lastName', 'users.profile_pic as avatarUrl')
+            ->paginate($perPage, ['*'], 'page', $page);
+        return response()->json([
+            'data' => $p->items(),
+            'nextCursor' => $p->hasMorePages() ? (string)($p->currentPage() + 1) : null,
+        ]);
+    }
+
+    // GET /profile/{id}/likes/sent
+    public function likesSent(Request $request, $id)
+    {
+        $page = max(1, (int)$request->query('cursor', 1));
+        $perPage = max(1, min(100, (int)$request->query('limit', 20)));
+        $p = DB::table('profile_likes')
+            ->join('users', 'profile_likes.profile_id', '=', 'users.id')
+            ->where('profile_likes.user_id', $id)
+            ->orderBy('profile_likes.id', 'desc')
+            ->select('users.id as id', 'users.first_name as firstName', 'users.last_name as lastName', 'users.profile_pic as avatarUrl')
+            ->paginate($perPage, ['*'], 'page', $page);
+        return response()->json([
+            'data' => $p->items(),
+            'nextCursor' => $p->hasMorePages() ? (string)($p->currentPage() + 1) : null,
+        ]);
     }
 
     /**
@@ -1674,25 +1695,28 @@ class ProfileController extends Controller
             ], Response::HTTP_NOT_FOUND);
         } else {
             if ($this->checkAuth($id)) {
-                $profileLikeId = $request->profileLikeId;
-                $user = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->get();
-                if (count($user) > 0) {
-                    return response()->json([
-                        'message' => 'fail',
-                        'details' => 'User and friend is liked'
-                    ], Response::HTTP_BAD_REQUEST);
-                } else {
-                    $user = ProfileLike::create(
-                        [
-                            'user_id' => $id,
-                            'profile_id' => $profileLikeId,
-                        ],
-                    );
-                    return response()->json([
-                        'message' => 'success',
-                        'details' => 'User is liked'
-                    ], Response::HTTP_OK);
+                $profileLikeId = $request->profileLikeId ?? $request->query('profileLikedId');
+                if (!$profileLikeId) {
+                    return response()->json(['message' => 'fail','details' => 'profileLikedId missing'], Response::HTTP_BAD_REQUEST);
                 }
+                // Idempotent insert
+                $created = false;
+                try {
+                    ProfileLike::create(['user_id' => $id, 'profile_id' => $profileLikeId]);
+                    $created = true;
+                } catch (\Throwable $e) {
+                    // duplicate -> already liked
+                }
+                // First-like notification (once per pair)
+                if ($created && !DB::table('profile_like_events')->where('user_id',$id)->where('profile_id',$profileLikeId)->exists()) {
+                    DB::table('profile_like_events')->insert([
+                        'user_id' => $id,
+                        'profile_id' => $profileLikeId,
+                        'notified_at' => now(),
+                    ]);
+                    try { app(LambdaNotificationService::class)->notifyProfileLiked((int)$profileLikeId, (int)$id); } catch (\Throwable $e) { }
+                }
+                return $created ? response()->noContent(Response::HTTP_CREATED) : response()->noContent(Response::HTTP_OK);
             } else {
                 return response()->json([
                     'message' => 'fail',
@@ -1742,20 +1766,12 @@ class ProfileController extends Controller
             ], Response::HTTP_NOT_FOUND);
         } else {
             if ($this->checkAuth($id)) {
-                $profileLikeId = $request->profileLikeId;
-                $user = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->first();
-                if ($user) {
-                    $user->delete($user);
-                    return response()->json([
-                        'message' => 'success',
-                        'details' => 'User is disliked'
-                    ], Response::HTTP_OK);
-                } else {
-                    return response()->json([
-                        'message' => 'fail',
-                        'details' => 'User and friend is not liked'
-                    ], Response::HTTP_BAD_REQUEST);
+                $profileLikeId = $request->profileLikeId ?? $request->query('profileLikedId');
+                if (!$profileLikeId) {
+                    return response()->json(['message' => 'fail','details' => 'profileLikedId missing'], Response::HTTP_BAD_REQUEST);
                 }
+                ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->delete();
+                return response()->noContent();
             } else {
                 return response()->json([
                     'message' => 'fail',

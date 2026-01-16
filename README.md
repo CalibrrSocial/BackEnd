@@ -1,3 +1,28 @@
+## Profile Likes Feature
+
+Endpoints (auth:api required):
+
+- GET `/api/profile/{id}/likes` → returns integer like count
+- POST `/api/profile/{id}/likes?profileLikedId={targetId}` → idempotent like; 201 on create, 200 if already liked
+- DELETE `/api/profile/{id}/likes?profileLikedId={targetId}` → idempotent unlike; 204 on success
+- GET `/api/profile/{id}/likes/received?cursor=1&limit=20` → `{ data: [{ id, firstName, lastName, avatarUrl }], nextCursor }`
+- GET `/api/profile/{id}/likes/sent?cursor=1&limit=20` → same shape
+
+First-like notification is sent once per pair (liker→liked) via AWS Lambda `emailNotificationFinal`.
+
+Required env vars:
+
+- `LAMBDA_REGION=us-east-1`
+- `LAMBDA_PROFILE_LIKED_FUNCTION=emailNotificationFinal`
+- If no IAM role: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+
+Deployment (EC2):
+
+1. Pull code; install PHP deps
+2. `php artisan migrate --force`
+3. `php artisan config:clear && php artisan cache:clear && php artisan config:cache && php artisan route:cache`
+4. Reload Apache
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
 
 <p align="center">
