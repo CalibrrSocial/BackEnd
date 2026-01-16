@@ -147,7 +147,7 @@ class LambdaNotificationService
             
             if ($this->debug) {
                 // Synchronous call with logs for troubleshooting
-                $params['InvocationType'] = 'RequestResponse';
+                $params['InvocationType'] => 'RequestResponse';
                 $params['LogType'] = 'Tail';
                 $result = $this->client->invoke($params);
                 $status = $result['StatusCode'] ?? null;
@@ -166,6 +166,69 @@ class LambdaNotificationService
             }
         } catch (\Throwable $e) {
             \Log::warning('Lambda notifyAttributeLiked failed: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Generic method to send any notification type to the Lambda function
+     * 
+     * @param string $notificationType
+     * @param array $additionalData
+     * @return array
+     */
+    public function sendNotification(string $notificationType, array $additionalData = []): array
+    {
+        $payload = json_encode([
+            'notificationType' => $notificationType,
+            'additionalData' => $additionalData,
+        ]);
+
+        try {
+            $params = [
+                'FunctionName' => $this->functionName,
+                'Payload' => $payload,
+            ];
+            
+            if ($this->debug) {
+                // Synchronous call with logs for troubleshooting
+                $params['InvocationType'] = 'RequestResponse';
+                $params['LogType'] = 'Tail';
+                $result = $this->client->invoke($params);
+                $status = $result['StatusCode'] ?? null;
+                $funcErr = $result['FunctionError'] ?? null;
+                $log = isset($result['LogResult']) ? base64_decode($result['LogResult']) : null;
+                
+                \Log::info('Lambda sendNotification debug', [
+                    'notificationType' => $notificationType,
+                    'status' => $status,
+                    'functionError' => $funcErr,
+                    'log' => $log,
+                    'function' => $this->functionName,
+                ]);
+                
+                return [
+                    'success' => $status === 200 && !$funcErr,
+                    'status' => $status,
+                    'error' => $funcErr,
+                    'log' => $log,
+                ];
+            } else {
+                // Async fire-and-forget in production
+                $params['InvocationType'] = 'Event';
+                $this->client->invoke($params);
+                
+                return ['success' => true];
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Lambda sendNotification failed: '.$e->getMessage(), [
+                'notificationType' => $notificationType,
+                'additionalData' => $additionalData,
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
         }
     }
 }
