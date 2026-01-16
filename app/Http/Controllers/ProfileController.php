@@ -1567,12 +1567,6 @@ class ProfileController extends Controller
                     'created' => $created,
                     'message' => $created ? 'Profile liked' : 'Already liked'
                 ], $created ? Response::HTTP_CREATED : Response::HTTP_OK);
-            } else {
-                return response()->json([
-                    'message' => 'fail',
-                    'details' => 'Authorization'
-                ], Response::HTTP_BAD_REQUEST);
-            }
         }
     }
 
