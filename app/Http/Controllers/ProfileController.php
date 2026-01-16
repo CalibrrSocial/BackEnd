@@ -566,6 +566,14 @@ class ProfileController extends Controller
                     $data['sexuality'] = $pi['sexuality'] ?? '';
                     $data['relationship'] = $pi['relationship'] ?? '';
                     $data['city'] = $pi['city'] ?? '';
+                    // Additional camelCase -> snake_case mappings
+                    $data['hometown'] = $pi['hometown'] ?? '';
+                    $data['high_school'] = $pi['highSchool'] ?? '';
+                    $data['class_year'] = $pi['classYear'] ?? '';
+                    $data['campus'] = $pi['campus'] ?? '';
+                    $data['career_aspirations'] = $pi['careerAspirations'] ?? '';
+                    $data['postgraduate'] = $pi['postgraduate'] ?? '';
+                    $data['postgraduate_plans'] = $pi['postgraduatePlans'] ?? '';
                     $data['favorite_music'] = $pi['favorite_music'] ?? ($pi['favoriteMusic'] ?? '');
                     $data['favorite_tv'] = $pi['favorite_tv'] ?? ($pi['favoriteTV'] ?? '');
                     $data['favorite_games'] = $pi['favorite_games'] ?? ($pi['favoriteGame'] ?? $pi['favoriteGames'] ?? '');
@@ -611,6 +619,14 @@ class ProfileController extends Controller
                             'club' => $data['club'],
                             'jersey_number' => $data['jersey_number'],
                             'ghost_mode_flag' => $ghost_mode_flag,
+                            // extra profile fields
+                            'hometown' => $data['hometown'],
+                            'high_school' => $data['high_school'],
+                            'class_year' => $data['class_year'],
+                            'campus' => $data['campus'],
+                            'career_aspirations' => $data['career_aspirations'],
+                            'postgraduate' => $data['postgraduate'],
+                            'postgraduate_plans' => $data['postgraduate_plans'],
                         ]);
                         DB::commit();
                     } catch (\Throwable $th) {
