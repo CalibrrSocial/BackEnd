@@ -33,6 +33,9 @@ class UserResource extends JsonResource
       $socials[$i]['name'] = $social_list[$i]->social_site_name;
       $socials[$i]['id'] = $social_list[$i]->id;
     }
+    // Ensure arrays are initialized to avoid undefined variable notices
+    $social_info = [];
+    $social_name = [];
     if (count($socialInfo) > 0) {
       for ($i = 0; $i < count($socialInfo); $i++) {
         $socila_site_row_id = $socialInfo[$i]->socila_site_row_id;
