@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Aws\Lambda\LambdaClient;
+use Aws\Credentials\Credentials;
 
 class LambdaNotificationService
 {
@@ -23,15 +24,10 @@ class LambdaNotificationService
         $secret = getenv('AWS_SECRET_ACCESS_KEY') ?: env('AWS_SECRET_ACCESS_KEY');
         $token = getenv('AWS_SESSION_TOKEN') ?: env('AWS_SESSION_TOKEN');
         if ($key && $secret) {
-            $config['credentials'] = [
-                'key' => $key,
-                'secret' => $secret,
-            ];
-            if (!empty($token)) {
-                $config['credentials']['token'] = $token;
-            }
+            $config['credentials'] = new Credentials($key, $secret, $token ?: null);
             \Log::info('LambdaNotificationService using explicit AWS credentials from env', [
                 'region' => $region,
+                'access_key_prefix' => substr($key, 0, 4),
                 'has_session_token' => !empty($token),
             ]);
         } else {
