@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Str;
 use App\Http\Resources\UserResource;
+use Illuminate\Support\Carbon;
 
 class AuthController extends Controller
 
@@ -35,13 +36,13 @@ class AuthController extends Controller
      *    required=true,
      *    description="Pass user credentials",
      *    @OA\JsonContent(
-     *       required={"email","password","phone","firstName","lastName"},
+     *       required={"email","password","dob"},
      *       @OA\Property(property="email", type="string",example="example@gmail.com"),
      *       @OA\Property(property="password", type="string", example="123456aA"),
      *       @OA\Property(property="phone", type="string", example="0902050807"),
      *       @OA\Property(property="firstName", type="string", example="User"),
      *       @OA\Property(property="lastName", type="string", example="Name"),
-     * 
+     *       @OA\Property(property="dob", type="string", example="2000/01/01"),
      *    ),
      * ),
      * @OA\Response(
@@ -52,8 +53,11 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        $dt = new Carbon();
+        $before = $dt->subYears(13)->format('Y-m-d');
+
         $rules = [
-            'email' => 'email:rfc,dns',
+            'email' => 'required|email:rfc,dns',
             'password' => [
                 'required',
                 'string',
@@ -62,10 +66,16 @@ class AuthController extends Controller
                 'regex:/[A-Z]/',      // must contain at least one uppercase letter
                 'regex:/[0-9]/',      // must contain at least one digit
             ],
+            'dob' => 'required|date|before:' . $before,
             'phone' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
         ];
 
-        $validation = Validator::make($request->all(), $rules);
+        $customMessages = [
+            'required' => 'The :attribute field is required.',
+            'dob.before' => 'You must be over 13 years old to signup'
+        ];
+
+        $validation = Validator::make($request->all(), $rules, $customMessages);
 
         if ($validation->fails()) {
             return response([
@@ -81,12 +91,14 @@ class AuthController extends Controller
                 "message" => "Email already in use",
             ], Response::HTTP_BAD_REQUEST);
         }
+
         $user = User::create([
             "email" => $request->email,
             "password" => bcrypt($request->password),
             "phone" => $request->phone,
             "first_name" => $request->firstName,
             "last_name" => $request->lastName,
+            "dob" => $request->dob,
         ]);
 
         if (!empty($user)) {
