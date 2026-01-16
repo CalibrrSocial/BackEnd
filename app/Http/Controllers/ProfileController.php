@@ -2310,7 +2310,7 @@ class ProfileController extends Controller
                 'reportedUserEmail' => $report->reported_user_email,
                 'reasonCategory' => $reasonName,
                 'description' => $report->info,
-                'reportedAt' => $report->created_at->setTimezone('America/New_York')->format('Y-m-d H:i:s T')
+                'reportedAt' => $report->created_at->setTimezone('America/New_York')->format('Y-m-d H:i:s T') // Eastern Time
             ];
             
             // Use Lambda service if available, otherwise log for manual review
