@@ -28,6 +28,7 @@ class UserResource extends JsonResource
     $social_list = DB::table('social_sites')->select('*')->get();
     $socialInfo = DB::table('social_site_infos')->select('*')->where('user_id', '=', $user_id)->get();
 
+    $socials = [];
     for ($i = 0; $i < count($social_list); $i++) {
       $socials[$i]['name'] = $social_list[$i]->social_site_name;
       $socials[$i]['id'] = $social_list[$i]->id;
