@@ -507,6 +507,10 @@ class ProfileController extends Controller
                 $data['relationship'] = !empty($request->personalInfo['relationship']) ? $request->personalInfo['relationship'] : '';
                 $data['city'] = !empty($request->personalInfo['city']) ? $request->personalInfo['city'] : '';
 
+                $ghost_mode_flag = 0;
+                if(!empty($request->ghostMode)){
+                    $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
+                }
                 $user->update([
                     'dob' => $data['dob'],
                     'locationTimestamp' => $data['locationTimestamp'],
@@ -519,6 +523,7 @@ class ProfileController extends Controller
                     'sexuality' => $data['sexuality'],
                     'relationship' => $data['relationship'],
                     'city' => $data['city'],
+                    'ghost_mode_flag' => $ghost_mode_flag,
                 ]);
                 return response()->json(new UserResource($user));
             } else {
