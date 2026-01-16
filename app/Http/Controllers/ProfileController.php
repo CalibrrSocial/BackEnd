@@ -347,6 +347,7 @@ class ProfileController extends Controller
                         $user = User::Where('id', $id)->first();
                     } catch (\Throwable $th) {
                         DB::rollBack();
+                        \Log::error('updateUserProfile exception', ['message' => $th->getMessage(), 'line' => $th->getLine(), 'file' => $th->getFile()]);
                     }
 
                     return response()->json(new UserResource($user));
@@ -881,9 +882,10 @@ class ProfileController extends Controller
                         }
                     }
 
-
-                    if (!empty($request->personalInfo['dob'])) {
-                        $dob_txt = $request->personalInfo['dob'];
+                    // Important: use input() to correctly read nested JSON payloads
+                    $pi2 = (array) $request->input('personalInfo', []);
+                    if (!empty($pi2['dob'])) {
+                        $dob_txt = $pi2['dob'];
                         $dob_obj = Carbon::parse($dob_txt);
                         if (!empty($dob_obj)) {
                             $data['dob'] =  $dob_obj->format("Y-m-d");
@@ -893,8 +895,6 @@ class ProfileController extends Controller
                     }
 
                     $data['locationTimestamp'] = $actionTime;
-                    // Important: use input() to correctly read nested JSON payloads
-                    $pi2 = (array) $request->input('personalInfo', []);
                     $data['gender'] = $pi2['gender'] ?? $user->gender;
                     $data['bio'] = $pi2['bio'] ?? $user->bio;
                     $data['education'] = $pi2['education'] ?? $user->education;
@@ -929,9 +929,9 @@ class ProfileController extends Controller
                         }
                     }
                     if (!empty($safeUpdate2)) {
-                        $user->update($safeUpdate2);
+                        \DB::table('users')->where('id', $id)->update($safeUpdate2);
                     }
-                    $user->refresh();
+                    $user = User::where('id', $id)->first();
                     return response()->json(new UserResource($user));
                 } else {
                     return response()->json([
