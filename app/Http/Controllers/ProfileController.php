@@ -359,7 +359,7 @@ class ProfileController extends Controller
                 }
 
                 if ($dataSocial['coverLetter']) {
-                    $name = "Cover Letter";
+                    $name = "coverLetter";
                     $social_name = DB::table('social_sites')
                         ->select("*")
                         ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
