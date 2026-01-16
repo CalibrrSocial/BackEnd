@@ -317,13 +317,17 @@ class ProfileController extends Controller
                     DB::beginTransaction();
                     try {
                         // update best friends
-                        if (isset($request->bestFriends)) {
+                        if ($request->has('bestFriends') && is_array($request->input('bestFriends'))) {
                             $this->updateBestFriends($request, $user);
+                        } else {
+                            \Log::info('skip updateBestFriends: not provided or not array');
                         }
 
                         // update courses
-                        if (isset($request->courses)) {
+                        if ($request->has('courses') && is_array($request->input('courses'))) {
                             $this->updateCourses($request, $user);
+                        } else {
+                            \Log::info('skip updateCourses: not provided or not array');
                         }
 
                         $updateData = [
@@ -375,6 +379,15 @@ class ProfileController extends Controller
                             'bio_len' => isset($safeUpdate['bio']) ? strlen($safeUpdate['bio']) : null,
                             'club' => $safeUpdate['club'] ?? null,
                             'jersey_number' => $safeUpdate['jersey_number'] ?? null,
+                            'safeUpdate_keys' => array_keys($safeUpdate),
+                            'columns_present' => [
+                                'city' => \Schema::hasColumn('users','city'),
+                                'postgraduate' => \Schema::hasColumn('users','postgraduate'),
+                                'postgraduate_plans' => \Schema::hasColumn('users','postgraduate_plans'),
+                                'bio' => \Schema::hasColumn('users','bio'),
+                                'club' => \Schema::hasColumn('users','club'),
+                                'jersey_number' => \Schema::hasColumn('users','jersey_number'),
+                            ],
                         ]);
                         if (!empty($safeUpdate)) {
                             DB::table('users')->where('id', $id)->update($safeUpdate);
@@ -2783,9 +2796,9 @@ class ProfileController extends Controller
     private function updateBestFriends($request, $user)
     {
         Validator::make($request->all(), [
-            'bestFriends' => 'array|max:5',
-            'bestFriends.*.first_name' => 'string|max:50',
-            'bestFriends.*.last_name' => 'string|max:50',
+            'bestFriends' => 'array|max:6',
+            'bestFriends.*.first_name' => 'required|string|max:50',
+            'bestFriends.*.last_name' => 'required|string|max:50',
         ])->validate();
 
         // delete old records
@@ -2798,24 +2811,28 @@ class ProfileController extends Controller
 
         // create new records
         $now = now();
-        $friends = array_map(function($item) use ($user, $now) {
+        $incoming = is_array($request->bestFriends) ? $request->bestFriends : [];
+        $friends = array_values(array_filter(array_map(function($item) use ($user, $now) {
+            $first = trim($item['first_name'] ?? '');
+            $last = trim($item['last_name'] ?? '');
+            if ($first === '' || $last === '') { return null; }
             return [
-                'first_name' => $item['first_name'],
-                'last_name' => $item['last_name'],
+                'first_name' => $first,
+                'last_name' => $last,
                 'user_id' => $user->id,
                 'created_at' => $now,
                 'updated_at' => $now
             ];
-        }, $request->bestFriends);
+        }, $incoming)));
 
-        Friend::insert($friends);
+        if (!empty($friends)) { Friend::insert($friends); }
     }
 
     private function updateCourses($request, $user)
     {
         Validator::make($request->all(), [
             'courses' => 'array|max:6',
-            'courses.*.name' => 'string|max:50',
+            'courses.*.name' => 'required|string|max:50',
         ])->validate();
 
         // delete old records
@@ -2828,16 +2845,19 @@ class ProfileController extends Controller
 
         // create new records
         $now = now();
-        $courses = array_map(function($item) use ($user, $now) {
+        $incomingCourses = is_array($request->courses) ? $request->courses : [];
+        $courses = array_values(array_filter(array_map(function($item) use ($user, $now) {
+            $name = trim($item['name'] ?? '');
+            if ($name === '') { return null; }
             return [
-                'name' => $item['name'],
+                'name' => $name,
                 'user_id' => $user->id,
                 'created_at' => $now,
                 'updated_at' => $now
             ];
-        }, $request->courses);
+        }, $incomingCourses)));
 
-        Course::insert($courses);
+        if (!empty($courses)) { Course::insert($courses); }
     }
 
     private function handleAttributeLike($userId, $profileId, $category, $attribute)
