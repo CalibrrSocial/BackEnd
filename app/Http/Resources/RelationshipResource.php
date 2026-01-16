@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Models\Relationship;
 
 class RelationshipResource extends JsonResource
 {
@@ -14,14 +15,26 @@ class RelationshipResource extends JsonResource
    */
   public function toArray($request)
   {
+
+    $status = $this->status;
+    $dateAction = '';
+    if ($status == 'requested') {
+      $dateAction = 'dateRequested';
+    } else if ($status == 'accepted') {
+      $dateAction = 'dateAccepted';
+    } else if ($status == 'rejected') {
+      $dateAction = 'dateRejected';
+    } else if ($status == 'blocked') {
+      $dateAction = 'dateBlocked';
+    } else {
+      $dateAction = null;
+    }
+
     return [
       'user_id' => $this->user_id,
       'friend_id' => $this->friend_id,
       'status' => $this->status,
-      'dateRequested' => $this->dateRequested,
-      'dateAccepted' => $this->dateAccepted,
-      'dateRejected' => $this->dateRejected,
-      'dateBlocked' => $this->dateBlocked,
+      $dateAction => $this->$dateAction,
     ];
   }
 }

@@ -13,6 +13,7 @@ use App\Models\Relationship;
 use App\Models\Report;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
@@ -370,18 +371,24 @@ class ProfileController extends Controller
      * )
      */
 
-    public function requestFriend(Request $request, $userId, $friendId)
+    public function requestFriend($userId, $friendId)
     {
         $status = 'requested';
-        $requestedTime = Carbon::now('Asia/Ho_Chi_Minh');
+        $requestedTime = Carbon::now('Asia/Ho_Chi_Minh')->format('Y-m-d H:i:s');
 
         $relaUserToFriend = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
-            ->update(['status' => $status], ['dateRequested' => $requestedTime]);
+            ->update([
+                'status' => $status,
+                'dateRequested' => $requestedTime
+            ]);
 
         $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
             ->where('friend_id', '=', $userId)
-            ->update(['status' => $status], ['dateRequested' => $requestedTime]);
+            ->update([
+                'status' => $status,
+                'dateRequested' => $requestedTime
+            ]);
 
         $relaUserToFriend = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
@@ -393,7 +400,7 @@ class ProfileController extends Controller
 
         if ($relaFriendToUser && $relaUserToFriend) {
             return response()->json([
-                $requestedTime,
+                'time' => $requestedTime,
                 'status' => "Success",
                 'message' => Exception::UPDATE_SUCCESS,
                 'relationship_user_to_friend' => new RelationshipResource($relaUserToFriend),
@@ -452,6 +459,7 @@ class ProfileController extends Controller
 
     public function updateFriend(Request $request, $userId, $friendId)
     {
+        $actionTime = Carbon::now('Asia/Ho_Chi_Minh')->format('Y-m-d H:i:s');
         $relaUserToFriend = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
             ->first();
@@ -461,9 +469,25 @@ class ProfileController extends Controller
             ->first();
 
         if ($relaUserToFriend && $relaFriendToUser) {
+
             $data = $request->all();
             $relaUserToFriend->update($data);
             $relaFriendToUser->update($data);
+
+            if ($request->status == 'accepted') {
+                $relaUserToFriend->update(['dateAccepted' => $actionTime]);
+                $relaFriendToUser->update(['dateAccepted' => $actionTime]);
+            } else if ($request->status == 'rejected') {
+                $relaUserToFriend->update(['dateRejected' => $actionTime]);
+                $relaFriendToUser->update(['dateRejected' => $actionTime]);
+            } else if ($request->status == 'blocked') {
+                $relaUserToFriend->update(['dateBlocked' => $actionTime]);
+                $relaFriendToUser->update(['dateBlocked' => $actionTime]);
+            } else {
+                $relaUserToFriend->update(['dateBlocked' => '']);
+                $relaFriendToUser->update(['dateBlocked' => '']);
+            }
+
             return response()->json([
                 'status' => "Success",
                 'message' => Exception::UPDATE_SUCCESS,
@@ -613,8 +637,8 @@ class ProfileController extends Controller
      *    required=true,
      *    description="Profile",
      *    @OA\JsonContent(
-     *       required={"likeProfileId"},
-     *       @OA\Property(property="likeProfileId", type="string",example="2"),
+     *       required={"profileLikeId"},
+     *       @OA\Property(property="profileLikeId", type="string",example="2"),
      *    ),
      * ),
      * @OA\Response(
@@ -675,14 +699,6 @@ class ProfileController extends Controller
      *    ),
      *    in="path",
      *    required=true,
-     * ),
-     * @OA\RequestBody(
-     *    required=true,
-     *    description="Profile",
-     *    @OA\JsonContent(
-     *       required={"likeProfileId"},
-     *       @OA\Property(property="likeProfileId", type="string",example="2"),
-     *    ),
      * ),
      * @OA\Response(
      *    response=200,
@@ -805,8 +821,11 @@ class ProfileController extends Controller
 
     public function reportUser(Request $request, $id)
     {
-        $report = Report::where('id', $id)->first();
-        if ($report) {
+        $user_id = Auth::user()->id;
+        $report = Report::where('id', $id)
+            ->where('user_id', $user_id)
+            ->first();
+        if ($report && $user_id) {
             $data = $request->all();
             $report->update($data);
             return response()->json([

@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\DistanceResource;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Exceptions\Exception;
+use Symfony\Component\HttpFoundation\Response;
 
 class SearchController extends Controller
 {
@@ -58,38 +63,41 @@ class SearchController extends Controller
         $min_amount = $request->minDistance['amount'];
         $max_amount = $request->maxDistance['amount'];
 
-        if($request->maxDistance['type'] != $request->minDistance['type']){
+        if ($request->maxDistance['type'] != $request->minDistance['type']) {
             return response()->json([
                 'status' => 'Error',
                 'message' => 'type is not the same'
             ], 500);
-        }else{
+        } else {
             $type = $request->maxDistance['type'];
         }
 
         switch ($type) {
             case "feet":
-              $type_value = 6371000 * 3.2808399;
-              break;
+                $type_value = 6371000 * 3.2808399;
+                break;
             case "meters":
-              $type_value = 6371000;
-              break;
+                $type_value = 6371000;
+                break;
             default:
-              $type_value = 6371;
+                $type_value = 6371;
         }
         $result = DB::table("users")
-                ->select("users.id", "email"
-                ,DB::raw("$type_value * acos(cos(radians(" . $lat . ")) 
+            ->select(
+                "users.id",
+                "email",
+                DB::raw("$type_value * acos(cos(radians(" . $lat . ")) 
                 * cos(radians(users.latitude)) 
                 * cos(radians(users.longitude) - radians(" . $lon . ")) 
-                + sin(radians(" .$lat. ")) 
-                * sin(radians(users.latitude))) AS distance"))
-                ->having("distance" , "<=", $max_amount)
-                ->having("distance" , ">=", $min_amount)
-                ->orderBy("distance")
-                ->get();
-       
-        return $result;
+                + sin(radians(" . $lat . ")) 
+                * sin(radians(users.latitude))) AS distance")
+            )
+            ->having("distance", "<=", $max_amount)
+            ->having("distance", ">=", $min_amount)
+            ->orderBy("distance")
+            ->get();
+
+        return DistanceResource::collection($result);
     }
 
     /**
@@ -120,5 +128,24 @@ class SearchController extends Controller
 
     public function searchByName(Request $request)
     {
+        $data = $request->all();
+        $name = $data['name'];
+
+        $user = User::select("*")
+            ->Where(DB::raw("concat(firstname, ' ', lastname)"), 'LIKE', "%" . $name . "%")
+            ->orWhere(DB::raw("concat(firstname, lastname)"), 'LIKE', "%" . $name . "%")
+            ->get();
+
+        if ($user) {
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::SHOW,
+                'user' => UserResource::collection($user),
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not registered'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 }

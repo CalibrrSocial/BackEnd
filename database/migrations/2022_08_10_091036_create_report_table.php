@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class CreateReportTable extends Migration
 {
@@ -17,7 +18,7 @@ class CreateReportTable extends Migration
             $table->id();
             $table->string('user_id');
             $table->string('info');
-            $table->dateTime('dateCreated')->nullable();
+            $table->dateTime('dateCreated')->nullable()->default(null);;
             $table->timestamps();
         });
     }

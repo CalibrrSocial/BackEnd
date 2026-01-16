@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class CreateRelationshipTable extends Migration
 {
@@ -18,10 +19,10 @@ class CreateRelationshipTable extends Migration
             $table->string('user_id');
             $table->string('friend_id');
             $table->string('status');
-            $table->dateTime('dateRequested')->default('null');
-            $table->dateTime('dateAccepted')->default('null');
-            $table->dateTime('dateRejected')->default('null');
-            $table->dateTime('dateBlocked')->default('null');
+            $table->dateTime('dateRequested')->nullable()->default(null);
+            $table->dateTime('dateAccepted')->nullable()->default(null);
+            $table->dateTime('dateRejected')->nullable()->default(null);
+            $table->dateTime('dateBlocked')->nullable()->default(null);
             $table->timestamps();
         });
     }
