@@ -185,6 +185,11 @@ class SearchController extends Controller
                 ->whereIn('id', $arr_user)
                 ->whereNotIn('id', $hide_user)
                 ->whereNotIn('id', $blockedUsers) // Exclude blocked users
+                ->where(function ($q) {
+                    $q->where('moderation_state', '!=', 'banned')
+                      ->where('moderation_state', '!=', 'suspended')
+                      ->orWhereNull('moderation_state');
+                })
                 ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
                 ->get();
 
@@ -262,6 +267,11 @@ class SearchController extends Controller
             })
             ->where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $request->name . "%")
             ->whereNotIn('id', $blockedUsers) // Exclude blocked users
+            ->where(function ($q) {
+                $q->where('moderation_state', '!=', 'banned')
+                  ->where('moderation_state', '!=', 'suspended')
+                  ->orWhereNull('moderation_state');
+            })
             ->get();
 
             return response()->json(UserSearchResource::collection($users));
@@ -304,6 +314,11 @@ class SearchController extends Controller
             return $q->select('accounts.id')->from($query, 'accounts');
         })->where('users.id', '!=', $user->id)
         ->whereNotIn('id', $blockedUsers) // Exclude blocked users
+        ->where(function ($q) {
+            $q->where('moderation_state', '!=', 'banned')
+              ->where('moderation_state', '!=', 'suspended')
+              ->orWhereNull('moderation_state');
+        })
         ->get();
 
         return response()->json(UserSearchResource::collection($users));

@@ -23,8 +23,10 @@ class CheckUserModeration
             // Check if user is banned
             if ($user->moderation_state === 'banned') {
                 return response()->json([
-                    'error' => 'Account has been banned',
-                    'message' => $user->moderation_reason ?: 'Your account has been permanently banned.'
+                    'message' => 'fail',
+                    'details' => 'You have been banned from Calibrr Social.',
+                    'moderation_state' => 'banned',
+                    'moderation_reason' => $user->moderation_reason
                 ], 403);
             }
             
@@ -34,15 +36,12 @@ class CheckUserModeration
                 $suspensionEnds = $user->suspension_ends_at;
                 
                 if ($suspensionEnds && $now < $suspensionEnds) {
-                    $timeRemaining = $now->diffForHumans($suspensionEnds, true);
-                    $suspensionMessage = $user->moderation_reason 
-                        ? $user->moderation_reason . " Your suspension will be lifted in {$timeRemaining}."
-                        : "Your account is temporarily suspended. Your suspension will be lifted in {$timeRemaining}.";
-                    
                     return response()->json([
-                        'error' => 'Account is suspended',
-                        'message' => $suspensionMessage,
-                        'suspension_ends_at' => $suspensionEnds->toISOString()
+                        'message' => 'fail',
+                        'details' => 'You have been temporarily suspended from Calibrr Social.',
+                        'moderation_state' => 'suspended',
+                        'suspension_ends_at' => $suspensionEnds->format('Y-m-d H:i:s'),
+                        'moderation_reason' => $user->moderation_reason
                     ], 403);
                 } elseif ($suspensionEnds && $now >= $suspensionEnds) {
                     // Auto-unsuspend if suspension period has ended

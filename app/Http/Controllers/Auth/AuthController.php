@@ -208,7 +208,9 @@ class AuthController extends Controller
             if ($user->moderation_state === 'banned') {
                 return response()->json([
                     'message' => 'fail',
-                    'details' => $user->moderation_reason ?: 'Your account has been permanently banned.'
+                    'details' => 'You have been banned from Calibrr Social.',
+                    'moderation_state' => 'banned',
+                    'moderation_reason' => $user->moderation_reason
                 ], Response::HTTP_FORBIDDEN);
             }
             
@@ -217,14 +219,12 @@ class AuthController extends Controller
                 $suspensionEnds = $user->suspension_ends_at;
                 
                 if ($suspensionEnds && $now < $suspensionEnds) {
-                    $timeRemaining = $now->diffForHumans($suspensionEnds, true);
-                    $suspensionMessage = $user->moderation_reason 
-                        ? $user->moderation_reason . " Your suspension will be lifted in {$timeRemaining}."
-                        : "Your account is temporarily suspended. Your suspension will be lifted in {$timeRemaining}.";
-                    
                     return response()->json([
                         'message' => 'fail',
-                        'details' => $suspensionMessage
+                        'details' => 'You have been temporarily suspended from Calibrr Social.',
+                        'moderation_state' => 'suspended',
+                        'suspension_ends_at' => $suspensionEnds->format('Y-m-d H:i:s'),
+                        'moderation_reason' => $user->moderation_reason
                     ], Response::HTTP_FORBIDDEN);
                 } elseif ($suspensionEnds && $now >= $suspensionEnds) {
                     // Auto-unsuspend if suspension period has ended
