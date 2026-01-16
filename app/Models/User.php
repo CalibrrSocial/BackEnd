@@ -35,4 +35,12 @@ class User extends Authenticatable
     // protected $casts = [
     //     'email_verified_at' => 'datetime',
     // ];
+
+    public function bestFriends() {
+        return $this->hasMany(Friend::class);
+    }
+
+    public function courses() {
+        return $this->hasMany(Course::class);
+    }
 }

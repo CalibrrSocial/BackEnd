@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\RelationshipResource;
 use App\Http\Resources\ReportResource;
+use App\Models\Course;
+use App\Models\Friend;
 use App\Models\Relationship;
 use App\Models\Report;
 use App\Models\ProfileLike;
@@ -20,6 +22,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+
+use function PHPSTORM_META\map;
 
 class ProfileController extends Controller
 {
@@ -104,11 +108,11 @@ class ProfileController extends Controller
      *    description="Profile",
      *    @OA\JsonContent(
      *          @OA\Property(property="ghostMode", type="string",example="false"),
-     *          @OA\Property(property="location", type="object", 
+     *          @OA\Property(property="location", type="object",
      *          @OA\Property(property="latitude", type="integer", example="198"),
      *          @OA\Property(property="longitude", type="integer", example="123"),
      *          ),
-     * 
+     *
      *          @OA\Property(property="personalInfo", type="object",
      *          @OA\Property(property="dob", type="string",example="2000/01/01"),
      *          @OA\Property(property="gender", type="string",example="Male"),
@@ -129,8 +133,8 @@ class ProfileController extends Controller
      *          @OA\Property(property="club", type="string",example="Cheerleading"),
      *          @OA\Property(property="jersey_number", type="string",example="23"),)
      *          ),
-     * 
-     *          @OA\Property(property="socialInfo", type="object", 
+     *
+     *          @OA\Property(property="socialInfo", type="object",
      *          @OA\Property(property="facebook", type="string",example="No"),
      *          @OA\Property(property="instagram", type="string",example="No"),
      *          @OA\Property(property="snapchat", type="string",example="No"),
@@ -323,7 +327,7 @@ class ProfileController extends Controller
                             );
                         }
                     }
-                    
+
                     if ($dataSocial['tiktok']) {
                         $name = "tiktok";
                         $social_name = DB::table('social_sites')
@@ -579,6 +583,17 @@ class ProfileController extends Controller
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
                     }
+
+                    // update best friends
+                    if ($request->best_friends) {
+                        $this->updateBestFriends($request, $user);
+                    }
+
+                    // update courses
+                    if ($request->courses) {
+                        $this->updateCourses($request, $user);
+                    }
+
                     $user->update([
                         'dob' => $data['dob'],
                         'locationTimestamp' => $data['locationTimestamp'],
@@ -695,11 +710,11 @@ class ProfileController extends Controller
      *    description="Profile",
      *    @OA\JsonContent(
      *          @OA\Property(property="ghostMode", type="string",example="false"),
-     *          @OA\Property(property="location", type="object", 
+     *          @OA\Property(property="location", type="object",
      *          @OA\Property(property="latitude", type="integer", example="198"),
      *          @OA\Property(property="longitude", type="integer", example="123"),
      *          ),
-     * 
+     *
      *          @OA\Property(property="personalInfo", type="object",
      *          @OA\Property(property="dob", type="string",example="2000/01/01"),
      *          @OA\Property(property="gender", type="string",example="Male"),
@@ -712,8 +727,8 @@ class ProfileController extends Controller
      *          @OA\Property(property="relationship", type="string",example="No"),
      *          @OA\Property(property="city", type="string",example="No"),
      *          ),
-     * 
-     *          @OA\Property(property="socialInfo", type="object", 
+     *
+     *          @OA\Property(property="socialInfo", type="object",
      *          @OA\Property(property="facebook", type="string",example="No"),
      *          @OA\Property(property="instagram", type="string",example="No"),
      *          @OA\Property(property="snapchat", type="string",example="No"),
@@ -906,7 +921,7 @@ class ProfileController extends Controller
                             );
                         }
                     }
-                    
+
                     if ($dataSocial['tiktok']) {
                         $name = "tiktok";
                         $social_name = DB::table('social_sites')
@@ -2060,5 +2075,55 @@ class ProfileController extends Controller
                 ], Response::HTTP_BAD_REQUEST);
             }
         }
+    }
+
+    private function updateBestFriends($request, $user)
+    {
+        Validator::make($request->all(), [
+            'best_friends' => 'array|max:5',
+            'best_friends.*.first_name' => 'string|max:50',
+            'best_friends.*.last_name' => 'string|max:50',
+        ])->validate();
+
+        // delete old records
+        Friend::where('user_id', $user->id)->delete();
+
+        // create new records
+        $now = now();
+        $friends = array_map(function($item) use ($user, $now) {
+            return [
+                'first_name' => $item['first_name'],
+                'last_name' => $item['last_name'],
+                'user_id' => $user->id,
+                'created_at' => $now,
+                'updated_at' => $now
+            ];
+        }, $request->best_friends);
+
+        Friend::insert($friends);
+    }
+
+    private function updateCourses($request, $user)
+    {
+        Validator::make($request->all(), [
+            'courses' => 'array|max:6',
+            'courses.*.name' => 'string|max:50',
+        ])->validate();
+
+        // delete old records
+        Course::where('user_id', $user->id)->delete();
+
+        // create new records
+        $now = now();
+        $courses = array_map(function($item) use ($user, $now) {
+            return [
+                'name' => $item['name'],
+                'user_id' => $user->id,
+                'created_at' => $now,
+                'updated_at' => $now
+            ];
+        }, $request->courses);
+
+        Course::insert($courses);
     }
 }
