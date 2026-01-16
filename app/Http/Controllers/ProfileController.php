@@ -569,11 +569,10 @@ class ProfileController extends Controller
                     // Additional camelCase -> snake_case mappings
                     $data['hometown'] = $pi['hometown'] ?? '';
                     $data['high_school'] = $pi['highSchool'] ?? $pi['high_school'] ?? '';
-                    // Preserve existing value if client doesn't send this field
-                    if (array_key_exists('classYear', $pi) || array_key_exists('class_year', $pi)) {
+                    // Track whether client explicitly sent this field to avoid overwriting with stale values
+                    $classYearProvided = array_key_exists('classYear', $pi) || array_key_exists('class_year', $pi);
+                    if ($classYearProvided) {
                         $data['class_year'] = $pi['classYear'] ?? $pi['class_year'];
-                    } else {
-                        $data['class_year'] = $user->class_year;
                     }
                     $data['campus'] = $pi['campus'] ?? '';
                     $data['career_aspirations'] = $pi['careerAspirations'] ?? $pi['career_aspirations'] ?? $user->career_aspirations;
@@ -604,7 +603,7 @@ class ProfileController extends Controller
                             $this->updateCourses($request, $user);
                         }
 
-                        $user->update([
+                        $updateData = [
                             'dob' => $data['dob'],
                             'locationTimestamp' => $data['locationTimestamp'],
                             'gender' => $data['gender'],
@@ -627,12 +626,15 @@ class ProfileController extends Controller
                             // extra profile fields
                             'hometown' => $data['hometown'],
                             'high_school' => $data['high_school'],
-                            'class_year' => $data['class_year'],
                             'campus' => $data['campus'],
                             'career_aspirations' => $data['career_aspirations'],
                             'postgraduate' => $data['postgraduate'],
                             'postgraduate_plans' => $data['postgraduate_plans'],
-                        ]);
+                        ];
+                        if ($classYearProvided) {
+                            $updateData['class_year'] = $data['class_year'];
+                        }
+                        $user->update($updateData);
                         DB::commit();
                     } catch (\Throwable $th) {
                         DB::rollBack();
