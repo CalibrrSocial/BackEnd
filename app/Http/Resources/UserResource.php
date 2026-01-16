@@ -116,7 +116,9 @@ class UserResource extends JsonResource
           'jersey_number' => $this->jersey_number,
         ],
       ],
-      'socialInfo' => $info,
+      'socialInfo' => array_map(function ($item) {
+        return $item == 'null' ? '' : $item ;
+      }, $info),
       'liked' => $like,
       'likeCount' => $countLike,
       'visitCount' => $count_visit,
