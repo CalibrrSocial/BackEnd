@@ -571,21 +571,20 @@ class ProfileController extends Controller
                     $data['sexuality'] = !empty($request->personalInfo['sexuality']) ? $request->personalInfo['sexuality'] : '';
                     $data['relationship'] = !empty($request->personalInfo['relationship']) ? $request->personalInfo['relationship'] : '';
                     $data['city'] = !empty($request->personalInfo['city']) ? $request->personalInfo['city'] : '';
-
                     $data['favorite_music'] = !empty($request->personalInfo['favorite_music']) ? $request->personalInfo['favorite_music'] : '';
                     $data['favorite_tv'] = !empty($request->personalInfo['favorite_tv']) ? $request->personalInfo['favorite_tv'] : '';
                     $data['favorite_games'] = !empty($request->personalInfo['favorite_games']) ? $request->personalInfo['favorite_games'] : '';
                     $data['greek_life'] = !empty($request->personalInfo['greek_life']) ? $request->personalInfo['greek_life'] : '';
                     $data['studying'] = !empty($request->personalInfo['studying']) ? $request->personalInfo['studying'] : '';
-                    $data['club'] = !empty($request->personalInfo->club['club']) ? $request->personalInfo->club['club'] : '';
-                    $data['jersey_number'] = !empty($request->personalInfo->club['jersey_number']) ? $request->personalInfo->club['jersey_number'] : '';
+                    $data['club'] = !empty($request->personalInfo['club']['club']) ? $request->personalInfo['club']['club'] : '';
+                    $data['jersey_number'] = !empty($request->personalInfo['club']['jersey_number']) ? $request->personalInfo['club']['jersey_number'] : '';
                     $ghost_mode_flag = 0;
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
                     }
 
                     // update best friends
-                    if ($request->best_friends) {
+                    if ($request->bestFriends) {
                         $this->updateBestFriends($request, $user);
                     }
 
@@ -2080,9 +2079,9 @@ class ProfileController extends Controller
     private function updateBestFriends($request, $user)
     {
         Validator::make($request->all(), [
-            'best_friends' => 'array|max:5',
-            'best_friends.*.first_name' => 'string|max:50',
-            'best_friends.*.last_name' => 'string|max:50',
+            'bestFriends' => 'array|max:5',
+            'bestFriends.*.first_name' => 'string|max:50',
+            'bestFriends.*.last_name' => 'string|max:50',
         ])->validate();
 
         // delete old records
@@ -2098,7 +2097,7 @@ class ProfileController extends Controller
                 'created_at' => $now,
                 'updated_at' => $now
             ];
-        }, $request->best_friends);
+        }, $request->bestFriends);
 
         Friend::insert($friends);
     }
