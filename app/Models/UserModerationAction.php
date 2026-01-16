@@ -17,12 +17,12 @@ class UserModerationAction extends Model
         'user_id',
         'action',
         'reason',
-        'expires_at',
+        'duration_hours',
         'admin_email'
     ];
     
     protected $casts = [
-        'expires_at' => 'datetime',
+        'duration_hours' => 'integer',
         'created_at' => 'datetime'
     ];
     

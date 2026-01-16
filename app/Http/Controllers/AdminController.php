@@ -138,11 +138,16 @@ class AdminController extends Controller
             $user->save();
             
             // Log the action
+            $durationHours = null;
+            if ($action === 'suspend' && $user->suspension_ends_at) {
+                $durationHours = now()->diffInHours($user->suspension_ends_at);
+            }
+            
             UserModerationAction::create([
                 'user_id' => $id,
                 'action' => $action,
                 'reason' => $reason,
-                'expires_at' => $action === 'suspend' ? $user->suspension_ends_at : null,
+                'duration_hours' => $durationHours,
                 'admin_email' => $adminEmail
             ]);
             
@@ -177,7 +182,7 @@ class AdminController extends Controller
                 'user_id',
                 'action',
                 'reason',
-                'expires_at',
+                'duration_hours',
                 'admin_email',
                 'created_at'
             ]);
@@ -254,6 +259,7 @@ class AdminController extends Controller
                 'user_id' => $id,
                 'action' => 'password_reset',
                 'reason' => 'Password reset by admin',
+                'duration_hours' => null,
                 'admin_email' => $adminEmail
             ]);
             
@@ -310,6 +316,7 @@ class AdminController extends Controller
                 'user_id' => $id,
                 'action' => 'email_update',
                 'reason' => "Email changed from {$oldEmail} to {$newEmail}",
+                'duration_hours' => null,
                 'admin_email' => $adminEmail
             ]);
             
