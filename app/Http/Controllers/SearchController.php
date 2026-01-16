@@ -42,9 +42,6 @@ class SearchController extends Controller
      * @OA\Response(
      *    response=200,
      *    description="Success",
-     *    @OA\JsonContent(
-     *       @OA\Property(property="name", type="string"),
-     *        )
      *     )
      * )
      */
@@ -98,9 +95,11 @@ class SearchController extends Controller
             $tempStr = implode(',', $arr_users);
             $users = DB::table('users')
                 ->select('*')
+                ->where('ghost_mode_flag', false)
                 ->whereIn('id', $arr_user)
                 ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
                 ->get();
+
             return response()->json(UserResource::collection($users));
         } else {
             return response()->json([
@@ -129,9 +128,6 @@ class SearchController extends Controller
      * @OA\Response(
      *    response=200,
      *    description="Success",
-     *    @OA\JsonContent(
-     *       @OA\Property(property="name", type="string"),
-     *        )
      *     )
      * )
      */
@@ -148,9 +144,8 @@ class SearchController extends Controller
                 'details' => 'User not found'
             ], Response::HTTP_BAD_REQUEST);
         } else {
-            $user = User::select("*")
+            $user = User::select("*")->where('ghost_mode_flag', false)
                 ->Where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $name . "%")
-                ->orWhere(DB::raw("concat(first_name, last_name)"), 'LIKE', "%" . $name . "%")
                 ->get();
 
             for ($i = 0; $i < count($user); $i++) {
