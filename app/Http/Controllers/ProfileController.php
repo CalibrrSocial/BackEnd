@@ -1481,6 +1481,7 @@ class ProfileController extends Controller
         $p = DB::table('profile_likes')
             ->join('users', 'profile_likes.user_id', '=', 'users.id')
             ->where('profile_likes.profile_id', $id)
+            ->where('profile_likes.is_deleted', 0)
             ->orderBy('profile_likes.id', 'desc')
             ->selectRaw('CAST(users.id AS CHAR) as id, users.first_name as firstName, users.last_name as lastName, ' . $avatarSelect)
             ->paginate($perPage, ['*'], 'page', $page);
@@ -1503,6 +1504,7 @@ class ProfileController extends Controller
         $p = DB::table('profile_likes')
             ->join('users', 'profile_likes.profile_id', '=', 'users.id')
             ->where('profile_likes.user_id', $id)
+            ->where('profile_likes.is_deleted', 0)
             ->orderBy('profile_likes.id', 'desc')
             ->selectRaw('CAST(users.id AS CHAR) as id, users.first_name as firstName, users.last_name as lastName, ' . $avatarSelect)
             ->paginate($perPage, ['*'], 'page', $page);
@@ -1562,18 +1564,45 @@ class ProfileController extends Controller
                 if (!$profileLikeId) {
                     return response()->json(['message' => 'fail','details' => 'profileLikedId missing'], Response::HTTP_BAD_REQUEST);
                 }
-                // Idempotent insert
+                // Check if like record already exists (including soft-deleted)
+                $existingLike = ProfileLike::where('user_id', $id)
+                    ->where('profile_id', $profileLikeId)
+                    ->first();
+                
                 $created = false;
-                try {
-                    ProfileLike::create(['user_id' => $id, 'profile_id' => $profileLikeId]);
-                    $created = true;
-                } catch (\Throwable $e) {
-                    // duplicate -> already liked
-                    \Log::info('likeProfile duplicate like detected', [
-                        'authId' => (string)$id,
-                        'profileLikedId' => (string)$profileLikeId,
-                        'error' => $e->getMessage(),
-                    ]);
+                
+                if ($existingLike) {
+                    if ($existingLike->is_deleted == 1) {
+                        // Reactivate soft-deleted like
+                        $existingLike->update(['is_deleted' => 0]);
+                        $created = true;
+                        \Log::info('likeProfile reactivated soft-deleted like', [
+                            'authId' => (string)$id,
+                            'profileLikedId' => (string)$profileLikeId,
+                        ]);
+                    } else {
+                        // Already liked and active
+                        \Log::info('likeProfile already liked and active', [
+                            'authId' => (string)$id,
+                            'profileLikedId' => (string)$profileLikeId,
+                        ]);
+                    }
+                } else {
+                    // Create new like record
+                    try {
+                        ProfileLike::create(['user_id' => $id, 'profile_id' => $profileLikeId]);
+                        $created = true;
+                        \Log::info('likeProfile created new like', [
+                            'authId' => (string)$id,
+                            'profileLikedId' => (string)$profileLikeId,
+                        ]);
+                    } catch (\Throwable $e) {
+                        \Log::error('likeProfile failed to create like', [
+                            'authId' => (string)$id,
+                            'profileLikedId' => (string)$profileLikeId,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
                 }
                 \Log::info('likeProfile state', ['created' => $created, 'self_like' => $id === $profileLikeId]);
                 // Email notification policy: allow up to 2 notifications per A->B lifetime, suppress for self-like
