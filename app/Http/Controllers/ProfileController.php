@@ -1804,11 +1804,11 @@ class ProfileController extends Controller
                 if ($validation->fails()) {
                     return response([
                         "message" => 'fail',
-                        "details" => $validation->errors()->all(),
+                        "details" => $validation->errors()->all()[0],
                     ], Response::HTTP_BAD_REQUEST);
                 }
 
-                $avatar_path = $avatar->store('avatar', 's3');
+                $avatar_path = $avatar->store('profile', 's3');
                 $avatar_path = Storage::disk('s3')->url($avatar_path);
                 $user->update(['profile_pic' => $avatar_path]);
                 return response()->json([
@@ -1882,11 +1882,11 @@ class ProfileController extends Controller
                 if ($validation->fails()) {
                     return response([
                         "message" => 'fail',
-                        "details" => $validation->errors()->all(),
+                        "details" => $validation->errors()->all()[0],
                     ], Response::HTTP_BAD_REQUEST);
                 }
 
-                $ci_path = $avatar->store('coverImage', 's3');
+                $ci_path = $avatar->store('banner', 's3');
                 $ci_path = Storage::disk('s3')->url($ci_path);
                 $user->update(['cover_image' => $ci_path]);
                 return response()->json([

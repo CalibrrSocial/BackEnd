@@ -149,6 +149,13 @@ class AuthController extends Controller
     {
         $username = $request->username;
 
+        if (empty($username)) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Incorrect username or password'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         $user = User::where('email', $username)
             ->orWhere('phone', $username)
             ->first();
