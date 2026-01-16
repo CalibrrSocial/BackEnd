@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Schema;
 
 class ProfileController extends Controller
 {
@@ -645,7 +646,17 @@ class ProfileController extends Controller
                         if ($classYearProvided) {
                             $updateData['class_year'] = $data['class_year'];
                         }
-                        $user->update($updateData);
+                        // Only update columns that exist in the users table
+                        $safeUpdate = [];
+                        foreach ($updateData as $column => $value) {
+                            if (Schema::hasColumn('users', $column)) {
+                                $safeUpdate[$column] = $value;
+                            }
+                        }
+                        if (!empty($safeUpdate)) {
+                            $user->update($safeUpdate);
+                        }
+                        $user->refresh();
                         DB::commit();
                     } catch (\Throwable $th) {
                         DB::rollBack();
@@ -1209,7 +1220,7 @@ class ProfileController extends Controller
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
                     }
-                    $user->update([
+                    $updateBlock = [
                         'dob' => $data['dob'],
                         'locationTimestamp' => $data['locationTimestamp'],
                         'gender' => $data['gender'],
@@ -1222,7 +1233,17 @@ class ProfileController extends Controller
                         'relationship' => $data['relationship'],
                         'city' => $data['city'],
                         'ghost_mode_flag' => $ghost_mode_flag,
-                    ]);
+                    ];
+                    $safeUpdate2 = [];
+                    foreach ($updateBlock as $column => $value) {
+                        if (Schema::hasColumn('users', $column)) {
+                            $safeUpdate2[$column] = $value;
+                        }
+                    }
+                    if (!empty($safeUpdate2)) {
+                        $user->update($safeUpdate2);
+                    }
+                    $user->refresh();
                     return response()->json(new UserResource($user));
                 } else {
                     return response()->json([
