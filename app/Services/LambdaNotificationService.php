@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Aws\Lambda\LambdaClient;
+use App\Models\User;
 
 class LambdaNotificationService
 {
@@ -18,13 +19,25 @@ class LambdaNotificationService
         $this->functionName = env('LAMBDA_PROFILE_LIKED_FUNCTION', 'emailNotificationFinal');
     }
 
-    public function notifyProfileLiked(int $recipientUserId, int $senderUserId, array $additionalData = []): void
+    public function notifyProfileLiked(int $recipientUserId, int $senderUserId): void
     {
+        // Enrich payload with recipient/sender email and names so Lambda can send without extra lookups
+        $recipient = User::find($recipientUserId);
+        $sender = User::find($senderUserId);
+
+        $additionalData = [
+            'recipientEmail' => $recipient?->email,
+            'recipientFirstName' => $recipient?->first_name,
+            'recipientLastName' => $recipient?->last_name,
+            'senderFirstName' => $sender?->first_name,
+            'senderLastName' => $sender?->last_name,
+        ];
+
         $payload = json_encode([
             'notificationType' => 'profile_liked',
             'recipientUserId' => $recipientUserId,
             'senderUserId' => $senderUserId,
-            'additionalData' => (object)$additionalData,
+            'additionalData' => $additionalData,
         ]);
 
         try {
