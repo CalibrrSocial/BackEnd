@@ -62,7 +62,7 @@ class AuthController extends Controller
                 'regex:/[A-Z]/',      // must contain at least one uppercase letter
                 'regex:/[0-9]/',      // must contain at least one digit
             ],
-            'phone' => 'regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
+            'phone' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
         ];
 
         $validation = Validator::make($request->all(), $rules);
