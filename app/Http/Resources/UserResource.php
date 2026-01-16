@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class UserResource extends JsonResource
 {
@@ -20,6 +21,7 @@ class UserResource extends JsonResource
     $countLike = count($like);
     $ghostMode = $this->ghostMode == 1 ? true : false;
     $liked = $this->liked == 1 ? true : false;
+
     return [
       'id' => "$this->id",
       'firstName' => $this->firstname,

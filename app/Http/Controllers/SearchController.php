@@ -84,8 +84,7 @@ class SearchController extends Controller
         }
         $result = DB::table("users")
             ->select(
-                "users.id",
-                "email",
+                "*",
                 DB::raw("$type_value * acos(cos(radians(" . $lat . ")) 
                 * cos(radians(users.latitude)) 
                 * cos(radians(users.longitude) - radians(" . $lon . ")) 
@@ -97,7 +96,16 @@ class SearchController extends Controller
             ->orderBy("distance")
             ->get();
 
-        return DistanceResource::collection($result);
+        // dd($result, count($result));
+
+        if (count($result) > 0) {
+            return response()->json(UserResource::collection($result));
+        } else {
+            return response()->json([
+                'message' => 'Search failed',
+                'details' => 'User not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**

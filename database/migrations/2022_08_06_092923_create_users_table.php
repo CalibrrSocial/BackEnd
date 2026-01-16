@@ -25,6 +25,7 @@ class CreateUsersTable extends Migration
             $table->json('location')->nullable();
             $table->double('latitude')->default(0);
             $table->double('longitude')->default(0);
+            $table->dateTime('locationTimestamp')->nullable();
             $table->string('pictureProfile')->nullable();
             $table->string('pictureCover')->nullable();
             $table->boolean('liked')->default(false);

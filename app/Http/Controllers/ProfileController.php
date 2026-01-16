@@ -272,11 +272,14 @@ class ProfileController extends Controller
                 'details' => 'Id not found'
             ], 404);
         } else {
+            $time_zone = env('TIME_ZONE');
+            $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
             $user = User::Where('id', $id)->first();
             if ($user) {
                 $data = $request->all();
                 $data['latitude'] = $request->location['latitude'];
                 $data['longitude'] = $request->location['longitude'];
+                $data['locationTimestamp'] = $actionTime;
                 $data['facebook'] = $request->socialInfo['facebook'];
                 $data['instagram'] = $request->socialInfo['instagram'];
                 $data['snapchat'] = $request->socialInfo['snapchat'];
