@@ -22,8 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-
-use function PHPSTORM_META\map;
+use PhpParser\Node\Stmt\TryCatch;
 
 class ProfileController extends Controller
 {
@@ -193,7 +192,7 @@ class ProfileController extends Controller
                     $dataSocial['website'] = !empty($request->socialInfo['website']) ? $request->socialInfo['website'] : '';
                     $dataSocial['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
 
-                    if ($dataSocial['facebook']) {
+                    if (isset($dataSocial['facebook'])) {
                         $name = "facebook";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -225,7 +224,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['instagram']) {
+                    if (isset($dataSocial['instagram'])) {
                         $name = "instagram";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -257,7 +256,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['snapchat']) {
+                    if (isset($dataSocial['snapchat'])) {
                         $name = "snapchat";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -289,7 +288,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['vsco']) {
+                    if (isset($dataSocial['vsco'])) {
                         $name = "vsco";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -321,7 +320,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['tiktok']) {
+                    if (isset($dataSocial['tiktok'])) {
                         $name = "tiktok";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -353,7 +352,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['twitter']) {
+                    if (isset($dataSocial['twitter'])) {
                         $name = "twitter";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -385,7 +384,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['resume']) {
+                    if (isset($dataSocial['resume'])) {
                         $name = "resume";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -417,7 +416,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['coverLetter']) {
+                    if (isset($dataSocial['coverLetter'])) {
                         $name = "coverLetter";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -449,7 +448,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['email']) {
+                    if (isset($dataSocial['email'])) {
                         $name = "email";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -481,7 +480,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['website']) {
+                    if (isset($dataSocial['website'])) {
                         $name = "website";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -513,7 +512,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['contact']) {
+                    if (isset($dataSocial['contact'])) {
                         $name = "contact";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -576,37 +575,44 @@ class ProfileController extends Controller
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
                     }
 
-                    // update best friends
-                    if ($request->bestFriends) {
-                        $this->updateBestFriends($request, $user);
+                    DB::beginTransaction();
+                    try {
+                        // update best friends
+                        if ($request->bestFriends) {
+                            $this->updateBestFriends($request, $user);
+                        }
+
+                        // update courses
+                        if ($request->courses) {
+                            $this->updateCourses($request, $user);
+                        }
+
+                        $user->update([
+                            'dob' => $data['dob'],
+                            'locationTimestamp' => $data['locationTimestamp'],
+                            'gender' => $data['gender'],
+                            'bio' => $data['bio'],
+                            'education' => $data['education'],
+                            'occupation' => $data['occupation'],
+                            'politics' => $data['politics'],
+                            'religion' => $data['religion'],
+                            'sexuality' => $data['sexuality'],
+                            'relationship' => $data['relationship'],
+                            'city' => $data['city'],
+                            'favorite_music' => $data['favorite_music'],
+                            'favorite_tv' => $data['favorite_tv'],
+                            'favorite_games' => $data['favorite_games'],
+                            'greek_life' => $data['greek_life'],
+                            'studying' => $data['studying'],
+                            'club' => $data['club'],
+                            'jersey_number' => $data['jersey_number'],
+                            'ghost_mode_flag' => $ghost_mode_flag,
+                        ]);
+                        DB::commit();
+                    } catch (\Throwable $th) {
+                        DB::rollBack();
                     }
 
-                    // update courses
-                    if ($request->courses) {
-                        $this->updateCourses($request, $user);
-                    }
-
-                    $user->update([
-                        'dob' => $data['dob'],
-                        'locationTimestamp' => $data['locationTimestamp'],
-                        'gender' => $data['gender'],
-                        'bio' => $data['bio'],
-                        'education' => $data['education'],
-                        'occupation' => $data['occupation'],
-                        'politics' => $data['politics'],
-                        'religion' => $data['religion'],
-                        'sexuality' => $data['sexuality'],
-                        'relationship' => $data['relationship'],
-                        'city' => $data['city'],
-                        'favorite_music' => $data['favorite_music'],
-                        'favorite_tv' => $data['favorite_tv'],
-                        'favorite_games' => $data['favorite_games'],
-                        'greek_life' => $data['greek_life'],
-                        'studying' => $data['studying'],
-                        'club' => $data['club'],
-                        'jersey_number' => $data['jersey_number'],
-                        'ghost_mode_flag' => $ghost_mode_flag,
-                    ]);
                     return response()->json(new UserResource($user));
                 } else {
                     return response()->json([
