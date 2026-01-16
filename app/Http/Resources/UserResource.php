@@ -20,15 +20,6 @@ class UserResource extends JsonResource
     $user_id = $this->id;
     $like = DB::table('profile_likes')->select('*')->where('profile_id', '=', $user_id)->get();
     $countLike = count($like);
-    
-    // Debug log to check what data is actually in the User model
-    \Log::info('UserResource debug for user ' . $user_id, [
-      'class_year' => $this->class_year,
-      'education' => $this->education,
-      'gender' => $this->gender,
-      'relationship' => $this->relationship,
-      'studying' => $this->studying,
-    ]);
 
     $locationInfo = DB::table('location_infos')->select('*')->where('user_id', '=', $user_id)->first();
     $latitude = !empty($locationInfo->latitude) ? (float)($locationInfo->latitude) : 0;
@@ -95,7 +86,7 @@ class UserResource extends JsonResource
         'dob' => $this->dob,
         'gender' => $this->gender,
         'bio' => $this->bio,
-        'education' => $this->education ?? $this->studying,
+        'education' => $this->education ?? $this->studying ?? null,
         'hometown' => $this->hometown,
         'highSchool' => $this->high_school,
         'classYear' => $this->class_year,
@@ -109,14 +100,15 @@ class UserResource extends JsonResource
         'sexuality' => $this->sexuality,
         'relationship' => $this->relationship,
         'city' => $this->city,
-        'favorite_music' => $this->favorite_music,
-        'favorite_tv' => $this->favorite_tv,
-        'favorite_games' => $this->favorite_games,
-        'greek_life' => $this->greek_life,
-        'studying' => $this->studying,
+        'favorite_music' => $this->favorite_music ?? null,
+        'favorite_tv' => $this->favorite_tv ?? null,
+        'favorite_games' => $this->favorite_games ?? null,
+        'greek_life' => $this->greek_life ?? null,
+        // Return studying from education field if studying column doesn't exist
+        'studying' => $this->studying ?? $this->education ?? null,
         'club' => [
-          'club' => $this->club,
-          'jersey_number' => $this->jersey_number,
+          'club' => $this->club ?? null,
+          'jersey_number' => $this->jersey_number ?? null,
         ],
       ],
       // Keep socialInfo as an object with site-name keys; normalize 'null' → ''
