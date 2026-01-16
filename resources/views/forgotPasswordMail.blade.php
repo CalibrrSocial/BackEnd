@@ -4,57 +4,50 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Password Reset - Calibrr</title>
+    <style>
+        body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h2 { font-size: 24px; margin: 0; }
+        .header .highlight { background-color: #f5d742; padding: 2px 6px; }
+        .content { margin-bottom: 30px; }
+        .content h3 { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .content p { margin: 10px 0; }
+        .password-box { background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+        .password-box .password { font-family: 'Courier New', monospace; font-size: 28px; font-weight: bold; color: #333; letter-spacing: 2px; }
+        .password-box .note { font-size: 12px; color: #999; margin-top: 10px; }
+        .footer { text-align: center; margin-top: 30px; }
+        .footer .highlight { background-color: #f5d742; padding: 2px 6px; }
+        .app-link { color: #007bff; text-decoration: none; font-weight: bold; background-color: #f5d742; padding: 2px 6px; }
+        .logo { text-align: center; margin-top: 40px; }
+    </style>
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-        <tr>
-            <td style="background-color: #ffffff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <table width="100%" cellpadding="0" cellspacing="0">
-                    <tr>
-                        <td style="text-align: center; padding-bottom: 30px;">
-                            <h1 style="color: #333333; font-size: 24px; margin: 0;">Calibrr</h1>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding-bottom: 20px;">
-                            <h2 style="color: #333333; font-size: 20px; margin: 0 0 10px 0;">Password Reset</h2>
-                            <p style="color: #666666; font-size: 16px; line-height: 1.5; margin: 0;">
-                                We received a request to reset your password. Your new temporary password is:
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 20px 0;">
-                            <div style="background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px; padding: 20px; text-align: center;">
-                                <span style="font-family: 'Courier New', monospace; font-size: 28px; font-weight: bold; color: #333333; letter-spacing: 2px;">
-                                    {{ $my_password }}
-                                </span>
-                            </div>
-                            <p style="color: #999999; font-size: 12px; text-align: center; margin-top: 10px;">
-                                (Password is case-sensitive)
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding-top: 20px; border-top: 1px solid #eeeeee;">
-                            <p style="color: #666666; font-size: 14px; line-height: 1.5; margin: 0;">
-                                Please log in with this temporary password, then change it to something you'll remember in your account settings.
-                            </p>
-                            <p style="color: #999999; font-size: 12px; line-height: 1.5; margin: 20px 0 0 0;">
-                                If you didn't request this password reset, please contact us immediately at contact@calibrr.com
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-        <tr>
-            <td style="text-align: center; padding: 20px;">
-                <p style="color: #999999; font-size: 12px; margin: 0;">
-                    © {{ date('Y') }} Calibrr Social. All rights reserved.
-                </p>
-            </td>
-        </tr>
-    </table>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2><span class="highlight">Calibrr</span> Social App</h2>
+        </div>
+        
+        <div class="content">
+            <h3>Password Reset</h3>
+            <p>We received a request to reset your password. Your new temporary password is:</p>
+            
+            <div class="password-box">
+                <span class="password">{{ $my_password }}</span>
+                <p class="note">(Password is case-sensitive)</p>
+            </div>
+            
+            <p>Please log in with this temporary password, then change it to something you'll remember in your account settings.</p>
+            <p style="font-size: 12px; color: #666;">If you didn't request this password reset, please contact us at contact@calibrr.com</p>
+        </div>
+        
+        <div class="footer">
+            <p>Open <span class="highlight">Calibrr</span> Social <a href="https://apps.apple.com/us/app/calibrr-social/id1377015871" class="app-link">HERE</a></p>
+        </div>
+        
+        <div class="logo">
+            <img src="https://calibrr-email-logo-1753077694.s3.amazonaws.com/calibrr-logo.png" alt="Calibrr Social App" style="max-width: 200px; height: auto;">
+        </div>
+    </div>
 </body>
 </html>
