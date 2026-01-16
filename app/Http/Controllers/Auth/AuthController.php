@@ -171,7 +171,7 @@ class AuthController extends Controller
             ], 200);
         } else {
             return response()->json([
-                'massage' => 'Login fail',
+                'message' => 'fail',
                 'details' => 'Incorrect email or password'
             ], Response::HTTP_BAD_REQUEST);
         }
@@ -229,7 +229,7 @@ class AuthController extends Controller
             ]);
         } else {
             return response()->json([
-                'massage' => 'Refresh fail',
+                'message' => 'fail',
                 'details' => 'Incorrect refresh token'
             ], Response::HTTP_BAD_REQUEST);
         }
@@ -279,18 +279,18 @@ class AuthController extends Controller
                     'password' => bcrypt($data['my_password'])
                 ]);
                 return response()->json([
-                    'message' => 'Success',
+                    'message' => 'success',
                     'details' => 'A mail has been sent to your mail id'
                 ]);
             } else {
                 return response()->json([
-                    'message' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'Unable to send mail'
                 ]);
             }
         } else {
             return response()->json([
-                'message' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Email is not register'
             ], Response::HTTP_BAD_REQUEST);
         }
@@ -327,7 +327,7 @@ class AuthController extends Controller
     {
         if (!(Hash::check($request->oldPassword, Auth::user()->password))) {
             return response()->json([
-                'message' => 'Change password failed',
+                'message' => 'fail',
                 'details' => 'Your current password does not matches with the password'
             ], Response::HTTP_BAD_REQUEST);
         } else {
@@ -337,7 +337,8 @@ class AuthController extends Controller
             ]);
             if ($updatePasswordUser == 1) {
                 return response()->json([
-                    'message' => 'Update password success'
+                    'message' => 'success',
+                    'details' => 'Update password success'
                 ]);
             }
         }

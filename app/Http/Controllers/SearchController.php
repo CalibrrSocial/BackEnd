@@ -68,8 +68,8 @@ class SearchController extends Controller
 
         if ($request->maxDistance['type'] != $request->minDistance['type']) {
             return response()->json([
-                'status' => 'Error',
-                'message' => 'type is not the same'
+                'message' => 'fail',
+                'details' => 'Type is not the same'
             ], 500);
         } else {
             $type = $request->maxDistance['type'];
@@ -120,7 +120,7 @@ class SearchController extends Controller
             return response()->json(UserResource::collection($users));
         } else {
             return response()->json([
-                'message' => 'Search failed',
+                'message' => 'fail',
                 'details' => 'User not found'
             ], Response::HTTP_BAD_REQUEST);
         }
@@ -172,7 +172,7 @@ class SearchController extends Controller
             return response()->json(UserResource::collection($user));
         } else {
             return response()->json([
-                'message' => 'Search failed',
+                'message' => 'fail',
                 'details' => 'User not found'
             ], Response::HTTP_BAD_REQUEST);
         }

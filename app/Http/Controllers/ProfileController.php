@@ -54,7 +54,7 @@ class ProfileController extends Controller
     {
         if (!$id) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -63,7 +63,7 @@ class ProfileController extends Controller
                 return response()->json(new UserResource($user));
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is not registered'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -128,7 +128,7 @@ class ProfileController extends Controller
     {
         if (!$id) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -520,7 +520,7 @@ class ProfileController extends Controller
                 return response()->json(new UserResource($user));
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is not registered'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -563,7 +563,7 @@ class ProfileController extends Controller
     {
         if (!$id) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -577,7 +577,7 @@ class ProfileController extends Controller
                 ], Response::HTTP_OK);
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is not registered'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -642,7 +642,7 @@ class ProfileController extends Controller
     {
         if (!$id) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -1034,7 +1034,7 @@ class ProfileController extends Controller
                 return response()->json(new UserResource($user));
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is not registered'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -1074,7 +1074,7 @@ class ProfileController extends Controller
     {
         if (!$id) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -1083,8 +1083,8 @@ class ProfileController extends Controller
                 return response()->json(RelationshipResource::collection($rela_list));
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
-                    'details' => 'User is not reglationship'
+                    'message' => 'fail',
+                    'details' => 'User is not relationship'
                 ], Response::HTTP_BAD_REQUEST);
             }
         }
@@ -1131,7 +1131,7 @@ class ProfileController extends Controller
     {
         if (!$userId) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -1142,7 +1142,7 @@ class ProfileController extends Controller
                 return response()->json(new RelationshipResource($rela));
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is not relationships'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -1190,7 +1190,7 @@ class ProfileController extends Controller
     {
         if (!$userId) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -1248,11 +1248,12 @@ class ProfileController extends Controller
 
             if ($relaFriendToUser && $relaUserToFriend) {
                 return response()->json([
-                    'Success'
+                    'message' => 'success',
+                    'details' => 'Requested'
                 ], Response::HTTP_OK);
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is not relationships'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -1307,7 +1308,7 @@ class ProfileController extends Controller
     {
         if (!$userId) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -1343,11 +1344,12 @@ class ProfileController extends Controller
                 }
 
                 return response()->json([
-                    "Success"
+                    'message' => 'success',
+                    'details' => 'Updated relationship'
                 ], Response::HTTP_OK);
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is not requested relationships'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -1395,7 +1397,7 @@ class ProfileController extends Controller
     {
         if (!$userId) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -1411,11 +1413,12 @@ class ProfileController extends Controller
                 $relaUserToFriend->delete($relaUserToFriend);
                 $relaFriendToUser->delete($relaFriendToUser);
                 return response()->json([
-                    "Success"
+                    'message' => 'success',
+                    'details' => 'Deleted relationship'
                 ], Response::HTTP_OK);
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is blocked. Unblock to remove'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -1461,7 +1464,7 @@ class ProfileController extends Controller
                 return count($user);
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is not regiter'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -1509,7 +1512,7 @@ class ProfileController extends Controller
     {
         if (!$id) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -1517,7 +1520,7 @@ class ProfileController extends Controller
             $user = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->get();
             if (count($user) > 0) {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User and friend is liked'
                 ], Response::HTTP_BAD_REQUEST);
             } else {
@@ -1528,7 +1531,8 @@ class ProfileController extends Controller
                     ],
                 );
                 return response()->json([
-                    "Success",
+                    'message' => 'success',
+                    'details' => 'User is liked'
                 ], Response::HTTP_OK);
             }
         }
@@ -1575,7 +1579,7 @@ class ProfileController extends Controller
     {
         if (!$id) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -1584,11 +1588,12 @@ class ProfileController extends Controller
             if ($user) {
                 $user->delete($user);
                 return response()->json([
-                    "Success",
+                    'message' => 'success',
+                    'details' => 'User is disliked'
                 ], Response::HTTP_OK);
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User and friend is not liked'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -1633,7 +1638,7 @@ class ProfileController extends Controller
     {
         if (!$id) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -1642,7 +1647,7 @@ class ProfileController extends Controller
                 return response()->json(ReportResource::collection($userReport));
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is not reported'
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -1691,7 +1696,7 @@ class ProfileController extends Controller
     {
         if (!$id) {
             return response()->json([
-                'massage' => 'Fail',
+                'message' => 'fail',
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
@@ -1715,7 +1720,8 @@ class ProfileController extends Controller
                     ]
                 );
                 return response()->json([
-                    "Success",
+                    'message' => 'success',
+                    'details' => 'Updated report'
                 ], Response::HTTP_OK);
             } else if ($noExistReport) {
                 $noExistReport = Report::create(
@@ -1727,11 +1733,12 @@ class ProfileController extends Controller
                     ]
                 );
                 return response()->json([
-                    "Success",
+                    'message' => 'success',
+                    'details' => 'Updated report'
                 ], Response::HTTP_OK);
             } else {
                 return response()->json([
-                    'massage' => 'Fail',
+                    'message' => 'fail',
                     'details' => 'User is not reported'
                 ], Response::HTTP_BAD_REQUEST);
             }
