@@ -341,10 +341,10 @@ class ProfileController extends Controller
                             }
                         }
                         if (!empty($safeUpdate)) {
-                            $user->update($safeUpdate);
+                            DB::table('users')->where('id', $id)->update($safeUpdate);
                         }
-                        $user->refresh();
                         DB::commit();
+                        $user = User::Where('id', $id)->first();
                     } catch (\Throwable $th) {
                         DB::rollBack();
                     }
