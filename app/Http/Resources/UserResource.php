@@ -20,6 +20,15 @@ class UserResource extends JsonResource
     $user_id = $this->id;
     $like = DB::table('profile_likes')->select('*')->where('profile_id', '=', $user_id)->get();
     $countLike = count($like);
+    
+    // Debug log to check what data is actually in the User model
+    \Log::info('UserResource debug for user ' . $user_id, [
+      'class_year' => $this->class_year,
+      'education' => $this->education,
+      'gender' => $this->gender,
+      'relationship' => $this->relationship,
+      'studying' => $this->studying,
+    ]);
 
     $locationInfo = DB::table('location_infos')->select('*')->where('user_id', '=', $user_id)->first();
     $latitude = !empty($locationInfo->latitude) ? (float)($locationInfo->latitude) : 0;
@@ -86,7 +95,7 @@ class UserResource extends JsonResource
         'dob' => $this->dob,
         'gender' => $this->gender,
         'bio' => $this->bio,
-        'education' => $this->education,
+        'education' => $this->education ?? $this->studying,
         'hometown' => $this->hometown,
         'highSchool' => $this->high_school,
         'classYear' => $this->class_year,
