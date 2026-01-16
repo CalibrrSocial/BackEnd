@@ -15,6 +15,7 @@ use App\Models\Like;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
@@ -134,19 +135,19 @@ class ProfileController extends Controller
                 $time_zone = env('TIME_ZONE');
                 $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
                 $data = $request->all();
-                $data['latitude'] = !empty($request->location['latitude'])? (double)($request->location['latitude']) : 0;
-                $data['longitude'] = !empty($request->location['longitude'])? (double)($request->location['longitude']) : 0;
+                $data['latitude'] = !empty($request->location['latitude']) ? (float)($request->location['latitude']) : 0;
+                $data['longitude'] = !empty($request->location['longitude']) ? (float)($request->location['longitude']) : 0;
                 $data['locationTimestamp'] = $actionTime;
-                $data['facebook'] = !empty($request->location['facebook'])? $request->location['facebook'] : '';
-                $data['instagram'] = !empty($request->location['instagram'])? $request->location['instagram'] : '';
-                $data['snapchat'] = !empty($request->location['snapchat'])? $request->location['snapchat'] : '';
-                $data['linkedIn'] = !empty($request->location['linkedIn'])? $request->location['linkedIn'] : '';
-                $data['twitter'] = !empty($request->location['twitter'])? $request->location['twitter'] : '';
-                $data['resume'] = !empty($request->location['resume'])? $request->location['resume'] : '';
-                $data['coverLetter'] = !empty($request->location['coverLetter'])? $request->location['coverLetter'] : '';
-                $data['email_2'] = !empty($request->location['email'])? $request->location['email'] : '';
-                $data['website'] = !empty($request->location['website'])? $request->location['website'] : '';
-                $data['contact'] = !empty($request->location['contact'])? $request->location['contact'] : '';
+                $data['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
+                $data['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
+                $data['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
+                $data['linkedIn'] = !empty($request->socialInfo['linkedIn']) ? $request->socialInfo['linkedIn'] : '';
+                $data['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
+                $data['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
+                $data['coverLetter'] = !empty($request->socialInfo['coverLetter']) ? $request->socialInfo['coverLetter'] : '';
+                $data['email_2'] = !empty($request->socialInfo['email']) ? $request->socialInfo['email'] : '';
+                $data['website'] = !empty($request->socialInfo['website']) ? $request->socialInfo['website'] : '';
+                $data['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
 
                 $user->update($data);
                 return response()->json(new UserResource($user));
@@ -276,24 +277,24 @@ class ProfileController extends Controller
                 'details' => 'Id not found'
             ], 404);
         } else {
-            $time_zone = env('TIME_ZONE');
-            $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
             $user = User::Where('id', $id)->first();
             if ($user) {
+                $time_zone = env('TIME_ZONE');
+                $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
                 $data = $request->all();
-                $data['latitude'] = $request->location['latitude'];
-                $data['longitude'] = $request->location['longitude'];
+                $data['latitude'] = !empty($request->location['latitude']) ? (float)($request->location['latitude']) : 0;
+                $data['longitude'] = !empty($request->location['longitude']) ? (float)($request->location['longitude']) : 0;
                 $data['locationTimestamp'] = $actionTime;
-                $data['facebook'] = $request->socialInfo['facebook'];
-                $data['instagram'] = $request->socialInfo['instagram'];
-                $data['snapchat'] = $request->socialInfo['snapchat'];
-                $data['linkedIn'] = $request->socialInfo['linkedIn'];
-                $data['twitter'] = $request->socialInfo['twitter'];
-                $data['resume'] = $request->socialInfo['resume'];
-                $data['coverLetter'] = $request->socialInfo['coverLetter'];
-                $data['email_2'] = $request->socialInfo['email'];
-                $data['website'] = $request->socialInfo['website'];
-                $data['contact'] = $request->socialInfo['contact'];
+                $data['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
+                $data['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
+                $data['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
+                $data['linkedIn'] = !empty($request->socialInfo['linkedIn']) ? $request->socialInfo['linkedIn'] : '';
+                $data['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
+                $data['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
+                $data['coverLetter'] = !empty($request->socialInfo['coverLetter']) ? $request->socialInfo['coverLetter'] : '';
+                $data['email_2'] = !empty($request->socialInfo['email']) ? $request->socialInfo['email'] : '';
+                $data['website'] = !empty($request->socialInfo['website']) ? $request->socialInfo['website'] : '';
+                $data['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
                 $user->update($data);
                 return response()->json(new UserResource($user));
             } else {

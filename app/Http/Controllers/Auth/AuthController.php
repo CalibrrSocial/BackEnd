@@ -134,64 +134,12 @@ class AuthController extends Controller
             $result['token'] = $response->json()['access_token'];
             $result['refresh_token'] = $response->json()['refresh_token'];
 
-            // $gost = Auth::user()->ghostMode;
-            // if ($gost == 1) {
-            //     $gost = true;
-            // } else {
-            //     $gost = false;
-            // }
-            // $user_id = Auth::user()->id;
-            // $locationTimestamp = Auth::user()->created_at;
-            // $result['user'] = [
-            //     'id' => "$user_id",
-            //     'firstName' => Auth::user()->firstname,
-            //     'lastName' => Auth::user()->lastname,
-            //     'ghostMode' => $gost,
-            //     'email' => Auth::user()->email,
-            //     'phone' => Auth::user()->phone,
-            //     'subscription' => Auth::user()->subscription,
-            //     'location' => [
-            //         'latitude' => Auth::user()->latitude,
-            //         'longitude' => Auth::user()->longitude
-            //     ],
-            //     'locationTimestamp' => $locationTimestamp,
-            //     "pictureProfile" => null,
-            //     "pictureCover" => null,
-            //     "personalInfo" => [
-            //         "dob" => null,
-            //         "gender" => null,
-            //         "bio" => null,
-            //         "education" => null,
-            //         "politics" => null,
-            //         "religion" => null,
-            //         "occupation" => null,
-            //         "sexuality" => null,
-            //         "relationship" => null,
-            //     ],
-            //     "socialInfo" => [
-            //         "facebook" => null,
-            //         "instagram" => null,
-            //         "snapchat" => null,
-            //         "linkedIn" => null,
-            //         "twitter" => null,
-            //         "resume" => null,
-            //         "coverLetter" => null,
-            //         "email" => null,
-            //         "website" => null,
-            //         "contact" => null
-            //     ],
-            //     "liked" => true,
-            //     "likeCount" => 0,
-            //     "visitCount" => 0
-            // ];
-
             $user = Auth::user();
             $user_data = new UserResource($user);
 
             return response()->json([
                 'token' => $result['token'],
                 'refreshToken' => $result['refresh_token'],
-                // 'user' => $result['user'],
                 'user' => $user_data,
             ], 200);
         } else {
@@ -248,10 +196,16 @@ class AuthController extends Controller
             'client_secret' => $clients->secret,
             'scope' => '',
         ]);
-
-        return response()->json([
-            'refresh_token' => $response->json()['refresh_token'],
-        ]);
+        if ($response['refresh_token']) {
+            return response()->json([
+                'refresh_token' => $response->json()['refresh_token'],
+            ]);
+        } else {
+            return response()->json([
+                'massage' => 'Refresh fail',
+                'details' => 'Incorrect refresh token'
+            ], 400);
+        }
     }
 
     /**
