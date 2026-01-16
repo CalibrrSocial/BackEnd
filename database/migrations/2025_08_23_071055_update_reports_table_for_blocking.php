@@ -15,7 +15,7 @@ class UpdateReportsTableForBlocking extends Migration
     {
         Schema::table('reports', function (Blueprint $table) {
             // Add new columns for enhanced reporting
-            $table->integer('reported_user_id')->unsigned()->after('user_id'); // User being reported
+            $table->integer('reported_user_id')->after('user_id'); // User being reported
             $table->string('reason_category')->after('info'); // Predefined reason category
             $table->boolean('auto_blocked')->default(true)->after('reason_category'); // Whether reporting auto-blocks
             $table->string('reporter_email')->nullable()->after('auto_blocked'); // Reporter's email
