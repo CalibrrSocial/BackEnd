@@ -57,6 +57,12 @@ Route::group(['prefix' => 'profile'], function () {
     Route::get('/{id}/reports', [ProfileController::class, 'getUserReports'])->name('getUserReports');
     Route::put('/{id}/reports', [ProfileController::class, 'reportUser'])->name('reportUser');
 
+    //Block and Report Information
+    Route::post('/{id}/block', [ProfileController::class, 'blockUser'])->name('blockUser');
+    Route::delete('/{id}/block', [ProfileController::class, 'unblockUser'])->name('unblockUser');
+    Route::post('/{id}/report', [ProfileController::class, 'reportAndBlockUser'])->name('reportAndBlockUser');
+    Route::get('/{id}/blocked', [ProfileController::class, 'getBlockedUsers'])->name('getBlockedUsers');
+
     //Upload Image
     Route::post('/{id}/upload', [ProfileController::class, 'uploadAvatar'])->name('uploadAvatar');
     Route::post('/{id}/coverImage', [ProfileController::class, 'uploadCoverImage'])->name('uploadCoverImage');

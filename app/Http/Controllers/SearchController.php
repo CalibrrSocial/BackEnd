@@ -6,6 +6,7 @@ use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\UserBlock;
 use App\Http\Requests\User\SearchRequest;
 use App\Http\Resources\UserSearchResource;
 use App\Models\Course;
@@ -15,6 +16,27 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SearchController extends Controller
 {
+    /**
+     * Get list of user IDs that should be excluded from search results
+     * (users blocked by current user and users who blocked current user)
+     */
+    private function getBlockedUserIds($currentUserId)
+    {
+        // Get users blocked by current user
+        $blockedByMe = UserBlock::where('blocker_id', $currentUserId)
+            ->where('is_active', true)
+            ->pluck('blocked_id')
+            ->toArray();
+            
+        // Get users who blocked current user
+        $blockedMe = UserBlock::where('blocked_id', $currentUserId)
+            ->where('is_active', true)
+            ->pluck('blocker_id')
+            ->toArray();
+            
+        // Combine both arrays and remove duplicates
+        return array_unique(array_merge($blockedByMe, $blockedMe));
+    }
     /**
      * @OA\Post(
      * path="/search/distance",
@@ -79,6 +101,9 @@ class SearchController extends Controller
         $max_amount = $request->maxDistance['amount'];
         $my_id = Auth::user()->id;
         $hide_user = [];
+        
+        // Get blocked users to exclude from search
+        $blockedUsers = $this->getBlockedUserIds($my_id);
 
         $type = $request->maxDistance['type'];
         $type_value = 6371000 * 0.000621371;
@@ -159,6 +184,7 @@ class SearchController extends Controller
                 })
                 ->whereIn('id', $arr_user)
                 ->whereNotIn('id', $hide_user)
+                ->whereNotIn('id', $blockedUsers) // Exclude blocked users
                 ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
                 ->get();
 
@@ -195,6 +221,9 @@ class SearchController extends Controller
     public function searchByName(SearchRequest $request)
     {
         $user = Auth::user();
+        
+        // Get blocked users to exclude from search
+        $blockedUsers = $this->getBlockedUserIds($user->id);
 
         // Select profile picture column based on schema; alias to profile_pic for consistency
         $picField = \Schema::hasColumn('users', 'profile_pic')
@@ -232,6 +261,7 @@ class SearchController extends Controller
                 return $q->where('ghost_mode_flag', false);
             })
             ->where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $request->name . "%")
+            ->whereNotIn('id', $blockedUsers) // Exclude blocked users
             ->get();
 
             return response()->json(UserSearchResource::collection($users));
@@ -272,7 +302,9 @@ class SearchController extends Controller
             return $qr->whereIn('courses.name', $courseNames);
         }])->whereIn('users.id', function ($q) use ($query) {
             return $q->select('accounts.id')->from($query, 'accounts');
-        })->where('users.id', '!=', $user->id)->get();
+        })->where('users.id', '!=', $user->id)
+        ->whereNotIn('id', $blockedUsers) // Exclude blocked users
+        ->get();
 
         return response()->json(UserSearchResource::collection($users));
     }

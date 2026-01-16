@@ -14,6 +14,7 @@ use App\Models\Friend;
 use App\Models\Relationship;
 use App\Models\Report;
 use App\Models\ProfileLike;
+use App\Models\UserBlock;
 use App\Models\SocialSiteInfo;
 use App\Models\LocationInfo;
 use Symfony\Component\HttpFoundation\Response;
@@ -1854,6 +1855,401 @@ class ProfileController extends Controller
                     'details' => 'User is not reported'
                 ], Response::HTTP_BAD_REQUEST);
             }
+        }
+    }
+
+    /**
+     * Block a user
+     * 
+     * @OA\Post(
+     * path="/profile/{id}/block",
+     * summary="Block a user",
+     * description="Block a user to prevent mutual visibility",
+     * operationId="blockUser",
+     * security={{"bearerAuth":{}}},
+     * tags={"Profile"},
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(type="string"),
+     *    in="path",
+     *    required=true,
+     * ),
+     * @OA\RequestBody(
+     *    required=false,
+     *    description="Block details",
+     *    @OA\JsonContent(
+     *       @OA\Property(property="reason", type="string", example="Inappropriate behavior"),
+     *    ),
+     * ),
+     * @OA\Response(response=200, description="Success"),
+     * @OA\Response(response=400, description="Bad Request")
+     * )
+     */
+    public function blockUser(Request $request, $id)
+    {
+        $currentUserId = Auth::user()->id;
+        $userToBlockId = $id;
+        
+        // Prevent self-blocking
+        if ($currentUserId == $userToBlockId) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Cannot block yourself'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+        
+        // Check if user exists
+        $userToBlock = User::find($userToBlockId);
+        if (!$userToBlock) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'User not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
+        
+        try {
+            DB::beginTransaction();
+            
+            // Create or reactivate block
+            $block = UserBlock::where('blocker_id', $currentUserId)
+                ->where('blocked_id', $userToBlockId)
+                ->first();
+                
+            if ($block) {
+                if ($block->is_active) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'success',
+                        'details' => 'User already blocked'
+                    ], Response::HTTP_OK);
+                } else {
+                    // Reactivate existing block
+                    $block->update([
+                        'is_active' => true,
+                        'reason' => $request->reason
+                    ]);
+                }
+            } else {
+                // Create new block
+                UserBlock::create([
+                    'blocker_id' => $currentUserId,
+                    'blocked_id' => $userToBlockId,
+                    'reason' => $request->reason,
+                    'is_active' => true
+                ]);
+            }
+            
+            DB::commit();
+            
+            \Log::info('User blocked', [
+                'blocker_id' => $currentUserId,
+                'blocked_id' => $userToBlockId,
+                'reason' => $request->reason
+            ]);
+            
+            return response()->json([
+                'message' => 'success',
+                'details' => 'User blocked successfully'
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Block user error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Failed to block user'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Unblock a user
+     * 
+     * @OA\Delete(
+     * path="/profile/{id}/block",
+     * summary="Unblock a user",
+     * description="Unblock a previously blocked user",
+     * operationId="unblockUser",
+     * security={{"bearerAuth":{}}},
+     * tags={"Profile"},
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(type="string"),
+     *    in="path",
+     *    required=true,
+     * ),
+     * @OA\Response(response=200, description="Success"),
+     * @OA\Response(response=400, description="Bad Request")
+     * )
+     */
+    public function unblockUser(Request $request, $id)
+    {
+        $currentUserId = Auth::user()->id;
+        $userToUnblockId = $id;
+        
+        try {
+            $block = UserBlock::where('blocker_id', $currentUserId)
+                ->where('blocked_id', $userToUnblockId)
+                ->where('is_active', true)
+                ->first();
+                
+            if (!$block) {
+                return response()->json([
+                    'message' => 'fail',
+                    'details' => 'User is not blocked'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+            
+            $block->update(['is_active' => false]);
+            
+            \Log::info('User unblocked', [
+                'blocker_id' => $currentUserId,
+                'unblocked_id' => $userToUnblockId
+            ]);
+            
+            return response()->json([
+                'message' => 'success',
+                'details' => 'User unblocked successfully'
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            \Log::error('Unblock user error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Failed to unblock user'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Report and block a user
+     * 
+     * @OA\Post(
+     * path="/profile/{id}/report",
+     * summary="Report and block a user",
+     * description="Report a user for inappropriate behavior and automatically block them",
+     * operationId="reportAndBlockUser",
+     * security={{"bearerAuth":{}}},
+     * tags={"Profile"},
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(type="string"),
+     *    in="path",
+     *    required=true,
+     * ),
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Report details",
+     *    @OA\JsonContent(
+     *       required={"reason_category","info"},
+     *       @OA\Property(property="reason_category", type="string", example="harassment"),
+     *       @OA\Property(property="info", type="string", example="User was sending inappropriate messages"),
+     *    ),
+     * ),
+     * @OA\Response(response=200, description="Success"),
+     * @OA\Response(response=400, description="Bad Request")
+     * )
+     */
+    public function reportAndBlockUser(Request $request, $id)
+    {
+        $currentUserId = Auth::user()->id;
+        $reportedUserId = $id;
+        
+        // Prevent self-reporting
+        if ($currentUserId == $reportedUserId) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Cannot report yourself'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+        
+        // Validate required fields
+        if (!$request->reason_category || !$request->info) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Reason category and description are required'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+        
+        // Validate reason category
+        if (!array_key_exists($request->reason_category, Report::REASON_CATEGORIES)) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Invalid reason category'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+        
+        // Check if users exist
+        $reporter = User::find($currentUserId);
+        $reportedUser = User::find($reportedUserId);
+        
+        if (!$reportedUser) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'User not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
+        
+        try {
+            DB::beginTransaction();
+            
+            $time_zone = env('TIME_ZONE');
+            $createdTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
+            
+            // Create report
+            $report = Report::create([
+                'user_id' => $currentUserId,
+                'reported_user_id' => $reportedUserId,
+                'info' => $request->info,
+                'reason_category' => $request->reason_category,
+                'auto_blocked' => true,
+                'reporter_email' => $reporter->email,
+                'reported_user_email' => $reportedUser->email,
+                'reporter_name' => $reporter->first_name . ' ' . $reporter->last_name,
+                'reported_user_name' => $reportedUser->first_name . ' ' . $reportedUser->last_name,
+                'dateCreated' => $createdTime
+            ]);
+            
+            // Auto-block the reported user
+            $block = UserBlock::where('blocker_id', $currentUserId)
+                ->where('blocked_id', $reportedUserId)
+                ->first();
+                
+            if ($block) {
+                $block->update([
+                    'is_active' => true,
+                    'reason' => 'Reported: ' . $request->reason_category
+                ]);
+            } else {
+                UserBlock::create([
+                    'blocker_id' => $currentUserId,
+                    'blocked_id' => $reportedUserId,
+                    'reason' => 'Reported: ' . $request->reason_category,
+                    'is_active' => true
+                ]);
+            }
+            
+            DB::commit();
+            
+            // Send email notifications to admins
+            $this->sendReportNotificationEmails($report);
+            
+            \Log::info('User reported and blocked', [
+                'reporter_id' => $currentUserId,
+                'reported_id' => $reportedUserId,
+                'reason_category' => $request->reason_category,
+                'report_id' => $report->id
+            ]);
+            
+            return response()->json([
+                'message' => 'success',
+                'details' => 'User reported and blocked successfully'
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Report and block user error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Failed to report user'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Get blocked users list
+     * 
+     * @OA\Get(
+     * path="/profile/{id}/blocked",
+     * summary="Get blocked users list",
+     * description="Get list of users blocked by the current user",
+     * operationId="getBlockedUsers",
+     * security={{"bearerAuth":{}}},
+     * tags={"Profile"},
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(type="string"),
+     *    in="path",
+     *    required=true,
+     * ),
+     * @OA\Response(response=200, description="Success"),
+     * @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function getBlockedUsers(Request $request, $id)
+    {
+        if (!$this->checkAuth($id)) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Authorization'
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+        
+        try {
+            $blockedUsers = UserBlock::where('blocker_id', $id)
+                ->where('is_active', true)
+                ->with(['blocked' => function($query) {
+                    $query->select('id', 'first_name', 'last_name', 'profile_pic');
+                }])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($block) {
+                    return [
+                        'id' => $block->blocked->id,
+                        'firstName' => $block->blocked->first_name,
+                        'lastName' => $block->blocked->last_name,
+                        'avatarUrl' => $block->blocked->profile_pic,
+                        'blockedAt' => $block->created_at->toISOString(),
+                        'reason' => $block->reason
+                    ];
+                });
+            
+            return response()->json([
+                'message' => 'success',
+                'data' => $blockedUsers
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            \Log::error('Get blocked users error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Failed to get blocked users'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Send report notification emails to admins
+     */
+    private function sendReportNotificationEmails($report)
+    {
+        try {
+            $adminEmails = ['nolan@calibrr.com', 'contact@calibrr.com'];
+            $reasonName = Report::REASON_CATEGORIES[$report->reason_category] ?? 'Unknown';
+            
+            $emailData = [
+                'reportId' => $report->id,
+                'reporterName' => $report->reporter_name,
+                'reporterEmail' => $report->reporter_email,
+                'reportedUserName' => $report->reported_user_name,
+                'reportedUserEmail' => $report->reported_user_email,
+                'reasonCategory' => $reasonName,
+                'description' => $report->info,
+                'reportedAt' => $report->created_at->format('Y-m-d H:i:s T')
+            ];
+            
+            // Use Lambda service if available, otherwise log for manual review
+            if (class_exists('App\Services\LambdaNotificationService')) {
+                app(LambdaNotificationService::class)->notifyUserReported($emailData, $adminEmails);
+            } else {
+                \Log::info('User Report Notification', [
+                    'admin_emails' => $adminEmails,
+                    'report_data' => $emailData
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send report notification emails: ' . $e->getMessage());
         }
     }
 
