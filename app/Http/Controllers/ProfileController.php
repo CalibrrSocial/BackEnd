@@ -138,6 +138,7 @@ class ProfileController extends Controller
                 $data['latitude'] = !empty($request->location['latitude']) ? (float)($request->location['latitude']) : 0;
                 $data['longitude'] = !empty($request->location['longitude']) ? (float)($request->location['longitude']) : 0;
                 $data['locationTimestamp'] = $actionTime;
+
                 $data['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
                 $data['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
                 $data['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
@@ -149,13 +150,22 @@ class ProfileController extends Controller
                 $data['website'] = !empty($request->socialInfo['website']) ? $request->socialInfo['website'] : '';
                 $data['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
 
-                $user->update($data);
-                $user = User::Where('id', $id)->first(); // Query again
-                if(!empty($user)){
-                    return response()->json(new UserResource($user));
-                } else {
-                    // TODO
+                if(!empty($request->personalInfo['dob'])){
+                    $dob_txt = $request->personalInfo['dob'];
+                    $dob_obj = Carbon::parse($dob_txt);
+                    if(!empty($dob_obj)){
+                        $data['dob'] =  $dob_obj->format("Y-m-d H:m:s");
+                    }
                 }
+                $data['gender'] = !empty($request->personalInfo['gender']) ? $request->personalInfo['gender'] : '';
+                $data['bio'] = !empty($request->personalInfo['bio']) ? $request->personalInfo['bio'] : '';
+                $data['education'] = !empty($request->personalInfo['education']) ? $request->personalInfo['education'] : '';
+                $data['occupation'] = !empty($request->personalInfo['occupation']) ? $request->personalInfo['occupation'] : '';
+                $data['politics'] = !empty($request->personalInfo['politics']) ? $request->personalInfo['politics'] : '';
+                $data['religion'] = !empty($request->personalInfo['religion']) ? $request->personalInfo['religion'] : '';
+
+                $user->update($data);
+                return response()->json(new UserResource($user));
             } else {
                 return response()->json([
                     'massage' => 'Fail',
