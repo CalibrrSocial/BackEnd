@@ -279,7 +279,7 @@ class AuthController extends Controller
             return response()->json([
                 'response' => 2,
                 'message' => 'Email is not registered'
-            ], Response::HTTP_NOT_FOUND);
+            ], 400);
         }
     }
 

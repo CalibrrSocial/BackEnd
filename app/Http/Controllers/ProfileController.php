@@ -56,7 +56,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $user = User::Where('id', $id)->first();
             if ($user) {
@@ -130,7 +130,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $user = User::Where('id', $id)->first();
             $userLocationInfo = LocationInfo::Where('user_id', $id)->first();
@@ -565,7 +565,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $user = User::whereid($id)->first();
             if ($user) {
@@ -644,7 +644,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $user = User::Where('id', $id)->first();
             $userLocationInfo = LocationInfo::Where('user_id', $id)->first();
@@ -1076,7 +1076,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $rela_list = Relationship::where('user_id', '=', $id)->get();
             if (count($rela_list) > 0) {
@@ -1133,7 +1133,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $rela = Relationship::where('user_id', '=', $userId)
                 ->where('friend_id', '=', $friendId)
@@ -1192,7 +1192,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $relaUserToFriend = $relaFriendToUser = '';
             $status = 'requested';
@@ -1309,7 +1309,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $time_zone = env('TIME_ZONE');
             $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
@@ -1397,7 +1397,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $relaUserToFriend = Relationship::where('user_id', '=', $userId)
                 ->where('friend_id', '=', $friendId)
@@ -1511,7 +1511,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $profileLikeId = $request->profileLikeId;
             $user = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->get();
@@ -1577,7 +1577,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $profileLikeId = $request->profileLikeId;
             $user = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->first();
@@ -1635,7 +1635,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $userReport = Report::where('user_id', $id)->get();
             if (count($userReport) > 0) {
@@ -1693,7 +1693,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 404);
+            ], 400);
         } else {
             $time_zone = env('TIME_ZONE');
             $createdTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
