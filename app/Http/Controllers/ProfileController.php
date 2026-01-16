@@ -68,20 +68,13 @@ class ProfileController extends Controller
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
-            if ($this->checkAuth($id)) {
-                $user = User::Where('id', $id)->first();
-                if ($user) {
-                    return response()->json(new UserResource($user));
-                } else {
-                    return response()->json([
-                        'message' => 'fail',
-                        'details' => 'User is not registered'
-                    ], Response::HTTP_BAD_REQUEST);
-                }
+            $user = User::Where('id', $id)->first();
+            if ($user) {
+                return response()->json(new UserResource($user));
             } else {
                 return response()->json([
                     'message' => 'fail',
-                    'details' => 'Authorization'
+                    'details' => 'User is not registered'
                 ], Response::HTTP_BAD_REQUEST);
             }
         }
