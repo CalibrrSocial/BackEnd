@@ -57,6 +57,7 @@ class SearchController extends Controller
         // $min_amount = $request->minDistance['amount'];
         $max_amount = $request->maxDistance['amount'];
         $my_id = Auth::user()->id;
+        $hide_user = [];
 
         $type = $request->maxDistance['type'];
         $type_value = 6371000 * 0.000621371;
@@ -108,7 +109,6 @@ class SearchController extends Controller
                 ->get();
             if(count($user_dob_list) > 0){
                 $now = Carbon::now();
-                $hide_user = [];
                 foreach($user_dob_list as $user_dob){
                     $year = Carbon::parse($user_dob->dob)->age;
                     if($year >= 25){
