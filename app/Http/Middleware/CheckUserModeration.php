@@ -34,9 +34,14 @@ class CheckUserModeration
                 $suspensionEnds = $user->suspension_ends_at;
                 
                 if ($suspensionEnds && $now < $suspensionEnds) {
+                    $timeRemaining = $now->diffForHumans($suspensionEnds, true);
+                    $suspensionMessage = $user->moderation_reason 
+                        ? $user->moderation_reason . " Your suspension will be lifted in {$timeRemaining}."
+                        : "Your account is temporarily suspended. Your suspension will be lifted in {$timeRemaining}.";
+                    
                     return response()->json([
                         'error' => 'Account is suspended',
-                        'message' => $user->moderation_reason ?: 'Your account is temporarily suspended.',
+                        'message' => $suspensionMessage,
                         'suspension_ends_at' => $suspensionEnds->toISOString()
                     ], 403);
                 } elseif ($suspensionEnds && $now >= $suspensionEnds) {

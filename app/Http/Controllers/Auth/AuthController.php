@@ -203,6 +203,37 @@ class AuthController extends Controller
             $result['refresh_token'] = $json['refresh_token'];
 
             $user = Auth::user();
+            
+            // Check if user is banned or suspended
+            if ($user->moderation_state === 'banned') {
+                return response()->json([
+                    'message' => 'fail',
+                    'details' => $user->moderation_reason ?: 'Your account has been permanently banned.'
+                ], Response::HTTP_FORBIDDEN);
+            }
+            
+            if ($user->moderation_state === 'suspended') {
+                $now = now();
+                $suspensionEnds = $user->suspension_ends_at;
+                
+                if ($suspensionEnds && $now < $suspensionEnds) {
+                    $timeRemaining = $now->diffForHumans($suspensionEnds, true);
+                    $suspensionMessage = $user->moderation_reason 
+                        ? $user->moderation_reason . " Your suspension will be lifted in {$timeRemaining}."
+                        : "Your account is temporarily suspended. Your suspension will be lifted in {$timeRemaining}.";
+                    
+                    return response()->json([
+                        'message' => 'fail',
+                        'details' => $suspensionMessage
+                    ], Response::HTTP_FORBIDDEN);
+                } elseif ($suspensionEnds && $now >= $suspensionEnds) {
+                    // Auto-unsuspend if suspension period has ended
+                    $user->moderation_state = 'active';
+                    $user->suspension_ends_at = null;
+                    $user->save();
+                }
+            }
+            
             $user_data = new UserResource($user);
 
             return response()->json([
