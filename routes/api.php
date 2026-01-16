@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BrokenLinksController;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,6 +73,11 @@ Route::group(['prefix' => 'profile'], function () {
     Route::post('/{id}/upload', [ProfileController::class, 'uploadAvatar'])->name('uploadAvatar');
     Route::post('/{id}/coverImage', [ProfileController::class, 'uploadCoverImage'])->name('uploadCoverImage');
   });
+});
+
+// Broken Links Routes
+Route::group(['middleware' => ['auth:api', 'check.moderation']], function () {
+  Route::post('/broken-links/report', [BrokenLinksController::class, 'reportBrokenLinks'])->name('reportBrokenLinks');
 });
 
 Route::group(['prefix' => 'search'], function () {
