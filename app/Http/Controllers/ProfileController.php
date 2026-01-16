@@ -1630,7 +1630,7 @@ class ProfileController extends Controller
             ->join('users', 'profile_likes.user_id', '=', 'users.id')
             ->where('profile_likes.profile_id', $id)
             ->orderBy('profile_likes.id', 'desc')
-            ->select('users.id as id', 'users.first_name as firstName', 'users.last_name as lastName', 'users.profile_pic as avatarUrl')
+            ->selectRaw('CAST(users.id AS CHAR) as id, users.first_name as firstName, users.last_name as lastName, users.profile_pic as avatarUrl')
             ->paginate($perPage, ['*'], 'page', $page);
         return response()->json([
             'data' => $p->items(),
@@ -1647,7 +1647,7 @@ class ProfileController extends Controller
             ->join('users', 'profile_likes.profile_id', '=', 'users.id')
             ->where('profile_likes.user_id', $id)
             ->orderBy('profile_likes.id', 'desc')
-            ->select('users.id as id', 'users.first_name as firstName', 'users.last_name as lastName', 'users.profile_pic as avatarUrl')
+            ->selectRaw('CAST(users.id AS CHAR) as id, users.first_name as firstName, users.last_name as lastName, users.profile_pic as avatarUrl')
             ->paginate($perPage, ['*'], 'page', $page);
         return response()->json([
             'data' => $p->items(),
