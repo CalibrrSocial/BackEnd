@@ -15,10 +15,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-            mkdir -p ~/.ssh
-            printf "Host github.com\n  User git\n  IdentityFile ~/.ssh/ec2-github\n  StrictHostKeyChecking accept-new\n" > ~/.ssh/config
-            chmod 600 ~/.ssh/config
-            git config --global core.sshCommand 'ssh -i ~/.ssh/ec2-github -o StrictHostKeyChecking=accept-new'
             cd ${{ secrets.PROJECT_DIR }}
 
             # Ensure required PHP extensions are present (DOM, SimpleXML, cURL)
@@ -30,11 +26,10 @@ jobs:
             sudo apt-get install -y "php${PHPV}-xml" "php${PHPV}-curl" || sudo apt-get install -y php-xml php-curl
             php -m | grep -E 'dom|SimpleXML|curl' || true
 
-            # Git pull from your repo
-            (git remote -v | grep -q 'myrepo') || git remote add myrepo git@github.com:EYoung21/calibrr-social-backend.git
-            git remote set-url myrepo git@github.com:EYoung21/calibrr-social-backend.git
-            git fetch myrepo
-            git checkout -B ${{ secrets.BRANCH }} myrepo/${{ secrets.BRANCH }}
+            # Git pull from your repo using HTTPS
+            git remote set-url origin https://github.com/EYoung21/calibrr-social-backend.git
+            git fetch origin
+            git checkout -B ${{ secrets.BRANCH }} origin/${{ secrets.BRANCH }}
 
             # Deploy
             composer --version || true
