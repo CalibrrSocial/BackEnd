@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class UserResource extends JsonResource
 {
@@ -83,8 +84,12 @@ class UserResource extends JsonResource
       $liked = DB::table('profile_likes')->where('user_id', $viewerId)->where('profile_id', $user_id)->first();
       $like = $liked ? true : false;
     }
-    $visited = DB::table('profile_visit_analytics')->where('visited_profile_id', $user_id)->get();
-    $count_visit = count($visited);
+    $count_visit = 0;
+    if (Schema::hasTable('profile_visit_analytics')) {
+      $count_visit = DB::table('profile_visit_analytics')
+        ->where('visited_profile_id', $user_id)
+        ->count();
+    }
 
     return [
       'id' => "$this->id",
