@@ -19,6 +19,22 @@ class UserResource extends JsonResource
     $user_id = $this->id;
     $like = DB::table('likes')->select('*')->where('friend_id', '=', $user_id)->get();
     $countLike = count($like);
+
+    $locationInfo = DB::table('location_infos')->select('*')->where('user_id', '=', $user_id)->first();
+    $latitude = !empty($locationInfo->latitude) ? (float)($locationInfo->latitude) : 0;
+    $longitude = !empty($locationInfo->longitude) ? (float)($locationInfo->longitude) : 0;
+
+    $socialInfo = DB::table('social_infos')->select('*')->where('user_id', '=', $user_id)->first();
+    $facebook = !empty($socialInfo->facebook) ? $socialInfo->facebook : '';
+    $instagram = !empty($socialInfo->instagram) ? $socialInfo->instagram : '';
+    $snapchat = !empty($socialInfo->snapchat) ? $socialInfo->snapchat : '';
+    $linkedIn = !empty($socialInfo->linkedIn) ? $socialInfo->linkedIn : '';
+    $twitter = !empty($socialInfo->twitter) ? $socialInfo->twitter : '';
+    $resume = !empty($socialInfo->resume) ? $socialInfo->resume : '';
+    $coverLetter = !empty($socialInfo->coverLetter) ? $socialInfo->coverLetter : '';
+    $email = !empty($socialInfo->email) ? $socialInfo->email : '';
+    $website = !empty($socialInfo->website) ? $socialInfo->website : '';
+    $contact = !empty($socialInfo->contact) ? $socialInfo->contact : '';
     $ghostMode = $this->ghostMode == 1 ? true : false;
     $liked = $this->liked == 1 ? true : false;
 
@@ -31,8 +47,8 @@ class UserResource extends JsonResource
       'ghostMode' => $ghostMode,
       'subscription' => $this->subscription,
       'location' => [
-        'latitude' => $this->latitude,
-        'longitude' => $this->longitude,
+        'latitude' => $latitude,
+        'longitude' => $longitude,
       ],
       'locationTimestamp' => $this->locationTimestamp,
       'pictureProfile' => $this->pictureProfile,
@@ -46,17 +62,18 @@ class UserResource extends JsonResource
         'religion' => $this->religion,
         'occupation' => $this->occupation,
         'sexuality' => $this->sexuality,
+        'city' => $this->city,
       ],
       'socialInfo' => [
-        'facebook' => $this->facebook,
-        'instagram' => $this->instagram,
-        'linkedIn' => $this->linkedIn,
-        'twitter' => $this->twitter,
-        'resume' => $this->resume,
-        'coverLetter' => $this->coverLetter,
-        'email' => $this->email_2,
-        'website' => $this->website,
-        'contact' => $this->contact,
+        'facebook' => $facebook,
+        'instagram' => $instagram,
+        'linkedIn' => $linkedIn,
+        'twitter' => $twitter,
+        'resume' => $resume,
+        'coverLetter' => $coverLetter,
+        'email' => $email,
+        'website' => $website,
+        'contact' => $contact,
       ],
       'liked' => $liked,
       'likeCount' => $countLike,

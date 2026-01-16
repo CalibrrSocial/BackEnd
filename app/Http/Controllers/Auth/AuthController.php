@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\LocationInfo;
+use App\Models\SocialInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PasswordReset;
@@ -18,6 +20,7 @@ use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Str;
 use App\Http\Resources\UserResource;
+use phpDocumentor\Reflection\Location;
 
 class AuthController extends Controller
 
@@ -41,7 +44,7 @@ class AuthController extends Controller
      *    @OA\JsonContent(
      *       required={"email","password","phone","firstName","lastName"},
      *       @OA\Property(property="email", type="string",example="example@gmail.com"),
-     *       @OA\Property(property="password", type="string", example="123456"),
+     *       @OA\Property(property="password", type="string", example="123456aA"),
      *       @OA\Property(property="phone", type="string", example="0902050807"),
      *       @OA\Property(property="firstName", type="string", example="User"),
      *       @OA\Property(property="lastName", type="string", example="Name"),
@@ -56,10 +59,28 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        $this->validate($request, [
-            'password' => 'required|min:6',
+        $rules = [
             'email' => 'email:rfc,dns',
-        ]);
+            'password' => [
+                'required',
+                'string',
+                'min:8',             // must be at least 8 characters in length
+                'regex:/[a-z]/',      // must contain at least one lowercase letter
+                'regex:/[A-Z]/',      // must contain at least one uppercase letter
+                'regex:/[0-9]/',      // must contain at least one digit
+            ],
+            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
+        ];
+
+        $validation = Validator::make($request->all(), $rules);
+
+        if ($validation->fails()) {
+            return response([
+                "status" => 'error',
+                "message" => $validation->errors()->all(),
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         $check = DB::table('users')->where('email', $request->email)->where('password', '!=', null)->first();
         if ($check) {
             return response([
@@ -74,6 +95,15 @@ class AuthController extends Controller
             "firstname" => $request->firstName,
             "lastname" => $request->lastName,
         ]);
+
+        $location = LocationInfo::create([
+            "user_id" => $user->id,
+        ]);
+
+        $social = SocialInfo::create([
+            "user_id" => $user->id,
+        ]);
+
         if (!empty($user)) {
             $data = [
                 'email' => $request->email,
@@ -96,7 +126,7 @@ class AuthController extends Controller
      *    @OA\JsonContent(
      *       required={"email","password"},
      *       @OA\Property(property="email", type="string",example="example@gmail.com"),
-     *       @OA\Property(property="password", type="string", example="123456"),
+     *       @OA\Property(property="password", type="string", example="123456aA"),
      * 
      *    ),
      * ),
@@ -237,8 +267,9 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
         if ($user) {
             $data = [
-                'my_password' => Str::random(8),
+                'my_password' => Str::random(7) . random_int(0, 9)
             ];
+            dd($data);
             $mail_details = [
                 'email' => $request->email,
                 'subject' => 'Forgot password',

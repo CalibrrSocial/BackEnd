@@ -12,6 +12,8 @@ use App\Http\Resources\ReportResource;
 use App\Models\Relationship;
 use App\Models\Report;
 use App\Models\Like;
+use App\Models\SocialInfo;
+use App\Models\LocationInfo;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -102,16 +104,16 @@ class ProfileController extends Controller
      *          @OA\Property(property="personalInfo", type="object"),
      * 
      *          @OA\Property(property="socialInfo", type="object", 
-     *          @OA\Property(property="facebook", type="string",example="Không có"),
-     *          @OA\Property(property="instagram", type="string",example="Không có"),
-     *          @OA\Property(property="snapchat", type="string",example="Không có"),
-     *          @OA\Property(property="linkedIn", type="string",example="Không có"),
-     *          @OA\Property(property="twitter", type="string",example="Không có"),
-     *          @OA\Property(property="resume", type="string",example="Không có"),
-     *          @OA\Property(property="coverLetter", type="string",example="Không có"),
-     *          @OA\Property(property="email", type="string",example="Không có"),
-     *          @OA\Property(property="website", type="string",example="Không có"),
-     *          @OA\Property(property="contact", type="string",example="Không có"),
+     *          @OA\Property(property="facebook", type="string",example="No"),
+     *          @OA\Property(property="instagram", type="string",example="No"),
+     *          @OA\Property(property="snapchat", type="string",example="No"),
+     *          @OA\Property(property="linkedIn", type="string",example="No"),
+     *          @OA\Property(property="twitter", type="string",example="No"),
+     *          @OA\Property(property="resume", type="string",example="No"),
+     *          @OA\Property(property="coverLetter", type="string",example="No"),
+     *          @OA\Property(property="email", type="string",example="No"),
+     *          @OA\Property(property="website", type="string",example="No"),
+     *          @OA\Property(property="contact", type="string",example="No"),
      *          )
      *    ),
      * ),
@@ -131,40 +133,74 @@ class ProfileController extends Controller
             ], 404);
         } else {
             $user = User::Where('id', $id)->first();
+            $userSocialInfo = SocialInfo::Where('user_id', $id)->first();
+            $userLocationInfo = LocationInfo::Where('user_id', $id)->first();
             if ($user) {
                 $time_zone = env('TIME_ZONE');
                 $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
-                $data = $request->all();
-                $data['latitude'] = !empty($request->location['latitude']) ? (float)($request->location['latitude']) : 0;
-                $data['longitude'] = !empty($request->location['longitude']) ? (float)($request->location['longitude']) : 0;
-                $data['locationTimestamp'] = $actionTime;
 
-                $data['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
-                $data['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
-                $data['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
-                $data['linkedIn'] = !empty($request->socialInfo['linkedIn']) ? $request->socialInfo['linkedIn'] : '';
-                $data['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
-                $data['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
-                $data['coverLetter'] = !empty($request->socialInfo['coverLetter']) ? $request->socialInfo['coverLetter'] : '';
-                $data['email_2'] = !empty($request->socialInfo['email']) ? $request->socialInfo['email'] : '';
-                $data['website'] = !empty($request->socialInfo['website']) ? $request->socialInfo['website'] : '';
-                $data['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
+                $dataLocation['latitude'] = !empty($request->location['latitude']) ? (float)($request->location['latitude']) : 0;
+                $dataLocation['longitude'] = !empty($request->location['longitude']) ? (float)($request->location['longitude']) : 0;
 
-                if(!empty($request->personalInfo['dob'])){
+                $userLocationInfo->update([
+                    'latitude' => $dataLocation['latitude'],
+                    'longitude' => $dataLocation['longitude']
+                ]);
+
+                $dataSocial['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
+                $dataSocial['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
+                $dataSocial['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
+                $dataSocial['linkedIn'] = !empty($request->socialInfo['linkedIn']) ? $request->socialInfo['linkedIn'] : '';
+                $dataSocial['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
+                $dataSocial['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
+                $dataSocial['coverLetter'] = !empty($request->socialInfo['coverLetter']) ? $request->socialInfo['coverLetter'] : '';
+                $dataSocial['email'] = !empty($request->socialInfo['email']) ? $request->socialInfo['email'] : '';
+                $dataSocial['website'] = !empty($request->socialInfo['website']) ? $request->socialInfo['website'] : '';
+                $dataSocial['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
+
+                $userSocialInfo->update([
+                    'facebook' => $dataSocial['facebook'],
+                    'instagram' => $dataSocial['instagram'],
+                    'snapchat' => $dataSocial['snapchat'],
+                    'linkedIn' => $dataSocial['linkedIn'],
+                    'twitter' => $dataSocial['twitter'],
+                    'resume' => $dataSocial['resume'],
+                    'coverLetter' => $dataSocial['coverLetter'],
+                    'email' => $dataSocial['email'],
+                    'website' => $dataSocial['website'],
+                    'contact' => $dataSocial['contact'],
+                ]);
+
+                if (!empty($request->personalInfo['dob'])) {
                     $dob_txt = $request->personalInfo['dob'];
                     $dob_obj = Carbon::parse($dob_txt);
-                    if(!empty($dob_obj)){
+                    if (!empty($dob_obj)) {
                         $data['dob'] =  $dob_obj->format("Y-m-d H:m:s");
                     }
                 }
+                $data['locationTimestamp'] = $actionTime;
                 $data['gender'] = !empty($request->personalInfo['gender']) ? $request->personalInfo['gender'] : '';
                 $data['bio'] = !empty($request->personalInfo['bio']) ? $request->personalInfo['bio'] : '';
                 $data['education'] = !empty($request->personalInfo['education']) ? $request->personalInfo['education'] : '';
                 $data['occupation'] = !empty($request->personalInfo['occupation']) ? $request->personalInfo['occupation'] : '';
                 $data['politics'] = !empty($request->personalInfo['politics']) ? $request->personalInfo['politics'] : '';
                 $data['religion'] = !empty($request->personalInfo['religion']) ? $request->personalInfo['religion'] : '';
+                $data['sexuality'] = !empty($request->personalInfo['sexuality']) ? $request->personalInfo['sexuality'] : '';
+                $data['relationship'] = !empty($request->personalInfo['relationship']) ? $request->personalInfo['relationship'] : '';
+                $data['city'] = !empty($request->personalInfo['city']) ? $request->personalInfo['city'] : '';
 
-                $user->update($data);
+                $user->update([
+                    'locationTimestamp' => $data['locationTimestamp'],
+                    'gender' => $data['gender'],
+                    'bio' => $data['bio'],
+                    'education' => $data['education'],
+                    'occupation' => $data['occupation'],
+                    'politics' => $data['politics'],
+                    'religion' => $data['religion'],
+                    'sexuality' => $data['sexuality'],
+                    'relationship' => $data['relationship'],
+                    'city' => $data['city'],
+                ]);
                 return response()->json(new UserResource($user));
             } else {
                 return response()->json([
@@ -216,8 +252,12 @@ class ProfileController extends Controller
             ], 404);
         } else {
             $user = User::whereid($id)->first();
+            $userLocation = LocationInfo::Where('user_id', $id)->first();
+            $userSocial = SocialInfo::Where('user_id', $id)->first();
             if ($user) {
                 $user->delete($user);
+                $userLocation->delete($userLocation);
+                $userSocial->delete($userSocial);
                 return response()->json([
                     'message' => Exception::DELETE_SUCCESS,
                 ], Response::HTTP_OK);
@@ -264,16 +304,16 @@ class ProfileController extends Controller
      *          @OA\Property(property="personalInfo", type="object"),
      * 
      *          @OA\Property(property="socialInfo", type="object", 
-     *          @OA\Property(property="facebook", type="string",example="Không có"),
-     *          @OA\Property(property="instagram", type="string",example="Không có"),
-     *          @OA\Property(property="snapchat", type="string",example="Không có"),
-     *          @OA\Property(property="linkedIn", type="string",example="Không có"),
-     *          @OA\Property(property="twitter", type="string",example="Không có"),
-     *          @OA\Property(property="resume", type="string",example="Không có"),
-     *          @OA\Property(property="coverLetter", type="string",example="Không có"),
-     *          @OA\Property(property="email", type="string",example="Không có"),
-     *          @OA\Property(property="website", type="string",example="Không có"),
-     *          @OA\Property(property="contact", type="string",example="Không có"),
+     *          @OA\Property(property="facebook", type="string",example="No"),
+     *          @OA\Property(property="instagram", type="string",example="No"),
+     *          @OA\Property(property="snapchat", type="string",example="No"),
+     *          @OA\Property(property="linkedIn", type="string",example="No"),
+     *          @OA\Property(property="twitter", type="string",example="No"),
+     *          @OA\Property(property="resume", type="string",example="No"),
+     *          @OA\Property(property="coverLetter", type="string",example="No"),
+     *          @OA\Property(property="email", type="string",example="No"),
+     *          @OA\Property(property="website", type="string",example="No"),
+     *          @OA\Property(property="contact", type="string",example="No"),
      *          )
      *    ),
      * ),
@@ -293,24 +333,43 @@ class ProfileController extends Controller
             ], 404);
         } else {
             $user = User::Where('id', $id)->first();
+            $userSocialInfo = SocialInfo::Where('user_id', $id)->first();
+            $userLocationInfo = LocationInfo::Where('user_id', $id)->first();
             if ($user) {
                 $time_zone = env('TIME_ZONE');
                 $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
-                $data = $request->all();
-                $data['latitude'] = !empty($request->location['latitude']) ? (float)($request->location['latitude']) : 0;
-                $data['longitude'] = !empty($request->location['longitude']) ? (float)($request->location['longitude']) : 0;
-                $data['locationTimestamp'] = $actionTime;
-                $data['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
-                $data['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
-                $data['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
-                $data['linkedIn'] = !empty($request->socialInfo['linkedIn']) ? $request->socialInfo['linkedIn'] : '';
-                $data['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
-                $data['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
-                $data['coverLetter'] = !empty($request->socialInfo['coverLetter']) ? $request->socialInfo['coverLetter'] : '';
-                $data['email_2'] = !empty($request->socialInfo['email']) ? $request->socialInfo['email'] : '';
-                $data['website'] = !empty($request->socialInfo['website']) ? $request->socialInfo['website'] : '';
-                $data['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
-                $user->update($data);
+
+                $dataLocation['latitude'] = !empty($request->location['latitude']) ? (float)($request->location['latitude']) : 0;
+                $dataLocation['longitude'] = !empty($request->location['longitude']) ? (float)($request->location['longitude']) : 0;
+
+                $userLocationInfo->update([
+                    'latitude' => $dataLocation['latitude'],
+                    'longitude' => $dataLocation['longitude']
+                ]);
+
+                $dataSocial['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
+                $dataSocial['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
+                $dataSocial['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
+                $dataSocial['linkedIn'] = !empty($request->socialInfo['linkedIn']) ? $request->socialInfo['linkedIn'] : '';
+                $dataSocial['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
+                $dataSocial['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
+                $dataSocial['coverLetter'] = !empty($request->socialInfo['coverLetter']) ? $request->socialInfo['coverLetter'] : '';
+                $dataSocial['email'] = !empty($request->socialInfo['email']) ? $request->socialInfo['email'] : '';
+                $dataSocial['website'] = !empty($request->socialInfo['website']) ? $request->socialInfo['website'] : '';
+                $dataSocial['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
+
+                $userSocialInfo->update([
+                    'facebook' => $dataSocial['facebook'],
+                    'instagram' => $dataSocial['instagram'],
+                    'snapchat' => $dataSocial['snapchat'],
+                    'linkedIn' => $dataSocial['linkedIn'],
+                    'twitter' => $dataSocial['twitter'],
+                    'resume' => $dataSocial['resume'],
+                    'coverLetter' => $dataSocial['coverLetter'],
+                    'email' => $dataSocial['email'],
+                    'website' => $dataSocial['website'],
+                    'contact' => $dataSocial['contact'],
+                ]);
                 return response()->json(new UserResource($user));
             } else {
                 return response()->json([
