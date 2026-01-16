@@ -57,14 +57,7 @@ class SearchController extends Controller
         $max_amount = $request->maxDistance['amount'];
         $my_id = Auth::user()->id;
 
-        if ($request->maxDistance['type'] != $request->minDistance['type']) {
-            return response()->json([
-                'message' => 'fail',
-                'details' => 'Type is not the same'
-            ], 500);
-        } else {
-            $type = $request->maxDistance['type'];
-        }
+        $type = $request->maxDistance['type'];
 
         switch ($type) {
             case "Feet":
