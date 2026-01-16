@@ -38,8 +38,11 @@ jobs:
             else
               git remote add origin "$GIT_URL"
             fi
+            # Drop any tracked local changes without touching untracked files (e.g., .env)
+            git reset --hard
             git fetch --prune origin "${{ secrets.BRANCH }}"
-            git checkout -B "${{ secrets.BRANCH }}" "origin/${{ secrets.BRANCH }}"
+            git reset --hard "origin/${{ secrets.BRANCH }}"
+            git rev-parse --short HEAD
             
             # Sanity check: ensure the latest UserResource is present
             echo "--- Snippet from app/Http/Resources/UserResource.php ---"
