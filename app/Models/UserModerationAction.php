@@ -9,6 +9,8 @@ class UserModerationAction extends Model
 {
     use HasFactory;
     
+    // Disable updated_at since our table only has created_at
+    const UPDATED_AT = null;
     protected $table = 'user_moderation_actions';
     
     protected $fillable = [
