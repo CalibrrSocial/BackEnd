@@ -21,18 +21,22 @@ jobs:
             git config --global core.sshCommand 'ssh -i ~/.ssh/ec2-github -o StrictHostKeyChecking=accept-new'
             cd ${{ secrets.PROJECT_DIR }}
 
-            # Install required PHP extensions for composer (DOM, SimpleXML, cURL)
+            # Ensure required PHP extensions are present (DOM, SimpleXML, cURL)
             sudo apt-get update -y || sudo apt-get update --allow-releaseinfo-change -y
-            sudo apt-get install -y software-properties-common
-            sudo add-apt-repository -y ppa:ondrej/php
-            sudo apt-get update -y
-            sudo apt-get install -y php8.1-xml php8.1-curl
+            sudo apt-get install -y software-properties-common || true
+            sudo add-apt-repository -y ppa:ondrej/php || true
+            sudo apt-get update -y || true
+            PHPV=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
+            sudo apt-get install -y "php${PHPV}-xml" "php${PHPV}-curl" || sudo apt-get install -y php-xml php-curl
             php -m | grep -E 'dom|SimpleXML|curl' || true
 
+            # Git pull from your repo
             (git remote -v | grep -q 'myrepo') || git remote add myrepo git@github.com:EYoung21/calibrr-social-backend.git
             git remote set-url myrepo git@github.com:EYoung21/calibrr-social-backend.git
             git fetch myrepo
             git checkout -B ${{ secrets.BRANCH }} myrepo/${{ secrets.BRANCH }}
+
+            # Deploy
             composer --version || true
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
