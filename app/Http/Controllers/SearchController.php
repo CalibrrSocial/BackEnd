@@ -140,8 +140,8 @@ class SearchController extends Controller
         $name = $data['name'];
 
         $user = User::select("*")
-            ->Where(DB::raw("concat(firstname, ' ', lastname)"), 'LIKE', "%" . $name . "%")
-            ->orWhere(DB::raw("concat(firstname, lastname)"), 'LIKE', "%" . $name . "%")
+            ->Where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $name . "%")
+            ->orWhere(DB::raw("concat(first_name, last_name)"), 'LIKE', "%" . $name . "%")
             ->get();
 
         if (count($user) > 0) {

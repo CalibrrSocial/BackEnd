@@ -5,22 +5,15 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-use App\Models\LocationInfo;
-use App\Models\SocialSiteInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\PasswordReset;
-use Lcobucci\JWT\Parser as JwtParser;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
-use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Str;
 use App\Http\Resources\UserResource;
-use phpDocumentor\Reflection\Location;
 
 class AuthController extends Controller
 
@@ -94,10 +87,6 @@ class AuthController extends Controller
             "phone" => $request->phone,
             "first_name" => $request->firstName,
             "last_name" => $request->lastName,
-        ]);
-
-        $location = LocationInfo::create([
-            "user_id" => $user->id,
         ]);
 
         if (!empty($user)) {
@@ -263,7 +252,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
         if ($user) {
             $data = [
-                'my_password' => Str::random(7) . random_int(0, 9)
+                'my_password' => Str::lower(Str::random(4)) . Str::upper(Str::random(3)) . random_int(0, 9)
             ];
             $mail_details = [
                 'email' => $request->email,
