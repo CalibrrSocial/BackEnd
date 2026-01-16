@@ -1608,8 +1608,18 @@ class ProfileController extends Controller
         } else {
             if ($this->checkAuth($id)) {
                 $profileLikeId = $request->profileLikeId ?? $request->query('profileLikedId');
+                
+                // Check if this is an attribute unlike
+                $attributeCategory = $request->attributeCategory;
+                $attributeName = $request->attributeName;
+                
                 if (!$profileLikeId) {
                     return response()->json(['message' => 'fail','details' => 'profileLikedId missing'], Response::HTTP_BAD_REQUEST);
+                }
+
+                // Handle attribute unlikes
+                if ($attributeCategory && $attributeName) {
+                    return $this->handleAttributeUnlike($id, $profileLikeId, $attributeCategory, $attributeName);
                 }
                 $deleted = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->update(['is_deleted' => 1]);
                 
@@ -2940,5 +2950,64 @@ class ProfileController extends Controller
                 'name' => $attribute
             ]
         ], $created ? Response::HTTP_CREATED : Response::HTTP_OK);
+    }
+
+    private function handleAttributeUnlike($userId, $profileId, $category, $attribute)
+    {
+        // Soft delete the attribute like
+        $deleted = AttributeLike::where('user_id', $userId)
+            ->where('profile_id', $profileId)
+            ->where('category', $category)
+            ->where('attribute', $attribute)
+            ->where('is_deleted', 0)
+            ->update(['is_deleted' => 1]);
+
+        \Log::info('handleAttributeUnlike', [
+            'userId' => (string)$userId,
+            'profileId' => (string)$profileId,
+            'category' => $category,
+            'attribute' => $attribute,
+            'deleted' => $deleted > 0
+        ]);
+
+        // Update notification tracking for attribute unlike
+        if ($deleted > 0) {
+            $event = DB::table('attribute_like_events')
+                ->where('user_id', $userId)
+                ->where('profile_id', $profileId)
+                ->where('category', $category)
+                ->where('attribute', $attribute)
+                ->first();
+                
+            if ($event && $event->notify_count === 1) {
+                // Allow one more notification if they like again
+                DB::table('attribute_like_events')
+                    ->where('user_id', $userId)
+                    ->where('profile_id', $profileId)
+                    ->where('category', $category)
+                    ->where('attribute', $attribute)
+                    ->update([
+                        'last_unliked_at' => now(),
+                        'can_notify_again' => true,
+                        'updated_at' => now(),
+                    ]);
+                \Log::info('handleAttributeUnlike enabled can_notify_again', [
+                    'user_id' => $userId,
+                    'profile_id' => $profileId,
+                    'category' => $category,
+                    'attribute' => $attribute,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'deleted' => $deleted > 0,
+            'message' => $deleted > 0 ? 'Attribute unliked' : 'Not previously liked',
+            'attribute' => [
+                'category' => $category,
+                'name' => $attribute
+            ]
+        ]);
     }
 }
