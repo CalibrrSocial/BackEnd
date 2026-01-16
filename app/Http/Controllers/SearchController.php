@@ -31,15 +31,6 @@ class SearchController extends Controller
      *    example={"position" = {"latitude":0, "longitude":0}},
      * ),
      * @OA\Parameter(
-     *    name="minDistance",
-     *    @OA\Schema(
-     *      type="object",
-     *    ),
-     *    in="query",
-     *    required=true,
-     *    example={"minDistance" = {"type":"Feet", "amount":0}},
-     * ),
-     * @OA\Parameter(
      *    name="maxDistance",
      *    @OA\Schema(
      *      type="object",
@@ -62,7 +53,7 @@ class SearchController extends Controller
     {
         $lat = $request->position['latitude'];
         $lon = $request->position['longitude'];
-        $min_amount = $request->minDistance['amount'];
+        // $min_amount = $request->minDistance['amount'];
         $max_amount = $request->maxDistance['amount'];
         $my_id = Auth::user()->id;
 
@@ -95,7 +86,7 @@ class SearchController extends Controller
                 * sin(radians(location_infos.latitude))) AS distance")
             )
             ->having("distance", "<=", $max_amount)
-            ->having("distance", ">=", $min_amount)
+            // ->having("distance", ">=", $min_amount)
             ->orderBy("distance")
             ->get();
         if (count($result) > 0) {
