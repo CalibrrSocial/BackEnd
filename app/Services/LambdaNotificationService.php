@@ -147,7 +147,7 @@ class LambdaNotificationService
             
             if ($this->debug) {
                 // Synchronous call with logs for troubleshooting
-                $params['InvocationType'] => 'RequestResponse';
+                $params['InvocationType'] = 'RequestResponse';
                 $params['LogType'] = 'Tail';
                 $result = $this->client->invoke($params);
                 $status = $result['StatusCode'] ?? null;
