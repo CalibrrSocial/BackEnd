@@ -153,7 +153,21 @@ class ProfileController extends Controller
 
     public function updateUserProfile(Request $request, $id)
     {
-        \Log::info('updateUserProfile payload', $request->all());
+        // Focused log for debugging specific fields failing to persist
+        $dbgPi = (array) $request->input('personalInfo', []);
+        $dbgCourses = $request->input('courses', []);
+        $dbgFriends = $request->input('bestFriends', []);
+        \Log::info('updateUserProfile incoming (focused)', [
+            'user_id' => (string)$id,
+            'city' => $dbgPi['city'] ?? null,
+            'postgraduate' => $dbgPi['postgraduate'] ?? null,
+            'postgraduatePlans' => $dbgPi['postgraduatePlans'] ?? ($dbgPi['postgraduate_plans'] ?? null),
+            'bio_len' => isset($dbgPi['bio']) ? strlen($dbgPi['bio']) : null,
+            'club' => isset($dbgPi['club']['club']) ? $dbgPi['club']['club'] : null,
+            'jersey_number' => isset($dbgPi['club']['jersey_number']) ? $dbgPi['club']['jersey_number'] : (isset($dbgPi['club']['number']) ? $dbgPi['club']['number'] : null),
+            'courses' => array_values(array_map(function($c){ return $c['name'] ?? null; }, is_array($dbgCourses)?$dbgCourses:[])),
+            'bestFriends' => array_values(array_map(function($f){ return trim(($f['first_name'] ?? '').' '.($f['last_name'] ?? '')); }, is_array($dbgFriends)?$dbgFriends:[])),
+        ]);
         if (!$id) {
             return response()->json([
                 'message' => 'fail',
@@ -353,11 +367,14 @@ class ProfileController extends Controller
                                 $safeUpdate[$column] = $value;
                             }
                         }
-                        \Log::info('Profile update data', [
+                        \Log::info('Profile update write (focused)', [
                             'user_id' => $id,
-                            'updateData_keys' => array_keys($updateData),
-                            'safeUpdate_keys' => array_keys($safeUpdate),
-                            'safeUpdate' => $safeUpdate
+                            'city' => $safeUpdate['city'] ?? null,
+                            'postgraduate' => $safeUpdate['postgraduate'] ?? null,
+                            'postgraduate_plans' => $safeUpdate['postgraduate_plans'] ?? null,
+                            'bio_len' => isset($safeUpdate['bio']) ? strlen($safeUpdate['bio']) : null,
+                            'club' => $safeUpdate['club'] ?? null,
+                            'jersey_number' => $safeUpdate['jersey_number'] ?? null,
                         ]);
                         if (!empty($safeUpdate)) {
                             DB::table('users')->where('id', $id)->update($safeUpdate);
@@ -1711,6 +1728,7 @@ class ProfileController extends Controller
         $profileId = $request->profileId;
         $category = $request->category;
         $attribute = $request->attribute;
+        $displayLabel = $request->displayLabel; // optional explicit label from client
 
         if (!$profileId || !$category || !$attribute) {
             return response()->json([
@@ -1822,6 +1840,9 @@ class ProfileController extends Controller
                     'category' => $category,
                     'attribute' => $attribute,
                 ];
+                if (!empty($displayLabel)) {
+                    $additional['displayLabel'] = $displayLabel;
+                }
                 if ($recipient) {
                     $additional['recipientEmail'] = $recipient->email ?? null;
                     $additional['recipientFirstName'] = $recipient->first_name ?? null;
@@ -2768,6 +2789,11 @@ class ProfileController extends Controller
         ])->validate();
 
         // delete old records
+        \Log::info('updateBestFriends write', [
+            'user_id' => $user->id,
+            'count' => is_array($request->bestFriends) ? count($request->bestFriends) : 0,
+            'names' => array_values(array_map(function($f){ return trim(($f['first_name'] ?? '').' '.($f['last_name'] ?? '')); }, is_array($request->bestFriends)?$request->bestFriends:[])),
+        ]);
         $count = Friend::where('user_id', $user->id)->delete();
 
         // create new records
@@ -2793,6 +2819,11 @@ class ProfileController extends Controller
         ])->validate();
 
         // delete old records
+        \Log::info('updateCourses write', [
+            'user_id' => $user->id,
+            'count' => is_array($request->courses) ? count($request->courses) : 0,
+            'names' => array_values(array_map(function($c){ return $c['name'] ?? null; }, is_array($request->courses)?$request->courses:[])),
+        ]);
         Course::where('user_id', $user->id)->delete();
 
         // create new records

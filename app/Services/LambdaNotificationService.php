@@ -136,6 +136,8 @@ class LambdaNotificationService
                 'senderLastName' => $sender->last_name,
                 'category' => $additionalData['category'] ?? '',
                 'attribute' => $additionalData['attribute'] ?? '',
+                // Prefer explicit label if provided by client/backend path
+                'displayLabel' => $additionalData['displayLabel'] ?? ($additionalData['attributeLabel'] ?? null),
             ],
         ]);
 
