@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Exceptions\Exception;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -96,10 +97,30 @@ class SearchController extends Controller
                 $arr_users = array_merge($arr_users, $arr_use);
             }
             $tempStr = implode(',', $arr_users);
+            $user_dob_list = DB::table('users')
+                ->select('*')
+                ->where('ghost_mode_flag', false)
+                ->whereIn('id', $arr_user)
+                ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
+                ->get();
+            if(count($user_dob_list) > 0){
+                $now = Carbon::now();
+                $hide_user = [];
+                foreach($user_dob_list as $user_dob){
+                    $year = Carbon::parse($user_dob->dob)->age;
+                    if($year >= 25){
+                        $hour = $now->diffInHours($user_dob->updated_at);
+                        if($hour >= 1){
+                            $hide_user[] = $user_dob->id;
+                        }
+                    }
+                }
+            }
             $users = DB::table('users')
                 ->select('*')
                 ->where('ghost_mode_flag', false)
                 ->whereIn('id', $arr_user)
+                ->whereNotIn('id', $hide_user)
                 ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
                 ->get();
 
