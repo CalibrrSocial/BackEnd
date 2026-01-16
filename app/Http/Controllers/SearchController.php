@@ -169,31 +169,37 @@ class SearchController extends Controller
                 'details' => 'User not found'
             ], Response::HTTP_BAD_REQUEST);
         } else {
-            $query = User::select("*")->where('ghost_mode_flag', false);
+            DB::enableQueryLog();
+            $firstQuery = DB::table('users')
+                ->select('*')
+                ->where('ghost_mode_flag', false)
+                ->where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $request->name . "%");
 
-            $query = $query->where(function ($q) use ($request) {
-                $q = $q->orWhere(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $request->name . "%");
-
-                if ($request->search_in_course) {
-                    $q = $q->orWhereHas('courses', function (Builder $qr) use ($request) {
-                        return $qr->where('name', 'LIKE', "%" . $request->name . "%");
+            if ($request->search_in_course) {
+                $secondQuery = DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->join('courses', function($join) use ($request) {
+                    return $join->on('users.id', '=', 'courses.user_id')->whereIn('courses.name', function ($q) use ($request) {
+                        return $q->select('courses.name')->from('users')->where('ghost_mode_flag', false)->where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $request->name . "%")
+                            ->join('courses', 'users.id', '=', 'courses.user_id');
                     });
-                }
+                });
 
-                if ($request->search_in_studying) {
-                    $q = $q->orWhere('studying', 'LIKE', "%" . $request->name . "%");
-                }
-
-                return $q;
-            });
-
-            $user = $query->get();
-
-            for ($i = 0; $i < count($user); $i++) {
-                if ($user[$i]->id == $my_id) {
-                    unset($user[$i]);
-                }
+                $firstQuery = $firstQuery->union($secondQuery);
             }
+
+            if ($request->search_in_studying) {
+                $thirdQuery = DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->whereIn('studying', function ($query) use ($request) {
+                    return $query ->select('users.studying')
+                        ->from('users')
+                        ->where('ghost_mode_flag', false)
+                        ->where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $request->name . "%");
+                });
+
+                $firstQuery = $firstQuery->union($thirdQuery);
+            }
+
+            $user = User::with('courses', 'bestFriends')->whereIn('id', function ($q) use ($firstQuery) {
+                return $q->select('id')->from($firstQuery, 'accounts');
+            })->where('id', '!=', $my_id)->get();
 
             if (count($user) > 0) {
                 return response()->json(UserResource::collection($user));
