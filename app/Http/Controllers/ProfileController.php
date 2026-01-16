@@ -1741,13 +1741,23 @@ class ProfileController extends Controller
                     ]);
                 }
                 \Log::info('likeProfile state', ['created' => $created, 'self_like' => $id === $profileLikeId]);
-                // First-like notification (once per pair), suppress for self-like
-                if ($created && $id !== $profileLikeId && !DB::table('profile_like_events')->where('user_id',$id)->where('profile_id',$profileLikeId)->exists()) {
-                    DB::table('profile_like_events')->insert([
-                        'user_id' => $id,
-                        'profile_id' => $profileLikeId,
-                        'notified_at' => now(),
-                    ]);
+                // Email notification policy: allow up to 2 notifications per A->B lifetime, suppress for self-like
+                if ($created && $id !== $profileLikeId) {
+                    $event = DB::table('profile_like_events')->where('user_id',$id)->where('profile_id',$profileLikeId)->first();
+                    $notifyCount = $event->notify_count ?? 0;
+                    if ($notifyCount < 2) {
+                        if (!$event) {
+                            DB::table('profile_like_events')->insert([
+                                'user_id' => $id,
+                                'profile_id' => $profileLikeId,
+                                'notified_at' => now(),
+                                'notify_count' => 1,
+                            ]);
+                        } else {
+                            DB::table('profile_like_events')
+                                ->where('user_id',$id)->where('profile_id',$profileLikeId)
+                                ->update(['notified_at' => now(), 'notify_count' => $notifyCount + 1]);
+                        }
                     // Include recipient email and sender name so Lambda doesn't need DB
                     $recipient = DB::table('users')->select('email','first_name','last_name')->where('id', $profileLikeId)->first();
                     $sender = DB::table('users')->select('first_name','last_name')->where('id', $id)->first();
@@ -1767,6 +1777,7 @@ class ProfileController extends Controller
                         'hasRecipientEmail' => !empty($additional['recipientEmail']),
                     ]);
                     try { app(LambdaNotificationService::class)->notifyProfileLiked((int)$profileLikeId, (int)$id, $additional); } catch (\Throwable $e) { }
+                    }
                 }
                 return $created ? response()->noContent(Response::HTTP_CREATED) : response()->noContent(Response::HTTP_OK);
             } else {
