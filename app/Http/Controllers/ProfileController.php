@@ -14,6 +14,7 @@ use App\Models\Friend;
 use App\Models\Relationship;
 use App\Models\Report;
 use App\Models\ProfileLike;
+use App\Models\AttributeLike;
 use App\Models\UserBlock;
 use App\Models\SocialSiteInfo;
 use App\Models\LocationInfo;
@@ -1630,6 +1631,353 @@ class ProfileController extends Controller
                 ], Response::HTTP_BAD_REQUEST);
             }
         }
+    }
+
+    /**
+     * @OA\Post(
+     * path="/profile/{id}/attributes/like",
+     * summary="Like a specific attribute on user profile",
+     * description="Like a specific attribute on user profile",
+     * operationId="likeAttribute",
+     * security={{"bearerAuth":{}}},
+     * tags={"Profile"},
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(
+     *      type="string",
+     *    ),
+     *    in="path",
+     *    required=true,
+     * ),
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Attribute like data",
+     *    @OA\JsonContent(
+     *       required={"profileId","category","attribute"},
+     *       @OA\Property(property="profileId", type="string", example="123"),
+     *       @OA\Property(property="category", type="string", example="Music"),
+     *       @OA\Property(property="attribute", type="string", example="Hip Hop"),
+     *    ),
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="Success",
+     *   )
+     * )
+     */
+    public function likeAttribute(Request $request, $id)
+    {
+        if (!$id) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Id not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$this->checkAuth($id)) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Authorization'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $profileId = $request->profileId;
+        $category = $request->category;
+        $attribute = $request->attribute;
+
+        if (!$profileId || !$category || !$attribute) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'profileId, category, and attribute are required'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        \Log::info('likeAttribute request', [
+            'authId' => (string)$id,
+            'profileId' => (string)$profileId,
+            'category' => $category,
+            'attribute' => $attribute,
+        ]);
+
+        // Check if like record already exists (including soft-deleted)
+        $existingLike = AttributeLike::where('user_id', $id)
+            ->where('profile_id', $profileId)
+            ->where('category', $category)
+            ->where('attribute', $attribute)
+            ->first();
+        
+        $created = false;
+        
+        if ($existingLike) {
+            if ($existingLike->is_deleted == 1) {
+                // Reactivate soft-deleted like
+                $existingLike->update(['is_deleted' => 0]);
+                $created = true;
+                \Log::info('likeAttribute reactivated soft-deleted like');
+            } else {
+                // Already liked and active
+                \Log::info('likeAttribute already liked and active');
+            }
+        } else {
+            // Create new like record
+            try {
+                AttributeLike::create([
+                    'user_id' => $id,
+                    'profile_id' => $profileId,
+                    'category' => $category,
+                    'attribute' => $attribute
+                ]);
+                $created = true;
+                \Log::info('likeAttribute created new like');
+            } catch (\Throwable $e) {
+                \Log::error('likeAttribute failed to create like', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Email notification policy: same as profile likes but for attributes
+        if ($created && $id !== $profileId) {
+            $event = DB::table('attribute_like_events')
+                ->where('user_id', $id)
+                ->where('profile_id', $profileId)
+                ->where('category', $category)
+                ->where('attribute', $attribute)
+                ->first();
+                
+            $notifyCount = $event->notify_count ?? 0;
+            $canNotifyAgain = $event->can_notify_again ?? false;
+            
+            $shouldNotify = false;
+            
+            if (!$event) {
+                // First like from this person - always notify
+                $shouldNotify = true;
+                DB::table('attribute_like_events')->insert([
+                    'user_id' => $id,
+                    'profile_id' => $profileId,
+                    'category' => $category,
+                    'attribute' => $attribute,
+                    'notified_at' => now(),
+                    'notify_count' => 1,
+                    'can_notify_again' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                \Log::info('likeAttribute first like notification');
+            } else if ($notifyCount === 1 && $canNotifyAgain) {
+                // Second like after an unlike - notify once more
+                $shouldNotify = true;
+                DB::table('attribute_like_events')
+                    ->where('user_id', $id)
+                    ->where('profile_id', $profileId)
+                    ->where('category', $category)
+                    ->where('attribute', $attribute)
+                    ->update([
+                        'notified_at' => now(), 
+                        'notify_count' => 2,
+                        'can_notify_again' => false,
+                        'updated_at' => now(),
+                    ]);
+                \Log::info('likeAttribute second like after unlike notification');
+            } else {
+                \Log::info('likeAttribute notification suppressed', [
+                    'notify_count' => $notifyCount,
+                    'can_notify_again' => $canNotifyAgain,
+                ]);
+            }
+            
+            if ($shouldNotify) {
+                // Include recipient email and sender name so Lambda doesn't need DB
+                $recipient = DB::table('users')->select('email','first_name','last_name')->where('id', $profileId)->first();
+                $sender = DB::table('users')->select('first_name','last_name')->where('id', $id)->first();
+                $additional = [
+                    'category' => $category,
+                    'attribute' => $attribute,
+                ];
+                if ($recipient) {
+                    $additional['recipientEmail'] = $recipient->email ?? null;
+                    $additional['recipientFirstName'] = $recipient->first_name ?? null;
+                    $additional['recipientLastName'] = $recipient->last_name ?? null;
+                }
+                if ($sender) {
+                    $additional['senderFirstName'] = $sender->first_name ?? null;
+                    $additional['senderLastName'] = $sender->last_name ?? null;
+                }
+                \Log::info('likeAttribute invoking lambda', [
+                    'recipientUserId' => (int)$profileId,
+                    'senderUserId' => (int)$id,
+                    'hasRecipientEmail' => !empty($additional['recipientEmail']),
+                ]);
+                try { 
+                    app(LambdaNotificationService::class)->notifyAttributeLiked((int)$profileId, (int)$id, $additional); 
+                } catch (\Throwable $e) { 
+                    \Log::error('likeAttribute lambda notification failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
+        // Return success JSON response with like status
+        return response()->json([
+            'success' => true,
+            'created' => $created,
+            'message' => $created ? 'Attribute liked' : 'Already liked'
+        ], $created ? Response::HTTP_CREATED : Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Delete(
+     * path="/profile/{id}/attributes/like",
+     * summary="Unlike a specific attribute on user profile",
+     * description="Unlike a specific attribute on user profile",
+     * operationId="unlikeAttribute",
+     * security={{"bearerAuth":{}}},
+     * tags={"Profile"},
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(
+     *      type="string",
+     *    ),
+     *    in="path",
+     *    required=true,
+     * ),
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Attribute unlike data",
+     *    @OA\JsonContent(
+     *       required={"profileId","category","attribute"},
+     *       @OA\Property(property="profileId", type="string", example="123"),
+     *       @OA\Property(property="category", type="string", example="Music"),
+     *       @OA\Property(property="attribute", type="string", example="Hip Hop"),
+     *    ),
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="Success",
+     *   )
+     * )
+     */
+    public function unlikeAttribute(Request $request, $id)
+    {
+        if (!$id) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Id not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$this->checkAuth($id)) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Authorization'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $profileId = $request->profileId;
+        $category = $request->category;
+        $attribute = $request->attribute;
+
+        if (!$profileId || !$category || !$attribute) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'profileId, category, and attribute are required'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $deleted = AttributeLike::where('user_id', $id)
+            ->where('profile_id', $profileId)
+            ->where('category', $category)
+            ->where('attribute', $attribute)
+            ->update(['is_deleted' => 1]);
+        
+        // Update notification tracking for unlike
+        if ($deleted > 0) {
+            $event = DB::table('attribute_like_events')
+                ->where('user_id', $id)
+                ->where('profile_id', $profileId)
+                ->where('category', $category)
+                ->where('attribute', $attribute)
+                ->first();
+                
+            if ($event && $event->notify_count === 1) {
+                // Allow one more notification if they like again
+                DB::table('attribute_like_events')
+                    ->where('user_id', $id)
+                    ->where('profile_id', $profileId)
+                    ->where('category', $category)
+                    ->where('attribute', $attribute)
+                    ->update([
+                        'last_unliked_at' => now(),
+                        'can_notify_again' => true,
+                        'updated_at' => now(),
+                    ]);
+                \Log::info('unlikeAttribute enabled can_notify_again');
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'deleted' => $deleted > 0,
+            'message' => $deleted > 0 ? 'Attribute unliked' : 'Not previously liked'
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     * path="/profile/{id}/attributes/{category}/{attribute}/likes",
+     * summary="Get like count for a specific attribute",
+     * description="Get like count for a specific attribute",
+     * operationId="getAttributeLikes",
+     * security={{"bearerAuth":{}}},
+     * tags={"Profile"},
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(
+     *      type="string",
+     *    ),
+     *    in="path",
+     *    required=true,
+     * ),
+     * @OA\Parameter(
+     *    name="category",
+     *    @OA\Schema(
+     *      type="string",
+     *    ),
+     *    in="path",
+     *    required=true,
+     * ),
+     * @OA\Parameter(
+     *    name="attribute",
+     *    @OA\Schema(
+     *      type="string",
+     *    ),
+     *    in="path",
+     *    required=true,
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="Count",
+     *   ),
+     * )
+     */
+    public function getAttributeLikes($id, $category, $attribute)
+    {
+        if (!$id || !$category || !$attribute) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Missing required parameters'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $count = AttributeLike::where('profile_id', $id)
+            ->where('category', $category)
+            ->where('attribute', $attribute)
+            ->where('is_deleted', 0)
+            ->count();
+            
+        return response()->json([
+            'count' => $count
+        ]);
     }
 
     /**

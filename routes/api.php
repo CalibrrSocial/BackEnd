@@ -53,6 +53,11 @@ Route::group(['prefix' => 'profile'], function () {
     Route::get('/{id}/likes/received', [ProfileController::class, 'likesReceived']);
     Route::get('/{id}/likes/sent', [ProfileController::class, 'likesSent']);
 
+    //Attribute Like Information
+    Route::post('/{id}/attributes/like', [ProfileController::class, 'likeAttribute'])->name('likeAttribute');
+    Route::delete('/{id}/attributes/like', [ProfileController::class, 'unlikeAttribute'])->name('unlikeAttribute');
+    Route::get('/{id}/attributes/{category}/{attribute}/likes', [ProfileController::class, 'getAttributeLikes'])->name('getAttributeLikes');
+
     //Report Information
     Route::get('/{id}/reports', [ProfileController::class, 'getUserReports'])->name('getUserReports');
     Route::put('/{id}/reports', [ProfileController::class, 'reportUser'])->name('reportUser');
