@@ -224,7 +224,6 @@ class AdminController extends Controller
             return response()->json(['error' => 'Failed to fetch statistics'], 500);
         }
     }
-}
 
     /**
      * Reset user password
