@@ -87,7 +87,7 @@ class UserResource extends JsonResource
       'email' => $this->email,
       'phone' => $this->phone,
       'ghostMode' => $ghostMode,
-      'subscription' => $this->subscription_type,
+      'subscription' => "$this->subscription_type",
       'location' => [
         'latitude' => $latitude,
         'longitude' => $longitude,
