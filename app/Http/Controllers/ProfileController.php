@@ -57,9 +57,7 @@ class ProfileController extends Controller
         } else {
             $user = User::Where('id', $id)->first();
             if ($user) {
-                return response()->json([
-                    new UserResource($user),
-                ], Response::HTTP_OK);
+                return response()->json(new UserResource($user));
             } else {
                 return response()->json([
                     'massage' => 'Fail',
@@ -147,9 +145,7 @@ class ProfileController extends Controller
                 $data['website'] = $request->socialInfo['website'];
                 $data['contact'] = $request->socialInfo['contact'];
                 $user->update($data);
-                return response()->json([
-                    new UserResource($user),
-                ], Response::HTTP_OK);
+                return response()->json(new UserResource($user));
             } else {
                 return response()->json([
                     'massage' => 'Fail',
@@ -292,9 +288,7 @@ class ProfileController extends Controller
                 $data['website'] = $request->socialInfo['website'];
                 $data['contact'] = $request->socialInfo['contact'];
                 $user->update($data);
-                return response()->json([
-                    new UserResource($user),
-                ], Response::HTTP_OK);
+                return response()->json(new UserResource($user));
             } else {
                 return response()->json([
                     'massage' => 'Fail',
@@ -343,9 +337,7 @@ class ProfileController extends Controller
         } else {
             $rela_list = Relationship::where('user_id', '=', $id)->get();
             if (count($rela_list) > 0) {
-                return response()->json([
-                    RelationshipResource::collection($rela_list),
-                ], Response::HTTP_OK);
+                return response()->json(RelationshipResource::collection($rela_list));
             } else {
                 return response()->json([
                     'massage' => 'Fail',
@@ -404,9 +396,7 @@ class ProfileController extends Controller
                 ->where('friend_id', '=', $friendId)
                 ->first();
             if ($rela) {
-                return response()->json([
-                    new RelationshipResource($rela),
-                ], Response::HTTP_OK);
+                return response()->json(new RelationshipResource($rela));
             } else {
                 return response()->json([
                     'massage' => 'Fail',
@@ -914,7 +904,7 @@ class ProfileController extends Controller
         } else {
             $userReport = Report::where('user_id', $id)->get();
             if (count($userReport) > 0) {
-                return ReportResource::collection($userReport);
+                return response()->json(ReportResource::collection($userReport));
             } else {
                 return response()->json([
                     'massage' => 'Fail',
