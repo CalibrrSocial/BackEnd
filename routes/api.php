@@ -56,6 +56,8 @@ Route::group(['prefix' => 'profile'], function () {
 });
 
 Route::group(['prefix' => 'search'], function () {
-  Route::post('/distance', [SearchController::class, 'searchByDistance'])->name('searchByDistance');
-  Route::post('/name', [SearchController::class, 'searchByName'])->name('searchByName');
+  Route::group(['middleware' => 'auth:api'], function () {
+    Route::post('/distance', [SearchController::class, 'searchByDistance'])->name('searchByDistance');
+    Route::post('/name', [SearchController::class, 'searchByName'])->name('searchByName');
+  });
 });

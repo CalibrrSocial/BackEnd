@@ -63,6 +63,7 @@ class SearchController extends Controller
         $lon = $request->position['longitude'];
         $min_amount = $request->minDistance['amount'];
         $max_amount = $request->maxDistance['amount'];
+        $my_id = Auth::user()->id;
 
         if ($request->maxDistance['type'] != $request->minDistance['type']) {
             return response()->json([
@@ -97,11 +98,13 @@ class SearchController extends Controller
             ->orderBy("distance")
             ->get();
         if (count($result) > 0) {
-            foreach ($result as $re) {
-                unset($re->distance);
+            for($i = 0; $i < count($result); $i++){
+                unset($result[$i]->distance);
+                if($result[$i]->user_id == $my_id){
+                    $result[$i]->user_id = 0;
+                }
             }
             $arr_user = json_decode(json_encode($result), true);
-
             $arr_users = [];
             foreach ($arr_user as $user) {
                 $arr_use = array_values($user);
@@ -152,11 +155,17 @@ class SearchController extends Controller
     {
         $data = $request->all();
         $name = $data['name'];
-
+        $my_id = Auth::user()->id;
+        
         $user = User::select("*")
             ->Where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $name . "%")
             ->orWhere(DB::raw("concat(first_name, last_name)"), 'LIKE', "%" . $name . "%")
             ->get();
+        for($i = 0; $i < count($user); $i++){
+            if($user[$i]->id == $my_id){
+                unset($user[$i]);
+            }
+        }
 
         if (count($user) > 0) {
             return response()->json(UserResource::collection($user));
