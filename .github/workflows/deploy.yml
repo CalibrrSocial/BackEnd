@@ -27,10 +27,21 @@ jobs:
             PHPV=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
             sudo apt-get install -y "php${PHPV}-xml" "php${PHPV}-curl" || true
             
-            # Pull latest code using existing repository
-            git stash || true
-            git clean -fd || true
-            git pull origin ${{ secrets.BRANCH }} || git reset --hard origin/${{ secrets.BRANCH }}
+            # Fix permissions before git operations
+            sudo chown -R ubuntu:ubuntu .
+            sudo chmod -R 755 .
+            
+            # Pull latest code using a different approach
+            git fetch origin ${{ secrets.BRANCH }}:temp_branch || true
+            git checkout temp_branch || git checkout ${{ secrets.BRANCH }}
+            git reset --hard origin/${{ secrets.BRANCH }} || true
+            
+            # Fix permissions for Laravel directories
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo chmod -R 775 storage bootstrap/cache
+            sudo touch storage/logs/laravel.log
+            sudo chmod 775 storage/logs/laravel.log
+            sudo chown www-data:www-data storage/logs/laravel.log
             
             # Install dependencies
             composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-dom --ignore-platform-req=ext-simplexml
