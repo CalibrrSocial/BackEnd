@@ -560,12 +560,10 @@ class ProfileController extends Controller
             ], 404);
         } else {
             $user = User::whereid($id)->first();
-            $userLocation = LocationInfo::Where('user_id', $id)->first();
-            $userSocial = SocialSiteInfo::Where('user_id', $id)->get();
             if ($user) {
                 $user->delete($user);
-                $userLocation->delete($userLocation);
-                $userSocial->delete($userSocial);
+                $userLocation = LocationInfo::Where('user_id', $id)->delete();
+                $userSocial = SocialSiteInfo::Where('user_id', $id)->delete();
                 return response()->json([
                     'message' => Exception::DELETE_SUCCESS,
                 ], Response::HTTP_OK);
