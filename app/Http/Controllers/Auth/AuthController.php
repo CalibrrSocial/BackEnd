@@ -62,7 +62,7 @@ class AuthController extends Controller
         $check = DB::table('users')->where('email', $request->email)->where('password', '!=', null)->first();
         if($check){
             return response([
-                "status" =>'erorr',
+                "status" =>'error',
                 "message" => "Email already in use",
             ], Response::HTTP_BAD_REQUEST);
         }
@@ -91,15 +91,61 @@ class AuthController extends Controller
             
             $result['token'] = $response->json()['access_token'];
             $result['refresh_token'] = $response->json()['refresh_token'];
+            // dd(Auth::user());
+            $gost = Auth::user()->ghostMode;
+            if($gost == 1){
+                $gost = true;
+            }else{
+                $gost = false;
+            }
+            $user_id = Auth::user()->id;
             $result['user'] = [
-                'fullname' => Auth::user()->firstname . ' ' . Auth::user()->lastname,
+                'id' => "$user_id",
+                'firstName' => Auth::user()->firstname,
+                'lastName' => Auth::user()->lastname,
+                'ghostMode' => $gost,
                 'email' => Auth::user()->email,
                 'phone' => Auth::user()->phone,
+                'subscription' => Auth::user()->subscription,
+                'location' => [
+                    'latitude' => Auth::user()->latitude,
+                    'longitude' => Auth::user()->longitude
+                ]
             ];
+            $result['locationTimestamp'] = Auth::user()->created_at;
             return response()->json([
                 'token' => $result['token'],
                 'refresh_token' => $result['refresh_token'],
                 'user' => $result['user'],
+                'locationTimestamp' => $result['locationTimestamp'],
+                "pictureProfile"=> "string",
+                "pictureCover" => "string",
+                "personalInfo" => [
+                "dob" => null,
+                "gender" => null,
+                "bio" => null,
+                "education" => null,
+                "politics" => null,
+                "religion" => null,
+                "occupation" => null,
+                "sexuality" => null,
+                "relationship" => null,
+                ],
+                "socialInfo" => [
+                    "facebook" => null,
+                    "instagram" => null,
+                    "snapchat" => null,
+                    "linkedIn" => null,
+                    "twitter" => null,
+                    "resume" => null,
+                    "coverLetter" => null,
+                    "email" => null,
+                    "website" => null,
+                    "contact" => null
+                ],
+                  "liked" => true,
+                  "likeCount" => 0,
+                  "visitCount" => 0
             ], 200);
         } else {
             return response()->json([
