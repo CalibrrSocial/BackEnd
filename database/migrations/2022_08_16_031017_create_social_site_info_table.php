@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateLikeTable extends Migration
+class CreateSocialSiteInfoTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,11 @@ class CreateLikeTable extends Migration
      */
     public function up()
     {
-        Schema::create('likes', function (Blueprint $table) {
+        Schema::create('social_site_infos', function (Blueprint $table) {
             $table->id();
             $table->string('user_id');
-            $table->string('profile_id');
+            $table->string('social_id')->nullable()->default(null);
+            $table->string('social_username')->nullable()->default(null);
             $table->timestamps();
         });
     }
@@ -28,6 +29,6 @@ class CreateLikeTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('like');
+        Schema::dropIfExists('social_site_info');
     }
 }

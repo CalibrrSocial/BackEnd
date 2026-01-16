@@ -22,11 +22,10 @@ class CreateUsersTable extends Migration
             $table->string('lastname')->nullable();
             $table->boolean('ghostMode')->default(1);
             $table->string('subscription')->nullable();
-            $table->json('location')->nullable();
+            $table->string('location')->nullable();
             $table->dateTime('locationTimestamp')->nullable();
             $table->string('pictureProfile')->nullable();
             $table->string('pictureCover')->nullable();
-            $table->json('personalInfo')->nullable();
             $table->dateTime('dob')->nullable();
             $table->string('gender')->nullable();
             $table->string('bio')->nullable();
@@ -37,7 +36,6 @@ class CreateUsersTable extends Migration
             $table->string('sexuality')->nullable();
             $table->string('relationship')->nullable();
             $table->string('city')->nullable();
-            $table->json('socialInfo')->nullable();
             $table->boolean('liked')->default(false);
             $table->integer('likeCount')->default(0);
             $table->integer('visitCount')->default(0);

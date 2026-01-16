@@ -17,24 +17,59 @@ class UserResource extends JsonResource
   public function toArray($request)
   {
     $user_id = $this->id;
-    $like = DB::table('likes')->select('*')->where('friend_id', '=', $user_id)->get();
+    $like = DB::table('likes')->select('*')->where('profile_id', '=', $user_id)->get();
     $countLike = count($like);
 
     $locationInfo = DB::table('location_infos')->select('*')->where('user_id', '=', $user_id)->first();
     $latitude = !empty($locationInfo->latitude) ? (float)($locationInfo->latitude) : 0;
     $longitude = !empty($locationInfo->longitude) ? (float)($locationInfo->longitude) : 0;
 
-    $socialInfo = DB::table('social_infos')->select('*')->where('user_id', '=', $user_id)->first();
-    $facebook = !empty($socialInfo->facebook) ? $socialInfo->facebook : '';
-    $instagram = !empty($socialInfo->instagram) ? $socialInfo->instagram : '';
-    $snapchat = !empty($socialInfo->snapchat) ? $socialInfo->snapchat : '';
-    $linkedIn = !empty($socialInfo->linkedIn) ? $socialInfo->linkedIn : '';
-    $twitter = !empty($socialInfo->twitter) ? $socialInfo->twitter : '';
-    $resume = !empty($socialInfo->resume) ? $socialInfo->resume : '';
-    $coverLetter = !empty($socialInfo->coverLetter) ? $socialInfo->coverLetter : '';
-    $email = !empty($socialInfo->email) ? $socialInfo->email : '';
-    $website = !empty($socialInfo->website) ? $socialInfo->website : '';
-    $contact = !empty($socialInfo->contact) ? $socialInfo->contact : '';
+
+    $social_list = DB::table('social_sites')->select('*')->get();
+    $socialInfo = DB::table('social_site_infos')->select('*')->where('user_id', '=', $user_id)->get();
+
+    for ($i = 0; $i < count($social_list); $i++) {
+      $socials[$i]['name'] = $social_list[$i]->social_site_name;
+      $socials[$i]['id'] = $social_list[$i]->id;
+    }
+    if (count($socialInfo) > 0) {
+      for ($i = 0; $i < count($socialInfo); $i++) {
+        $social_id = $socialInfo[$i]->social_id;
+        $social_name[$i] = DB::table('social_sites')->select('social_site_name', 'id')->where('id', $social_id)->first();
+        $social_info[$i]['social_id'] = $social_name[$i]->id;
+        $social_info[$i]['info_name'] = $socialInfo[$i]->social_username;
+      }
+      $info = [];
+      if (count($socials) > 0) {
+        for ($i = 0; $i < count($socials); $i++) {
+          $name = $socials[$i]['name'];
+          $id = $socials[$i]['id'];
+          for ($j = 0; $j < count($social_info); $j++) {
+            if ($social_info[$j]['social_id'] == $id) {
+              $info_name = $social_info[$j]['info_name'];
+              break;
+            } else {
+              $info_name = 'null';
+            }
+          }
+          $ifo = [
+            "$name" => $info_name,
+          ];
+          $info = $info + $ifo;
+        }
+      }
+    } else {
+      $info = [];
+      for ($i = 0; $i < count($socials); $i++) {
+        $name = $socials[$i]['name'];
+        $id = $socials[$i]['id'];
+        $ifo = [
+          "$name" => 'null',
+        ];
+        $info = $info + $ifo;
+      }
+    }
+
     $ghostMode = $this->ghostMode == 1 ? true : false;
     $liked = $this->liked == 1 ? true : false;
 
@@ -64,17 +99,7 @@ class UserResource extends JsonResource
         'sexuality' => $this->sexuality,
         'city' => $this->city,
       ],
-      'socialInfo' => [
-        'facebook' => $facebook,
-        'instagram' => $instagram,
-        'linkedIn' => $linkedIn,
-        'twitter' => $twitter,
-        'resume' => $resume,
-        'coverLetter' => $coverLetter,
-        'email' => $email,
-        'website' => $website,
-        'contact' => $contact,
-      ],
+      'socialInfo' => $info,
       'liked' => $liked,
       'likeCount' => $countLike,
       'visitCount' => $this->visitCount,

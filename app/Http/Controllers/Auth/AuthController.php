@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\LocationInfo;
-use App\Models\SocialInfo;
+use App\Models\SocialSiteInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PasswordReset;
@@ -97,10 +97,6 @@ class AuthController extends Controller
         ]);
 
         $location = LocationInfo::create([
-            "user_id" => $user->id,
-        ]);
-
-        $social = SocialInfo::create([
             "user_id" => $user->id,
         ]);
 
@@ -226,11 +222,11 @@ class AuthController extends Controller
             'client_secret' => $clients->secret,
             'scope' => '',
         ]);
-        if(isset($response->json()['refresh_token'])){
+        if (isset($response->json()['refresh_token'])) {
             return response()->json([
                 'refresh_token' => $response->json()['refresh_token'],
             ]);
-        }else{
+        } else {
             return response()->json([
                 'massage' => 'Refresh fail',
                 'details' => 'Incorrect refresh token'

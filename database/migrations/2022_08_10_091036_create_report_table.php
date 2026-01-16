@@ -18,7 +18,7 @@ class CreateReportTable extends Migration
             $table->id();
             $table->string('user_id');
             $table->string('info');
-            $table->dateTime('dateCreated')->nullable()->default(null);;
+            $table->dateTime('dateCreated')->nullable()->default(null);
             $table->timestamps();
         });
     }
