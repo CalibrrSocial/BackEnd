@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
@@ -1761,19 +1762,19 @@ class ProfileController extends Controller
      *    in="path",
      *    required=true,
      * ),
-     *      @OA\RequestBody(
-     *          @OA\MediaType(
-     *              mediaType="multipart/form-data",
-     *              @OA\Schema(
-     *                  @OA\Property(
-     *                      description="Upload avatar",
-     *                      property="avatar",
-     *                      type="string",
-     *                      format="binary",
-     *                  ),
-     *              )
-     *          )
-     *      ),
+     * @OA\RequestBody(
+     *     @OA\MediaType(
+     *         mediaType="multipart/form-data",
+     *         @OA\Schema(
+     *             @OA\Property(
+     *                 description="Upload avatar",
+     *                 property="avatar",
+     *                 type="string",
+     *                 format="binary",
+     *             ),
+     *         )
+     *     )
+     * ),
      * @OA\Response(
      *    response=200,
      *    description="Success",
@@ -1793,6 +1794,19 @@ class ProfileController extends Controller
             $avatar = $request->file('avatar');
 
             if ($avatar != null) {
+                $rules = [
+                    'avatar' => 'mimes:png,jpg,jpeg',
+                ];
+
+                $validation = Validator::make($request->all(), $rules);
+
+                if ($validation->fails()) {
+                    return response([
+                        "message" => 'fail',
+                        "details" => $validation->errors()->all(),
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+
                 $avatar_path = $avatar->store('avatar', 's3');
                 $avatar_path = Storage::disk('s3')->url($avatar_path);
                 $user->update(['profile_pic' => $avatar_path]);
@@ -1804,6 +1818,83 @@ class ProfileController extends Controller
                 return response()->json([
                     'message' => 'fail',
                     'details' => 'Avatar is null'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+        }
+    }
+
+    /**
+     * @OA\Post(
+     * path="/profile/{id}/coverImage",
+     * summary="Upload user cover image",
+     * description="Upload user cover image",
+     * operationId="uploadCoverImage",
+     * security={{"bearerAuth":{}}},
+     * tags={"Profile"},
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(
+     *      type="string",
+     *    ),
+     *    in="path",
+     *    required=true,
+     * ),
+     * @OA\RequestBody(
+     *     @OA\MediaType(
+     *         mediaType="multipart/form-data",
+     *         @OA\Schema(
+     *             @OA\Property(
+     *                 description="Upload cover image",
+     *                 property="coverImage",
+     *                 type="string",
+     *                 format="binary",
+     *             ),
+     *         )
+     *     )
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="Success",
+     *   )
+     * )
+     */
+
+    public function uploadCoverImage(Request $request, $id)
+    {
+        if (!$id) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Id not found'
+            ], Response::HTTP_NOT_FOUND);
+        } else {
+            $user = User::where('id', $id)->first();
+            $avatar = $request->file('coverImage');
+
+            if ($avatar != null) {
+                $rules = [
+                    'coverImage' => 'mimes:png,jpg,jpeg',
+                ];
+
+                $validation = Validator::make($request->all(), $rules);
+
+                if ($validation->fails()) {
+                    return response([
+                        "message" => 'fail',
+                        "details" => $validation->errors()->all(),
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+
+                $ci_path = $avatar->store('coverImage', 's3');
+                $ci_path = Storage::disk('s3')->url($ci_path);
+                $user->update(['cover_image' => $ci_path]);
+                return response()->json([
+                    'message' => 'success',
+                    'details' => 'Upload cover image success'
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'message' => 'fail',
+                    'details' => 'Cover image is null'
                 ], Response::HTTP_BAD_REQUEST);
             }
         }

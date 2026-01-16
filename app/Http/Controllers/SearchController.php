@@ -114,7 +114,7 @@ class SearchController extends Controller
      * @OA\Post(
      * path="/search/name",
      * summary="Searches users by name",
-     * description="Searches users by name",
+     * description="Searches users by name (Search more than 3 letters)",
      * operationId="searchByName",
      * security={{"bearerAuth":{}}},
      * tags={"Search"},
@@ -138,27 +138,36 @@ class SearchController extends Controller
 
     public function searchByName(Request $request)
     {
+        $my_id = Auth::user()->id;
         $data = $request->all();
         $name = $data['name'];
-        $my_id = Auth::user()->id;
-
-        $user = User::select("*")
-            ->Where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $name . "%")
-            ->orWhere(DB::raw("concat(first_name, last_name)"), 'LIKE', "%" . $name . "%")
-            ->get();
-        for ($i = 0; $i < count($user); $i++) {
-            if ($user[$i]->id == $my_id) {
-                unset($user[$i]);
-            }
-        }
-
-        if (count($user) > 0) {
-            return response()->json(UserResource::collection($user));
-        } else {
+        
+        if(strlen($name) < 3) {
             return response()->json([
                 'message' => 'fail',
                 'details' => 'User not found'
             ], Response::HTTP_BAD_REQUEST);
+        }
+        else {
+            $user = User::select("*")
+            ->Where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $name . "%")
+            ->orWhere(DB::raw("concat(first_name, last_name)"), 'LIKE', "%" . $name . "%")
+            ->get();
+
+            for ($i = 0; $i < count($user); $i++) {
+                if ($user[$i]->id == $my_id) {
+                    unset($user[$i]);
+                }
+            }
+
+            if (count($user) > 0) {
+                return response()->json(UserResource::collection($user));
+            } else {
+                return response()->json([
+                    'message' => 'fail',
+                    'details' => 'User not found'
+                ], Response::HTTP_BAD_REQUEST);
+            }
         }
     }
 }

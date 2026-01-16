@@ -53,8 +53,9 @@ Route::group(['prefix' => 'profile'], function () {
     Route::get('/{id}/reports', [ProfileController::class, 'getUserReports'])->name('getUserReports');
     Route::put('/{id}/reports', [ProfileController::class, 'reportUser'])->name('reportUser');
 
-    //Upload Avatar
+    //Upload Image
     Route::post('/{id}/upload', [ProfileController::class, 'uploadAvatar'])->name('uploadAvatar');
+    Route::post('/{id}/coverImage', [ProfileController::class, 'uploadCoverImage'])->name('uploadCoverImage');
   });
 });
 
