@@ -30,11 +30,20 @@ jobs:
             # Fix permissions before git operations
             sudo chown -R ubuntu:ubuntu .
             sudo chmod -R 755 .
+
+            # Configure remote to use token and pull latest code
+            GIT_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+            if git remote get-url origin >/dev/null 2>&1; then
+              git remote set-url origin "$GIT_URL"
+            else
+              git remote add origin "$GIT_URL"
+            fi
+            git fetch --prune origin "${{ secrets.BRANCH }}"
+            git checkout -B "${{ secrets.BRANCH }}" "origin/${{ secrets.BRANCH }}"
             
-            # Pull latest code using a different approach
-            git fetch origin ${{ secrets.BRANCH }}:temp_branch || true
-            git checkout temp_branch || git checkout ${{ secrets.BRANCH }}
-            git reset --hard origin/${{ secrets.BRANCH }} || true
+            # Sanity check: ensure the latest UserResource is present
+            echo "--- Snippet from app/Http/Resources/UserResource.php ---"
+            grep -n "\$socials\[\$i\]\['name'\]" app/Http/Resources/UserResource.php || true
             
             # Fix permissions for Laravel directories
             sudo chown -R www-data:www-data storage bootstrap/cache
@@ -53,5 +62,5 @@ jobs:
             php artisan config:cache
             php artisan route:cache
             
-            # Restart Apache
-            sudo systemctl reload apache2
+            # Restart Apache (clear opcache)
+            sudo systemctl restart apache2
