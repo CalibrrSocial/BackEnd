@@ -92,8 +92,8 @@ class AuthController extends Controller
             "email" => $request->email,
             "password" => bcrypt($request->password),
             "phone" => $request->phone,
-            "firstname" => $request->firstName,
-            "lastname" => $request->lastName,
+            "first_name" => $request->firstName,
+            "last_name" => $request->lastName,
         ]);
 
         $location = LocationInfo::create([
