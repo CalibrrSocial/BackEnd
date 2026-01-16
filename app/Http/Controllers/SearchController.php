@@ -50,6 +50,7 @@ class SearchController extends Controller
 
     public function searchByDistance(Request $request)
     {
+        $authUser = Auth::user();
         $lat = $request->position['latitude'];
         $lon = $request->position['longitude'];
         // $min_amount = $request->minDistance['amount'];
@@ -117,11 +118,27 @@ class SearchController extends Controller
                     }
                 }
             }
+
+            // get users who has same courses
+            $query = DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->join('courses', function($join) use ($authUser) {
+                return $join->on('users.id', '=', 'courses.user_id')->whereIn('courses.name', function ($q) use ($authUser) {
+                    return $q->select('courses.name')->from('users')->where('users.id', $authUser->id)
+                        ->join('courses', 'users.id', '=', 'courses.user_id');
+                });
+            });
+
+            // get users who has same studying
+            $query = $query->union(DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->where('studying', $authUser->studying));
+
+
             $users = DB::table('users')
                 ->select('*')
                 ->where('ghost_mode_flag', false)
                 ->whereIn('id', $arr_user)
                 ->whereNotIn('id', $hide_user)
+                ->whereIn('users.id', function ($q) use ($query) {
+                    return $q->select('accounts.id')->from($query, 'accounts');
+                })
                 ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
                 ->get();
 
