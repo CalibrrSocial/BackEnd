@@ -96,30 +96,29 @@ class SearchController extends Controller
             ->having("distance", ">=", $min_amount)
             ->orderBy("distance")
             ->get();
-        foreach ($result as $re) {
-            unset($re->distance);
-        }
-        $arr_user = json_decode(json_encode($result), true);
-
-        $arr_users = [];
-        foreach ($arr_user as $user) {
-            $arr_use = array_values($user);
-            $arr_users = array_merge($arr_users, $arr_use);
-        }
-        $tempStr = implode(',', $arr_users);
-        $users = DB::table('users')
-            ->select('*')
-            ->whereIn('id', $arr_user)
-            ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
-            ->get();
-
         if (count($result) > 0) {
+            foreach ($result as $re) {
+                unset($re->distance);
+            }
+            $arr_user = json_decode(json_encode($result), true);
+
+            $arr_users = [];
+            foreach ($arr_user as $user) {
+                $arr_use = array_values($user);
+                $arr_users = array_merge($arr_users, $arr_use);
+            }
+            $tempStr = implode(',', $arr_users);
+            $users = DB::table('users')
+                ->select('*')
+                ->whereIn('id', $arr_user)
+                ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
+                ->get();
             return response()->json(UserResource::collection($users));
         } else {
             return response()->json([
                 'message' => 'Search failed',
                 'details' => 'User not found'
-            ], Response::HTTP_NOT_FOUND);
+            ], 400);
         }
     }
 
