@@ -1,0 +1,27 @@
+name: Deploy to EC2
+on:
+  push:
+    branches: [ feature/profile-liking ]  # change to main later
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.PROJECT_DIR }}
+            # Ensure remote points to your repo
+            (git remote -v | grep -q 'myrepo') || git remote add myrepo git@github.com:EYoung21/calibrr-social-backend.git
+            git remote set-url myrepo git@github.com:EYoung21/calibrr-social-backend.git
+            git fetch myrepo
+            git checkout -B ${{ secrets.BRANCH }} myrepo/${{ secrets.BRANCH }}
+            composer install -W --no-dev --optimize-autoloader
+            php artisan migrate --force
+            php artisan config:clear && php artisan cache:clear && php artisan config:cache && php artisan route:cache
+            sudo systemctl reload apache2 || sudo service apache2 reload
