@@ -1417,15 +1417,24 @@ class ProfileController extends Controller
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
-            if ($this->checkAuth($id)) {
-                $profileLikeId = $request->profileLikeId ?? $request->query('profileLikedId');
-                
-                // Check if this is an attribute like
-                $attributeCategory = $request->attributeCategory;
-                $attributeName = $request->attributeName;
+            // Verify user is authenticated (but don't check if they own this profile)
+            if (!Auth::check()) {
+                return response()->json([
+                    'message' => 'fail',
+                    'details' => 'Authentication required'
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            $authenticatedUserId = Auth::user()->id;
+            $profileLikeId = $request->profileLikeId ?? $request->query('profileLikedId');
+            
+            // Check if this is an attribute like
+            $attributeCategory = $request->attributeCategory;
+            $attributeName = $request->attributeName;
                 
                 \Log::info('likeProfile request', [
-                    'authId' => (string)$id,
+                    'authId' => (string)$authenticatedUserId,
+                    'profileId' => (string)$id,
                     'profileLikedId' => (string)($profileLikeId ?? ''),
                     'attributeCategory' => $attributeCategory,
                     'attributeName' => $attributeName,
@@ -1438,10 +1447,10 @@ class ProfileController extends Controller
 
                 // Handle attribute likes
                 if ($attributeCategory && $attributeName) {
-                    return $this->handleAttributeLike($id, $profileLikeId, $attributeCategory, $attributeName);
+                    return $this->handleAttributeLike($authenticatedUserId, $profileLikeId, $attributeCategory, $attributeName);
                 }
                 // Check if like record already exists (including soft-deleted)
-                $existingLike = ProfileLike::where('user_id', $id)
+                $existingLike = ProfileLike::where('user_id', $authenticatedUserId)
                     ->where('profile_id', $profileLikeId)
                     ->first();
                 
@@ -1453,37 +1462,37 @@ class ProfileController extends Controller
                         $existingLike->update(['is_deleted' => 0]);
                         $created = true;
                         \Log::info('likeProfile reactivated soft-deleted like', [
-                            'authId' => (string)$id,
+                            'authId' => (string)$authenticatedUserId,
                             'profileLikedId' => (string)$profileLikeId,
                         ]);
                     } else {
                         // Already liked and active
                         \Log::info('likeProfile already liked and active', [
-                            'authId' => (string)$id,
+                            'authId' => (string)$authenticatedUserId,
                             'profileLikedId' => (string)$profileLikeId,
                         ]);
                     }
                 } else {
                     // Create new like record
                     try {
-                        ProfileLike::create(['user_id' => $id, 'profile_id' => $profileLikeId]);
+                        ProfileLike::create(['user_id' => $authenticatedUserId, 'profile_id' => $profileLikeId]);
                         $created = true;
                         \Log::info('likeProfile created new like', [
-                            'authId' => (string)$id,
+                            'authId' => (string)$authenticatedUserId,
                             'profileLikedId' => (string)$profileLikeId,
                         ]);
                     } catch (\Throwable $e) {
                         \Log::error('likeProfile failed to create like', [
-                            'authId' => (string)$id,
+                            'authId' => (string)$authenticatedUserId,
                             'profileLikedId' => (string)$profileLikeId,
                             'error' => $e->getMessage(),
                         ]);
                     }
                 }
-                \Log::info('likeProfile state', ['created' => $created, 'self_like' => $id === $profileLikeId]);
+                \Log::info('likeProfile state', ['created' => $created, 'self_like' => $authenticatedUserId == $profileLikeId]);
                 // Email notification policy: refined logic for liking notifications, suppress for self-like
-                if ($created && $id !== $profileLikeId) {
-                    $event = DB::table('profile_like_events')->where('user_id',$id)->where('profile_id',$profileLikeId)->first();
+                if ($created && $authenticatedUserId != $profileLikeId) {
+                    $event = DB::table('profile_like_events')->where('user_id',$authenticatedUserId)->where('profile_id',$profileLikeId)->first();
                     $notifyCount = $event->notify_count ?? 0;
                     $canNotifyAgain = $event->can_notify_again ?? false;
                     
@@ -1493,33 +1502,33 @@ class ProfileController extends Controller
                         // First like from this person - always notify
                         $shouldNotify = true;
                         DB::table('profile_like_events')->insert([
-                            'user_id' => $id,
+                            'user_id' => $authenticatedUserId,
                             'profile_id' => $profileLikeId,
                             'notified_at' => now(),
                             'notify_count' => 1,
                             'can_notify_again' => false,
                         ]);
                         \Log::info('likeProfile first like notification', [
-                            'user_id' => $id,
+                            'user_id' => $authenticatedUserId,
                             'profile_id' => $profileLikeId,
                         ]);
                     } else if ($notifyCount === 1 && $canNotifyAgain) {
                         // Second like after an unlike - notify once more
                         $shouldNotify = true;
                         DB::table('profile_like_events')
-                            ->where('user_id',$id)->where('profile_id',$profileLikeId)
+                            ->where('user_id',$authenticatedUserId)->where('profile_id',$profileLikeId)
                             ->update([
                                 'notified_at' => now(), 
                                 'notify_count' => 2,
                                 'can_notify_again' => false
                             ]);
                         \Log::info('likeProfile second like after unlike notification', [
-                            'user_id' => $id,
+                            'user_id' => $authenticatedUserId,
                             'profile_id' => $profileLikeId,
                         ]);
                     } else {
                         \Log::info('likeProfile notification suppressed', [
-                            'user_id' => $id,
+                            'user_id' => $authenticatedUserId,
                             'profile_id' => $profileLikeId,
                             'notify_count' => $notifyCount,
                             'can_notify_again' => $canNotifyAgain,
@@ -1529,7 +1538,7 @@ class ProfileController extends Controller
                     if ($shouldNotify) {
                         // Include recipient email and sender name so Lambda doesn't need DB
                         $recipient = DB::table('users')->select('email','first_name','last_name')->where('id', $profileLikeId)->first();
-                        $sender = DB::table('users')->select('first_name','last_name')->where('id', $id)->first();
+                        $sender = DB::table('users')->select('first_name','last_name')->where('id', $authenticatedUserId)->first();
                         $additional = [];
                         if ($recipient) {
                             $additional['recipientEmail'] = $recipient->email ?? null;
@@ -1542,11 +1551,11 @@ class ProfileController extends Controller
                         }
                         \Log::info('likeProfile invoking lambda', [
                             'recipientUserId' => (int)$profileLikeId,
-                            'senderUserId' => (int)$id,
+                            'senderUserId' => (int)$authenticatedUserId,
                             'hasRecipientEmail' => !empty($additional['recipientEmail']),
                         ]);
                         try { 
-                            app(LambdaNotificationService::class)->notifyProfileLiked((int)$profileLikeId, (int)$id, $additional); 
+                            app(LambdaNotificationService::class)->notifyProfileLiked((int)$profileLikeId, (int)$authenticatedUserId, $additional); 
                         } catch (\Throwable $e) { 
                             \Log::error('likeProfile lambda notification failed', ['error' => $e->getMessage()]);
                         }
@@ -1606,12 +1615,20 @@ class ProfileController extends Controller
                 'details' => 'Id not found'
             ], Response::HTTP_NOT_FOUND);
         } else {
-            if ($this->checkAuth($id)) {
-                $profileLikeId = $request->profileLikeId ?? $request->query('profileLikedId');
-                
-                // Check if this is an attribute unlike
-                $attributeCategory = $request->attributeCategory;
-                $attributeName = $request->attributeName;
+            // Verify user is authenticated (but don't check if they own this profile)
+            if (!Auth::check()) {
+                return response()->json([
+                    'message' => 'fail',
+                    'details' => 'Authentication required'
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            $authenticatedUserId = Auth::user()->id;
+            $profileLikeId = $request->profileLikeId ?? $request->query('profileLikedId');
+            
+            // Check if this is an attribute unlike
+            $attributeCategory = $request->attributeCategory;
+            $attributeName = $request->attributeName;
                 
                 if (!$profileLikeId) {
                     return response()->json(['message' => 'fail','details' => 'profileLikedId missing'], Response::HTTP_BAD_REQUEST);
@@ -1619,23 +1636,23 @@ class ProfileController extends Controller
 
                 // Handle attribute unlikes
                 if ($attributeCategory && $attributeName) {
-                    return $this->handleAttributeUnlike($id, $profileLikeId, $attributeCategory, $attributeName);
+                    return $this->handleAttributeUnlike($authenticatedUserId, $profileLikeId, $attributeCategory, $attributeName);
                 }
-                $deleted = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->update(['is_deleted' => 1]);
+                $deleted = ProfileLike::where('user_id', $authenticatedUserId)->where('profile_id', $profileLikeId)->update(['is_deleted' => 1]);
                 
                 // Update notification tracking for unlike
                 if ($deleted > 0) {
-                    $event = DB::table('profile_like_events')->where('user_id',$id)->where('profile_id',$profileLikeId)->first();
+                    $event = DB::table('profile_like_events')->where('user_id',$authenticatedUserId)->where('profile_id',$profileLikeId)->first();
                     if ($event && $event->notify_count === 1) {
                         // Allow one more notification if they like again
                         DB::table('profile_like_events')
-                            ->where('user_id',$id)->where('profile_id',$profileLikeId)
+                            ->where('user_id',$authenticatedUserId)->where('profile_id',$profileLikeId)
                             ->update([
                                 'last_unliked_at' => now(),
                                 'can_notify_again' => true
                             ]);
                         \Log::info('unlikeProfile enabled can_notify_again', [
-                            'user_id' => $id,
+                            'user_id' => $authenticatedUserId,
                             'profile_id' => $profileLikeId,
                         ]);
                     }
@@ -1646,12 +1663,6 @@ class ProfileController extends Controller
                     'deleted' => $deleted > 0,
                     'message' => $deleted > 0 ? 'Profile unliked' : 'Not previously liked'
                 ]);
-            } else {
-                return response()->json([
-                    'message' => 'fail',
-                    'details' => 'Authorization'
-                ], Response::HTTP_BAD_REQUEST);
-            }
         }
     }
 
