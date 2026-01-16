@@ -32,11 +32,6 @@ class ProfileController extends Controller
             return false;
         }
     }
-    /**
-     * Get User
-     *
-     * @return json
-     */
 
     /**
      * @OA\Get(
@@ -89,12 +84,6 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update User Profile
-     *
-     * @return json
-     */
-
-    /**
      * @OA\Post(
      * path="/profile/{id}",
      * summary="Update a user's personalInfo and socialInfo",
@@ -131,6 +120,14 @@ class ProfileController extends Controller
      *          @OA\Property(property="sexuality", type="string",example="No"),
      *          @OA\Property(property="relationship", type="string",example="No"),
      *          @OA\Property(property="city", type="string",example="No"),
+     *          @OA\Property(property="favorite_music", type="string",example="hello"),
+     *          @OA\Property(property="favorite_tv", type="string",example=""),
+     *          @OA\Property(property="favorite_games", type="string",example=""),
+     *          @OA\Property(property="greek_life", type="string",example=""),
+     *          @OA\Property(property="studying", type="string",example=""),
+     *          @OA\Property(property="club", type="object",
+     *          @OA\Property(property="club", type="string",example="Cheerleading"),
+     *          @OA\Property(property="jersey_number", type="string",example="23"),)
      *          ),
      * 
      *          @OA\Property(property="socialInfo", type="object", 
@@ -536,6 +533,14 @@ class ProfileController extends Controller
                     $data['sexuality'] = !empty($request->personalInfo['sexuality']) ? $request->personalInfo['sexuality'] : '';
                     $data['relationship'] = !empty($request->personalInfo['relationship']) ? $request->personalInfo['relationship'] : '';
                     $data['city'] = !empty($request->personalInfo['city']) ? $request->personalInfo['city'] : '';
+
+                    $data['favorite_music'] = !empty($request->personalInfo['favorite_music']) ? $request->personalInfo['favorite_music'] : '';
+                    $data['favorite_tv'] = !empty($request->personalInfo['favorite_tv']) ? $request->personalInfo['favorite_tv'] : '';
+                    $data['favorite_games'] = !empty($request->personalInfo['favorite_games']) ? $request->personalInfo['favorite_games'] : '';
+                    $data['greek_life'] = !empty($request->personalInfo['greek_life']) ? $request->personalInfo['greek_life'] : '';
+                    $data['studying'] = !empty($request->personalInfo['studying']) ? $request->personalInfo['studying'] : '';
+                    $data['club'] = !empty($request->personalInfo->club['club']) ? $request->personalInfo->club['club'] : '';
+                    $data['jersey_number'] = !empty($request->personalInfo->club['jersey_number']) ? $request->personalInfo->club['jersey_number'] : '';
                     $ghost_mode_flag = 0;
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
@@ -552,6 +557,13 @@ class ProfileController extends Controller
                         'sexuality' => $data['sexuality'],
                         'relationship' => $data['relationship'],
                         'city' => $data['city'],
+                        'favorite_music' => $data['favorite_music'],
+                        'favorite_tv' => $data['favorite_tv'],
+                        'favorite_games' => $data['favorite_games'],
+                        'greek_life' => $data['greek_life'],
+                        'studying' => $data['studying'],
+                        'club' => $data['club'],
+                        'jersey_number' => $data['jersey_number'],
                         'ghost_mode_flag' => $ghost_mode_flag,
                     ]);
                     return response()->json(new UserResource($user));
@@ -569,12 +581,6 @@ class ProfileController extends Controller
             }
         }
     }
-
-    /**
-     * Delete User.
-     *
-     * @return json
-     */
 
     /**
      * @OA\Delete(
@@ -633,12 +639,6 @@ class ProfileController extends Controller
             }
         }
     }
-
-    /**
-     * Update User Profile Location
-     *
-     * @return json
-     */
 
     /**
      * @OA\Post(
@@ -1119,12 +1119,6 @@ class ProfileController extends Controller
     }
 
     /**
-     * Get User Relationships
-     *
-     * @return json
-     */
-
-    /**
      * @OA\Get(
      * path="/profile/{id}/relationships",
      * summary="Gets user's relationships",
@@ -1173,12 +1167,6 @@ class ProfileController extends Controller
             }
         }
     }
-
-    /**
-     * Get Relationship
-     *
-     * @return json
-     */
 
     /**
      * @OA\Get(
@@ -1239,12 +1227,6 @@ class ProfileController extends Controller
             }
         }
     }
-
-    /**
-     * Request Friend
-     *
-     * @return json
-     */
 
     /**
      * @OA\Put(
@@ -1359,12 +1341,6 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update Friend
-     *
-     * @return json
-     */
-
-    /**
      * @OA\Post(
      * path="/profile/{id}/relationships/{friendId}",
      * summary="Update user's friend status - accept/reject/block",
@@ -1462,12 +1438,6 @@ class ProfileController extends Controller
     }
 
     /**
-     * Unblock User
-     *
-     * @return json
-     */
-
-    /**
      * @OA\Delete(
      * path="/profile/{id}/relationships/{friendId}",
      * summary="Unblock user's friend - removing their relationship",
@@ -1538,12 +1508,6 @@ class ProfileController extends Controller
     }
 
     /**
-     * Get Likes
-     *
-     * @return json
-     */
-
-    /**
      * @OA\Get(
      * path="/profile/{id}/likes",
      * summary="Gets the number of likes a user's profile has",
@@ -1589,12 +1553,6 @@ class ProfileController extends Controller
             }
         }
     }
-
-    /**
-     * Like Profile
-     *
-     * @return json
-     */
 
     /**
      * @OA\Post(
@@ -1665,12 +1623,6 @@ class ProfileController extends Controller
     }
 
     /**
-     * Unlike Profile
-     *
-     * @return json
-     */
-
-    /**
      * @OA\Delete(
      * path="/profile/{id}/likes",
      * summary="Unlike user profile",
@@ -1734,12 +1686,6 @@ class ProfileController extends Controller
     }
 
     /**
-     * Get User Report
-     *
-     * @return json
-     */
-
-    /**
      * @OA\Get(
      * path="/profile/{id}/reports",
      * summary="Gets the reports that were submitted by the user",
@@ -1793,12 +1739,6 @@ class ProfileController extends Controller
             }
         }
     }
-
-    /**
-     * Report User 
-     *
-     * @return json
-     */
 
     /**
      * @OA\Put(
@@ -1884,6 +1824,7 @@ class ProfileController extends Controller
             }
         }
     }
+
     /**
      * @OA\Post(
      * path="/profile/{id}/upload",
@@ -2049,7 +1990,7 @@ class ProfileController extends Controller
                     'message' => 'fail',
                     'details' => 'Authorization'
                 ], Response::HTTP_BAD_REQUEST);
-            }
+            }A
         }
     }
 }
