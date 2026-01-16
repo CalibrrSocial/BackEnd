@@ -423,7 +423,7 @@ class ProfileController extends Controller
             } else {
                 return response()->json([
                     'massage' => 'Fail',
-                    'details' => 'User is not registered'
+                    'details' => 'User is not reglationship'
                 ], 400);
             }
         }
@@ -795,7 +795,7 @@ class ProfileController extends Controller
         if (!$id) {
             return 0;
         } else {
-            $user = Like::Where('user_id', $id)->get();
+            $user = Like::Where('friend_id', $id)->get();
             if ($user) {
                 return count($user);
             } else {
@@ -1054,9 +1054,7 @@ class ProfileController extends Controller
                     ]
                 );
                 return response()->json([
-                    'status' => "Success",
-                    'message' => Exception::SHOW,
-                    'report' => new ReportResource($existReport),
+                    "Success",
                 ], Response::HTTP_OK);
             } else if ($noExistReport) {
                 $noExistReport->create(

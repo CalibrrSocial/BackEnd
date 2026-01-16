@@ -269,7 +269,6 @@ class AuthController extends Controller
             $data = [
                 'my_password' => Str::random(7) . random_int(0, 9)
             ];
-            dd($data);
             $mail_details = [
                 'email' => $request->email,
                 'subject' => 'Forgot password',
@@ -313,8 +312,8 @@ class AuthController extends Controller
      *    description="changePasswordForgot",
      *    @OA\JsonContent(
      *       required={"oldPassword","newPassword"},
-     *       @OA\Property(property="oldPassword", type="string", format="password", example="123456"),
-     *       @OA\Property(property="newPassword", type="string", format="password", example="123456pix"),
+     *       @OA\Property(property="oldPassword", type="string", format="password", example="123456aA"),
+     *       @OA\Property(property="newPassword", type="string", format="password", example="123456bB"),
      *    ),
      * ),
      * @OA\Response(
