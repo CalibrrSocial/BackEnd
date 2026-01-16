@@ -134,7 +134,7 @@ class ProfileController extends Controller
      *          @OA\Property(property="facebook", type="string",example="No"),
      *          @OA\Property(property="instagram", type="string",example="No"),
      *          @OA\Property(property="snapchat", type="string",example="No"),
-     *          @OA\Property(property="VSCO", type="string",example="No"),
+     *          @OA\Property(property="vsco", type="string",example="No"),
      *          @OA\Property(property="tiktok", type="string",example="No"),
      *          @OA\Property(property="twitter", type="string",example="No"),
      *          @OA\Property(property="resume", type="string",example="No"),
@@ -187,7 +187,7 @@ class ProfileController extends Controller
                     $dataSocial['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
                     $dataSocial['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
                     $dataSocial['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
-                    $dataSocial['VSCO'] = !empty($request->socialInfo['VSCO']) ? $request->socialInfo['VSCO'] : '';
+                    $dataSocial['vsco'] = !empty($request->socialInfo['vsco']) ? $request->socialInfo['vsco'] : '';
                     $dataSocial['tiktok'] = !empty($request->socialInfo['tiktok']) ? $request->socialInfo['tiktok'] : '';
                     $dataSocial['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
                     $dataSocial['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
@@ -292,8 +292,8 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['VSCO']) {
-                        $name = "VSCO";
+                    if ($dataSocial['vsco']) {
+                        $name = "vsco";
                         $social_name = DB::table('social_sites')
                             ->select("*")
                             ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
@@ -310,7 +310,7 @@ class ProfileController extends Controller
                             $userSocialInfo->update(
                                 [
                                     'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['VSCO']
+                                    'social_siteUsername' => $dataSocial['vsco']
                                 ]
                             );
                         } else {
@@ -318,7 +318,7 @@ class ProfileController extends Controller
                                 [
                                     'user_id' => $id,
                                     'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['VSCO']
+                                    'social_siteUsername' => $dataSocial['vsco']
                                 ]
                             );
                         }
@@ -717,7 +717,7 @@ class ProfileController extends Controller
      *          @OA\Property(property="facebook", type="string",example="No"),
      *          @OA\Property(property="instagram", type="string",example="No"),
      *          @OA\Property(property="snapchat", type="string",example="No"),
-     *          @OA\Property(property="VSCO", type="string",example="No"),
+     *          @OA\Property(property="vsco", type="string",example="No"),
      *          @OA\Property(property="tiktok", type="string",example="No"),
      *          @OA\Property(property="twitter", type="string",example="No"),
      *          @OA\Property(property="resume", type="string",example="No"),
@@ -770,7 +770,7 @@ class ProfileController extends Controller
                     $dataSocial['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
                     $dataSocial['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
                     $dataSocial['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
-                    $dataSocial['VSCO'] = !empty($request->socialInfo['VSCO']) ? $request->socialInfo['VSCO'] : '';
+                    $dataSocial['vsco'] = !empty($request->socialInfo['vsco']) ? $request->socialInfo['vsco'] : '';
                     $dataSocial['tiktok'] = !empty($request->socialInfo['tiktok']) ? $request->socialInfo['tiktok'] : '';
                     $dataSocial['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
                     $dataSocial['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
@@ -875,8 +875,8 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['VSCO']) {
-                        $name = "VSCO";
+                    if ($dataSocial['vsco']) {
+                        $name = "vsco";
                         $social_name = DB::table('social_sites')
                             ->select("*")
                             ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
@@ -893,7 +893,7 @@ class ProfileController extends Controller
                             $userSocialInfo->update(
                                 [
                                     'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['VSCO']
+                                    'social_siteUsername' => $dataSocial['vsco']
                                 ]
                             );
                         } else {
@@ -901,7 +901,7 @@ class ProfileController extends Controller
                                 [
                                     'user_id' => $id,
                                     'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['VSCO']
+                                    'social_siteUsername' => $dataSocial['vsco']
                                 ]
                             );
                         }
