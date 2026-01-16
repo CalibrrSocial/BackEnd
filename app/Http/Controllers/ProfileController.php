@@ -1707,8 +1707,8 @@ class ProfileController extends Controller
                 } catch (\Throwable $e) {
                     // duplicate -> already liked
                 }
-                // First-like notification (once per pair)
-                if ($created && !DB::table('profile_like_events')->where('user_id',$id)->where('profile_id',$profileLikeId)->exists()) {
+                // First-like notification (once per pair), suppress for self-like
+                if ($created && $id !== $profileLikeId && !DB::table('profile_like_events')->where('user_id',$id)->where('profile_id',$profileLikeId)->exists()) {
                     DB::table('profile_like_events')->insert([
                         'user_id' => $id,
                         'profile_id' => $profileLikeId,
