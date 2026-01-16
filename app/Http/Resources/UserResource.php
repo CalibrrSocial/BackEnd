@@ -74,7 +74,8 @@ class UserResource extends JsonResource
     // Whether the authenticated viewer liked this user
     $viewerId = auth()->check() ? auth()->id() : null;
     $like = false;
-    if ($viewerId && $viewerId != $user_id) {
+    if ($viewerId) {
+      // Consider self-like as liked as well
       $liked = DB::table('profile_likes')->where('user_id', $viewerId)->where('profile_id', $user_id)->first();
       $like = $liked ? true : false;
     }
