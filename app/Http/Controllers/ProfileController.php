@@ -51,11 +51,12 @@ class ProfileController extends Controller
     {
         $user = User::Where('id', $id)->first();
         if ($user) {
-            return response()->json([
-                'status' => "Success",
-                'message' => Exception::SHOW,
-                'user' => new UserResource($user),
-            ], Response::HTTP_OK);
+            // return response()->json([
+            //     'status' => "Success",
+            //     'message' => Exception::SHOW,
+            //     'user' => new UserResource($user),
+            // ], Response::HTTP_OK);
+            return response()->json(new UserResource($user), Response::HTTP_OK);
         } else {
             return response()->json([
                 'message' => 'User is not registered'
