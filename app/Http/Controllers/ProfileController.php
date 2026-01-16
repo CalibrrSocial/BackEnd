@@ -577,12 +577,12 @@ class ProfileController extends Controller
                     DB::beginTransaction();
                     try {
                         // update best friends
-                        if ($request->bestFriends) {
+                        if (isset($request->bestFriends)) {
                             $this->updateBestFriends($request, $user);
                         }
 
                         // update courses
-                        if ($request->courses) {
+                        if (isset($request->courses)) {
                             $this->updateCourses($request, $user);
                         }
 
@@ -2083,7 +2083,7 @@ class ProfileController extends Controller
         ])->validate();
 
         // delete old records
-        Friend::where('user_id', $user->id)->delete();
+        $count = Friend::where('user_id', $user->id)->delete();
 
         // create new records
         $now = now();
