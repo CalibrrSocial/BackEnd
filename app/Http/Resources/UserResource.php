@@ -135,9 +135,14 @@ class UserResource extends JsonResource
           'jersey_number' => $this->jersey_number,
         ],
       ],
-      'socialInfo' => array_map(function ($item) {
-        return $item == 'null' ? '' : $item ;
-      }, $info),
+      // Keep socialInfo as an object with site-name keys; normalize 'null' → ''
+      'socialInfo' => (function($arr) {
+        $normalized = [];
+        foreach ($arr as $k => $v) {
+          $normalized[$k] = ($v === 'null' || $v === null) ? '' : $v;
+        }
+        return $normalized;
+      })($info),
       'liked' => $like,
       'likeCount' => $countLike,
       'visitCount' => $count_visit,
