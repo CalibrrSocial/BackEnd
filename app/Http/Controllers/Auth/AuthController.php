@@ -38,12 +38,12 @@ class AuthController extends Controller
      *    required=true,
      *    description="Pass user credentials",
      *    @OA\JsonContent(
-     *       required={"email","password","phone","firstname","lastname"},
+     *       required={"email","password","phone","firstName","lastname"},
      *       @OA\Property(property="email", type="string",example="example@gmail.com"),
      *       @OA\Property(property="password", type="string", example="123456"),
      *       @OA\Property(property="phone", type="string", example="0902050807"),
-     *       @OA\Property(property="firstname", type="string", example="User"),
-     *       @OA\Property(property="lastname", type="string", example="Name"),
+     *       @OA\Property(property="firstName", type="string", example="User"),
+     *       @OA\Property(property="lastName", type="string", example="Name"),
      * 
      *    ),
      * ),
@@ -57,27 +57,55 @@ class AuthController extends Controller
     {
         $this->validate($request, [
             'password' => 'required|min:6',
-            function ($attribute, $value, $fail) {
-                if (User::whereEmail($value)->count() > 0) {
-                    $fail($attribute . ' is already used.');
-                }
-            },
+            'email' => 'email:rfc,dns',
         ]);
+        $check = DB::table('users')->where('email', $request->email)->where('password', '!=', null)->first();
+        if($check){
+            return response([
+                "status" =>'erorr',
+                "message" => "Email already in use",
+            ], Response::HTTP_BAD_REQUEST);
+        }
         $user = User::create([
             "email" => $request->email,
             "password" => bcrypt($request->password),
             "phone" => $request->phone,
-            "firstname" => $request->firstname,
-            "lastname" => $request->lastname,
+            "firstname" => $request->firstName,
+            "lastname" => $request->lastName,
         ]);
-        if ($user) {
+        $data = [
+            'email' => $request->email,
+            'password' => $request->password
+        ];
+        $clients = DB::table('oauth_clients')->select('*')->where('provider', 'users')->orderByRaw('id DESC')->first();
+        if (auth()->attempt($data)) {
+            $path = env('APP_URL') . '/oauth/token';
+            $response = Http::asForm()->post($path, [
+                'grant_type' => 'password',
+                'client_id' => $clients->id,
+                'client_secret' => $clients->secret,
+                'username' => $data['email'],
+                'password' => $data['password'],
+                'scope' => '',
+            ]);
+            
+            $result['token'] = $response->json()['access_token'];
+            $result['refresh_token'] = $response->json()['refresh_token'];
+            $result['user'] = [
+                'fullname' => Auth::user()->firstname . ' ' . Auth::user()->lastname,
+                'email' => Auth::user()->email,
+                'phone' => Auth::user()->phone,
+            ];
             return response()->json([
-                'user' => $user,
+                'token' => $result['token'],
+                'refresh_token' => $result['refresh_token'],
+                'user' => $result['user'],
             ], 200);
         } else {
             return response()->json([
-                'message' => 'Register fail',
-            ], Response::HTTP_BAD_REQUEST);
+                'status' => 'Login fail',
+                'message' => 'Incorrect email or password'
+            ], 401);
         }
     }
 
