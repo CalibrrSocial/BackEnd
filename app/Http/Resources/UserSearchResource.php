@@ -34,11 +34,11 @@ class UserSearchResource extends JsonResource
                 'dob' => $this->dob,
                 'education' => $this->education,
                 'city' => $this->city,
-                'greek_life' => $this->greek_life,
-                'studying' => $this->studying,
+                'greek_life' => $this->greek_life ?? null,
+                'studying' => $this->studying ?? null,
                 'club' => [
-                    'club' => $this->club,
-                    'jersey_number' => $this->jersey_number,
+                    'club' => $this->club ?? null,
+                    'jersey_number' => $this->jersey_number ?? null,
                 ],
             ],
             'courses' => $this->courses ?? []

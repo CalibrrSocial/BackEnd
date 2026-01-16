@@ -57,7 +57,22 @@ class SearchController extends Controller
             : (\Schema::hasColumn('users', 'pictureProfile')
                 ? DB::raw('pictureProfile as profile_pic')
                 : DB::raw('NULL as profile_pic'));
-        $fields = ['users.id', 'first_name', 'last_name', $picField, 'location', 'city', 'dob', 'studying', 'education', 'club', 'jersey_number', 'greek_life'];
+        // Build fields array dynamically based on existing columns
+        $fields = ['users.id', 'first_name', 'last_name', $picField, 'location', 'city', 'dob', 'education'];
+        
+        // Add optional columns if they exist
+        if (\Schema::hasColumn('users', 'studying')) {
+            $fields[] = 'studying';
+        }
+        if (\Schema::hasColumn('users', 'club')) {
+            $fields[] = 'club';
+        }
+        if (\Schema::hasColumn('users', 'jersey_number')) {
+            $fields[] = 'jersey_number';
+        }
+        if (\Schema::hasColumn('users', 'greek_life')) {
+            $fields[] = 'greek_life';
+        }
         $lat = $request->position['latitude'];
         $lon = $request->position['longitude'];
         // $min_amount = $request->minDistance['amount'];
@@ -187,7 +202,22 @@ class SearchController extends Controller
             : (\Schema::hasColumn('users', 'pictureProfile')
                 ? DB::raw('pictureProfile as profile_pic')
                 : DB::raw('NULL as profile_pic'));
-        $fields = ['users.id', 'first_name', 'last_name', $picField, 'location', 'city', 'dob', 'studying', 'education', 'club', 'jersey_number', 'greek_life'];
+        // Build fields array dynamically based on existing columns
+        $fields = ['users.id', 'first_name', 'last_name', $picField, 'location', 'city', 'dob', 'education'];
+        
+        // Add optional columns if they exist
+        if (\Schema::hasColumn('users', 'studying')) {
+            $fields[] = 'studying';
+        }
+        if (\Schema::hasColumn('users', 'club')) {
+            $fields[] = 'club';
+        }
+        if (\Schema::hasColumn('users', 'jersey_number')) {
+            $fields[] = 'jersey_number';
+        }
+        if (\Schema::hasColumn('users', 'greek_life')) {
+            $fields[] = 'greek_life';
+        }
 
         $courseNames = Course::where('user_id', $user->id)->get();
         $courseNames = $courseNames->map(function ($i) {

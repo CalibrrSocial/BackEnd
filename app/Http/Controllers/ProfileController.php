@@ -578,14 +578,27 @@ class ProfileController extends Controller
                     $data['career_aspirations'] = $pi['careerAspirations'] ?? $pi['career_aspirations'] ?? $user->career_aspirations;
                     $data['postgraduate'] = $pi['postgraduate'] ?? $user->postgraduate;
                     $data['postgraduate_plans'] = $pi['postgraduatePlans'] ?? $pi['postgraduate_plans'] ?? $user->postgraduate_plans;
-                    $data['favorite_music'] = $pi['favorite_music'] ?? ($pi['favoriteMusic'] ?? $user->favorite_music);
-                    $data['favorite_tv'] = $pi['favorite_tv'] ?? ($pi['favoriteTV'] ?? $user->favorite_tv);
-                    $data['favorite_games'] = $pi['favorite_games'] ?? ($pi['favoriteGame'] ?? $pi['favoriteGames'] ?? $user->favorite_games);
-                    $data['greek_life'] = $pi['greek_life'] ?? ($pi['greekLife'] ?? $user->greek_life);
-                    $data['studying'] = $pi['studying'] ?? $user->studying;
+                    $data['favorite_music'] = $pi['favorite_music'] ?? ($pi['favoriteMusic'] ?? ($user->favorite_music ?? null));
+                    $data['favorite_tv'] = $pi['favorite_tv'] ?? ($pi['favoriteTV'] ?? ($user->favorite_tv ?? null));
+                    $data['favorite_games'] = $pi['favorite_games'] ?? ($pi['favoriteGame'] ?? $pi['favoriteGames'] ?? ($user->favorite_games ?? null));
+                    $data['greek_life'] = $pi['greek_life'] ?? ($pi['greekLife'] ?? ($user->greek_life ?? null));
+                    // Map studying to education field if studying doesn't exist
+                    if (\Schema::hasColumn('users', 'studying')) {
+                        $data['studying'] = $pi['studying'] ?? $user->studying;
+                    } else {
+                        // Store studying/major in education field if studying column doesn't exist
+                        if (isset($pi['studying']) && !empty($pi['studying'])) {
+                            $data['education'] = $pi['studying'];
+                        }
+                    }
+                    
                     $club = $pi['club'] ?? [];
-                    $data['club'] = $club['club'] ?? $user->club;
-                    $data['jersey_number'] = $club['jersey_number'] ?? ($club['number'] ?? $user->jersey_number);
+                    if (\Schema::hasColumn('users', 'club')) {
+                        $data['club'] = $club['club'] ?? $user->club;
+                    }
+                    if (\Schema::hasColumn('users', 'jersey_number')) {
+                        $data['jersey_number'] = $club['jersey_number'] ?? ($club['number'] ?? $user->jersey_number);
+                    }
                     $ghost_mode_flag = 0;
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
