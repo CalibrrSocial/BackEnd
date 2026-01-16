@@ -24,7 +24,8 @@ class UserSearchResource extends JsonResource
             'id' => "$this->id",
             'firstName' => $this->first_name,
             'lastName' => $this->last_name,
-            'pictureProfile' => $this->profile_pic,
+            // Support either 'profile_pic' or 'pictureProfile'
+            'pictureProfile' => $this->profile_pic ?? $this->pictureProfile ?? null,
             'location' => [
                 'latitude' => $latitude,
                 'longitude' => $longitude,

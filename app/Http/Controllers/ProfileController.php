@@ -1675,11 +1675,16 @@ class ProfileController extends Controller
     {
         $page = max(1, (int)$request->query('cursor', 1));
         $perPage = max(1, min(100, (int)$request->query('limit', 20)));
+        $avatarSelect = \Schema::hasColumn('users', 'profile_pic')
+            ? 'users.profile_pic as avatarUrl'
+            : (\Schema::hasColumn('users', 'pictureProfile')
+                ? 'users.pictureProfile as avatarUrl'
+                : 'NULL as avatarUrl');
         $p = DB::table('profile_likes')
             ->join('users', 'profile_likes.user_id', '=', 'users.id')
             ->where('profile_likes.profile_id', $id)
             ->orderBy('profile_likes.id', 'desc')
-            ->selectRaw('CAST(users.id AS CHAR) as id, users.first_name as firstName, users.last_name as lastName, users.profile_pic as avatarUrl')
+            ->selectRaw('CAST(users.id AS CHAR) as id, users.first_name as firstName, users.last_name as lastName, ' . $avatarSelect)
             ->paginate($perPage, ['*'], 'page', $page);
         return response()->json([
             'data' => $p->items(),
@@ -1692,11 +1697,16 @@ class ProfileController extends Controller
     {
         $page = max(1, (int)$request->query('cursor', 1));
         $perPage = max(1, min(100, (int)$request->query('limit', 20)));
+        $avatarSelect = \Schema::hasColumn('users', 'profile_pic')
+            ? 'users.profile_pic as avatarUrl'
+            : (\Schema::hasColumn('users', 'pictureProfile')
+                ? 'users.pictureProfile as avatarUrl'
+                : 'NULL as avatarUrl');
         $p = DB::table('profile_likes')
             ->join('users', 'profile_likes.profile_id', '=', 'users.id')
             ->where('profile_likes.user_id', $id)
             ->orderBy('profile_likes.id', 'desc')
-            ->selectRaw('CAST(users.id AS CHAR) as id, users.first_name as firstName, users.last_name as lastName, users.profile_pic as avatarUrl')
+            ->selectRaw('CAST(users.id AS CHAR) as id, users.first_name as firstName, users.last_name as lastName, ' . $avatarSelect)
             ->paginate($perPage, ['*'], 'page', $page);
         return response()->json([
             'data' => $p->items(),

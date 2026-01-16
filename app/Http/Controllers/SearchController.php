@@ -51,7 +51,13 @@ class SearchController extends Controller
     public function searchByDistance(Request $request)
     {
         $authUser = Auth::user();
-        $fields = ['users.id', 'first_name', 'last_name', 'profile_pic', 'location', 'city', 'dob', 'studying', 'education', 'club', 'jersey_number', 'greek_life'];
+        // Select profile picture column based on schema; alias to profile_pic for consistency
+        $picField = \Schema::hasColumn('users', 'profile_pic')
+            ? DB::raw('profile_pic')
+            : (\Schema::hasColumn('users', 'pictureProfile')
+                ? DB::raw('pictureProfile as profile_pic')
+                : DB::raw('NULL as profile_pic'));
+        $fields = ['users.id', 'first_name', 'last_name', $picField, 'location', 'city', 'dob', 'studying', 'education', 'club', 'jersey_number', 'greek_life'];
         $lat = $request->position['latitude'];
         $lon = $request->position['longitude'];
         // $min_amount = $request->minDistance['amount'];
@@ -175,7 +181,13 @@ class SearchController extends Controller
     {
         $user = Auth::user();
 
-        $fields = ['users.id', 'first_name', 'last_name', 'profile_pic', 'location', 'city', 'dob', 'studying', 'education', 'club', 'jersey_number', 'greek_life'];
+        // Select profile picture column based on schema; alias to profile_pic for consistency
+        $picField = \Schema::hasColumn('users', 'profile_pic')
+            ? DB::raw('profile_pic')
+            : (\Schema::hasColumn('users', 'pictureProfile')
+                ? DB::raw('pictureProfile as profile_pic')
+                : DB::raw('NULL as profile_pic'));
+        $fields = ['users.id', 'first_name', 'last_name', $picField, 'location', 'city', 'dob', 'studying', 'education', 'club', 'jersey_number', 'greek_life'];
 
         $courseNames = Course::where('user_id', $user->id)->get();
         $courseNames = $courseNames->map(function ($i) {
