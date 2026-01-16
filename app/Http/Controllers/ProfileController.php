@@ -2041,9 +2041,9 @@ class ProfileController extends Controller
      *    required=true,
      *    description="Report details",
      *    @OA\JsonContent(
-     *       required={"reason_category","info"},
-     *       @OA\Property(property="reason_category", type="string", example="harassment"),
-     *       @OA\Property(property="info", type="string", example="User was sending inappropriate messages"),
+     *       required={"reason_category"},
+     *       @OA\Property(property="reason_category", type="string", example="This user was sending inappropriate messages"),
+     *       @OA\Property(property="info", type="string", example="Additional details (optional)"),
      *    ),
      * ),
      * @OA\Response(response=200, description="Success"),
@@ -2064,18 +2064,10 @@ class ProfileController extends Controller
         }
         
         // Validate required fields
-        if (!$request->reason_category || !$request->info) {
+        if (!$request->reason_category) {
             return response()->json([
                 'message' => 'fail',
-                'details' => 'Reason category and description are required'
-            ], Response::HTTP_BAD_REQUEST);
-        }
-        
-        // Validate reason category
-        if (!array_key_exists($request->reason_category, Report::REASON_CATEGORIES)) {
-            return response()->json([
-                'message' => 'fail',
-                'details' => 'Invalid reason category'
+                'details' => 'Reason is required'
             ], Response::HTTP_BAD_REQUEST);
         }
         
@@ -2100,8 +2092,8 @@ class ProfileController extends Controller
             $report = Report::create([
                 'user_id' => $currentUserId,
                 'reported_user_id' => $reportedUserId,
-                'info' => $request->info,
-                'reason_category' => $request->reason_category,
+                'info' => $request->info ?? '', // Optional additional info
+                'reason_category' => $request->reason_category, // User-typed reason
                 'auto_blocked' => true,
                 'reporter_email' => $reporter->email,
                 'reported_user_email' => $reportedUser->email,
@@ -2225,7 +2217,7 @@ class ProfileController extends Controller
     {
         try {
             $adminEmails = ['nolan@calibrr.com', 'contact@calibrr.com'];
-            $reasonName = Report::REASON_CATEGORIES[$report->reason_category] ?? 'Unknown';
+            $reasonName = $report->reason_category; // User-typed reason
             
             $emailData = [
                 'reportId' => $report->id,

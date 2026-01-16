@@ -27,19 +27,7 @@ class Report extends Model
         'dateCreated' => 'datetime'
     ];
     
-    /**
-     * Predefined report reason categories
-     */
-    const REASON_CATEGORIES = [
-        'inappropriate_content' => 'Inappropriate Content',
-        'harassment' => 'Harassment or Bullying',
-        'fake_profile' => 'Fake Profile',
-        'spam' => 'Spam or Scam',
-        'hate_speech' => 'Hate Speech',
-        'violence' => 'Violence or Threats',
-        'nudity' => 'Nudity or Sexual Content',
-        'other' => 'Other'
-    ];
+    // Removed predefined categories - users can now type their own reasons
     
     /**
      * Get the user who made the report
@@ -58,10 +46,10 @@ class Report extends Model
     }
     
     /**
-     * Get the human-readable reason category
+     * Get the reason category (now just returns the user-typed reason)
      */
     public function getReasonCategoryNameAttribute()
     {
-        return self::REASON_CATEGORIES[$this->reason_category] ?? 'Unknown';
+        return $this->reason_category ?? 'No reason provided';
     }
 }
