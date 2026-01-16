@@ -134,7 +134,8 @@ class ProfileController extends Controller
      *          @OA\Property(property="facebook", type="string",example="No"),
      *          @OA\Property(property="instagram", type="string",example="No"),
      *          @OA\Property(property="snapchat", type="string",example="No"),
-     *          @OA\Property(property="linkedIn", type="string",example="No"),
+     *          @OA\Property(property="VSCO", type="string",example="No"),
+     *          @OA\Property(property="tiktok", type="string",example="No"),
      *          @OA\Property(property="twitter", type="string",example="No"),
      *          @OA\Property(property="resume", type="string",example="No"),
      *          @OA\Property(property="coverLetter", type="string",example="No"),
@@ -186,7 +187,8 @@ class ProfileController extends Controller
                     $dataSocial['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
                     $dataSocial['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
                     $dataSocial['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
-                    $dataSocial['linkedIn'] = !empty($request->socialInfo['linkedIn']) ? $request->socialInfo['linkedIn'] : '';
+                    $dataSocial['VSCO'] = !empty($request->socialInfo['VSCO']) ? $request->socialInfo['VSCO'] : '';
+                    $dataSocial['tiktok'] = !empty($request->socialInfo['tiktok']) ? $request->socialInfo['tiktok'] : '';
                     $dataSocial['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
                     $dataSocial['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
                     $dataSocial['coverLetter'] = !empty($request->socialInfo['coverLetter']) ? $request->socialInfo['coverLetter'] : '';
@@ -290,8 +292,8 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['linkedIn']) {
-                        $name = "linkedIn";
+                    if ($dataSocial['VSCO']) {
+                        $name = "VSCO";
                         $social_name = DB::table('social_sites')
                             ->select("*")
                             ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
@@ -308,7 +310,7 @@ class ProfileController extends Controller
                             $userSocialInfo->update(
                                 [
                                     'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['linkedIn']
+                                    'social_siteUsername' => $dataSocial['VSCO']
                                 ]
                             );
                         } else {
@@ -316,7 +318,39 @@ class ProfileController extends Controller
                                 [
                                     'user_id' => $id,
                                     'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['linkedIn']
+                                    'social_siteUsername' => $dataSocial['VSCO']
+                                ]
+                            );
+                        }
+                    }
+                    
+                    if ($dataSocial['tiktok']) {
+                        $name = "tiktok";
+                        $social_name = DB::table('social_sites')
+                            ->select("*")
+                            ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
+                            ->first();
+
+                        $social_id = $social_name->id;
+
+                        $userSocialInfo = SocialSiteInfo::select('*')
+                            ->where('user_id', '=', $id)
+                            ->where('socila_site_row_id', $social_id)
+                            ->first();
+
+                        if ($userSocialInfo) {
+                            $userSocialInfo->update(
+                                [
+                                    'socila_site_row_id' => $social_name->id,
+                                    'social_siteUsername' => $dataSocial['tiktok']
+                                ]
+                            );
+                        } else {
+                            $userSocialInfo = SocialSiteInfo::create(
+                                [
+                                    'user_id' => $id,
+                                    'socila_site_row_id' => $social_name->id,
+                                    'social_siteUsername' => $dataSocial['tiktok']
                                 ]
                             );
                         }
@@ -683,7 +717,8 @@ class ProfileController extends Controller
      *          @OA\Property(property="facebook", type="string",example="No"),
      *          @OA\Property(property="instagram", type="string",example="No"),
      *          @OA\Property(property="snapchat", type="string",example="No"),
-     *          @OA\Property(property="linkedIn", type="string",example="No"),
+     *          @OA\Property(property="VSCO", type="string",example="No"),
+     *          @OA\Property(property="tiktok", type="string",example="No"),
      *          @OA\Property(property="twitter", type="string",example="No"),
      *          @OA\Property(property="resume", type="string",example="No"),
      *          @OA\Property(property="coverLetter", type="string",example="No"),
@@ -735,7 +770,8 @@ class ProfileController extends Controller
                     $dataSocial['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
                     $dataSocial['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
                     $dataSocial['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
-                    $dataSocial['linkedIn'] = !empty($request->socialInfo['linkedIn']) ? $request->socialInfo['linkedIn'] : '';
+                    $dataSocial['VSCO'] = !empty($request->socialInfo['VSCO']) ? $request->socialInfo['VSCO'] : '';
+                    $dataSocial['tiktok'] = !empty($request->socialInfo['tiktok']) ? $request->socialInfo['tiktok'] : '';
                     $dataSocial['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
                     $dataSocial['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
                     $dataSocial['coverLetter'] = !empty($request->socialInfo['coverLetter']) ? $request->socialInfo['coverLetter'] : '';
@@ -839,8 +875,8 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['linkedIn']) {
-                        $name = "linkedIn";
+                    if ($dataSocial['VSCO']) {
+                        $name = "VSCO";
                         $social_name = DB::table('social_sites')
                             ->select("*")
                             ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
@@ -857,7 +893,7 @@ class ProfileController extends Controller
                             $userSocialInfo->update(
                                 [
                                     'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['linkedIn']
+                                    'social_siteUsername' => $dataSocial['VSCO']
                                 ]
                             );
                         } else {
@@ -865,7 +901,39 @@ class ProfileController extends Controller
                                 [
                                     'user_id' => $id,
                                     'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['linkedIn']
+                                    'social_siteUsername' => $dataSocial['VSCO']
+                                ]
+                            );
+                        }
+                    }
+                    
+                    if ($dataSocial['tiktok']) {
+                        $name = "tiktok";
+                        $social_name = DB::table('social_sites')
+                            ->select("*")
+                            ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
+                            ->first();
+
+                        $social_id = $social_name->id;
+
+                        $userSocialInfo = SocialSiteInfo::select('*')
+                            ->where('user_id', '=', $id)
+                            ->where('socila_site_row_id', $social_id)
+                            ->first();
+
+                        if ($userSocialInfo) {
+                            $userSocialInfo->update(
+                                [
+                                    'socila_site_row_id' => $social_name->id,
+                                    'social_siteUsername' => $dataSocial['tiktok']
+                                ]
+                            );
+                        } else {
+                            $userSocialInfo = SocialSiteInfo::create(
+                                [
+                                    'user_id' => $id,
+                                    'socila_site_row_id' => $social_name->id,
+                                    'social_siteUsername' => $dataSocial['tiktok']
                                 ]
                             );
                         }
