@@ -38,7 +38,7 @@ jobs:
 
             # Deploy
             composer --version || true
-            composer install --no-dev --optimize-autoloader
+            composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-dom --ignore-platform-req=ext-simplexml
             php artisan migrate --force
             php artisan config:clear && php artisan cache:clear && php artisan config:cache && php artisan route:cache
             sudo systemctl reload apache2 || sudo service apache2 reload
