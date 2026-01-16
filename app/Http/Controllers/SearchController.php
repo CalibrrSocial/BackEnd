@@ -50,6 +50,8 @@ class SearchController extends Controller
 
     public function searchByDistance(Request $request)
     {
+        $authUser = Auth::user();
+        $fields = ['users.id', 'first_name', 'last_name', 'profile_pic', 'location', 'city', 'dob', 'studying', 'education', 'club', 'jersey_number', 'greek_life'];
         $lat = $request->position['latitude'];
         $lon = $request->position['longitude'];
         // $min_amount = $request->minDistance['amount'];
@@ -117,15 +119,39 @@ class SearchController extends Controller
                     }
                 }
             }
-            $users = DB::table('users')
-                ->select('*')
+
+            // get users who has same courses
+            $query = DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->join('courses', function($join) use ($authUser) {
+                return $join->on('users.id', '=', 'courses.user_id')->whereIn('courses.name', function ($q) use ($authUser) {
+                    return $q->select('courses.name')->from('users')->where('users.id', $authUser->id)
+                        ->join('courses', 'users.id', '=', 'courses.user_id');
+                });
+            });
+
+            // get users who has same studying
+            $query = $query->union(DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->where('studying', $authUser->studying));
+
+            // get auth course names
+            $courseNames = Course::where('user_id', $authUser->id)->get();
+            $courseNames = $courseNames->map(function ($i) {
+                return $i->name;
+            });
+
+            $users = User::select($fields)
+                ->with(['courses' => function ($q) use ($courseNames) {
+                    return $q->whereIn('name', $courseNames);
+                }])
                 ->where('ghost_mode_flag', false)
                 ->whereIn('id', $arr_user)
                 ->whereNotIn('id', $hide_user)
+                ->whereIn('users.id', function ($q) use ($query) {
+                    return $q->select('accounts.id')->from($query, 'accounts');
+                })
                 ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
                 ->get();
 
-            return response()->json(UserResource::collection($users));
+
+            return response()->json(UserSearchResource::collection($users));
         } else {
             return response()->json([]);
         }
@@ -160,8 +186,15 @@ class SearchController extends Controller
 
         $fields = ['users.id', 'first_name', 'last_name', 'profile_pic', 'location', 'city', 'dob', 'studying', 'education', 'club', 'jersey_number', 'greek_life'];
 
+        $courseNames = Course::where('user_id', $user->id)->get();
+        $courseNames = $courseNames->map(function ($i) {
+            return $i->name;
+        });
+
         if (!$request->search_in_course && !$request->search_in_studying) {
-            $users = User::select($fields)->with('courses')->where('ghost_mode_flag', false)
+            $users = User::select($fields)->with(['courses' => function ($q) use ($courseNames) {
+                return $q->whereIn('courses.name', $courseNames);
+            }])->where('ghost_mode_flag', false)
             ->where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $request->name . "%")
             ->get();
 
@@ -189,10 +222,7 @@ class SearchController extends Controller
             return response()->json([]);
         }
 
-        $courseNames = Course::where('user_id', $user->id)->get();
-        $courseNames = $courseNames->map(function ($i) {
-            return $i->name;
-        });
+
 
         $users = User::select($fields)->with(['courses' => function ($qr) use ($courseNames) {
             return $qr->whereIn('courses.name', $courseNames);
