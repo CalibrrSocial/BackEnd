@@ -1614,7 +1614,12 @@ class ProfileController extends Controller
                     try { app(LambdaNotificationService::class)->notifyProfileLiked((int)$profileLikeId, (int)$id, $additional); } catch (\Throwable $e) { }
                     }
                 }
-                return $created ? response()->noContent(Response::HTTP_CREATED) : response()->noContent(Response::HTTP_OK);
+                // Return success JSON response with like status
+                return response()->json([
+                    'success' => true,
+                    'created' => $created,
+                    'message' => $created ? 'Profile liked' : 'Already liked'
+                ], $created ? Response::HTTP_CREATED : Response::HTTP_OK);
             } else {
                 return response()->json([
                     'message' => 'fail',
@@ -1668,8 +1673,12 @@ class ProfileController extends Controller
                 if (!$profileLikeId) {
                     return response()->json(['message' => 'fail','details' => 'profileLikedId missing'], Response::HTTP_BAD_REQUEST);
                 }
-                ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->delete();
-                return response()->noContent();
+                $deleted = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->delete();
+                return response()->json([
+                    'success' => true,
+                    'deleted' => $deleted > 0,
+                    'message' => $deleted > 0 ? 'Profile unliked' : 'Not previously liked'
+                ]);
             } else {
                 return response()->json([
                     'message' => 'fail',
