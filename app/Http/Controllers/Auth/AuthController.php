@@ -158,9 +158,11 @@ class AuthController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $user = User::where('email', $email)
-            ->orWhere('phone', $phone)
-            ->first();
+        if(!empty($email)){
+            $user = User::where('email', $email)->first();
+        } else if(!empty($phone)){
+            $user = User::where('phone', $phone)->first();
+        }
 
         if (!empty($user)) {
             $email = $user->email;
@@ -180,6 +182,7 @@ class AuthController extends Controller
     {
         $clients = DB::table('oauth_clients')->select('*')->where('provider', 'users')->orderByRaw('id DESC')->first();
         if (auth()->attempt($data)) {
+
             $path = env('APP_URL') . '/oauth/token';
             $response = Http::asForm()->post($path, [
                 'grant_type' => 'password',
