@@ -194,25 +194,34 @@ class ProfileController extends Controller
                     // Persist socials to actual schema social_site_infos(social_id, social_username)
                     foreach (['facebook','instagram','snapchat','vsco','tiktok','twitter','linkedin'] as $site) {
                         $username = $dataSocial[$site] ?? '';
-                        if ($username === '') { continue; }
                         $siteRow = DB::table('social_sites')->where('social_site_name', $site)->first();
                         if (!$siteRow) { continue; }
+                        
                         $existing = DB::table('social_site_infos')
                             ->where('user_id',$id)
                             ->where('social_id',$siteRow->id)
                             ->first();
-                        if ($existing) {
-                            DB::table('social_site_infos')
-                              ->where('id',$existing->id)
-                              ->update(['social_username'=>$username,'updated_at'=>now()]);
+                        
+                        if ($username === '' || $username === null) {
+                            // Delete the record if username is empty (user cleared the field)
+                            if ($existing) {
+                                DB::table('social_site_infos')->where('id', $existing->id)->delete();
+                            }
                         } else {
-                            DB::table('social_site_infos')->insert([
-                                'user_id'=>$id,
-                                'social_id'=>$siteRow->id,
-                                'social_username'=>$username,
-                                'created_at'=>now(),
-                                'updated_at'=>now(),
-                            ]);
+                            // Save or update the social media username
+                            if ($existing) {
+                                DB::table('social_site_infos')
+                                  ->where('id',$existing->id)
+                                  ->update(['social_username'=>$username,'updated_at'=>now()]);
+                            } else {
+                                DB::table('social_site_infos')->insert([
+                                    'user_id'=>$id,
+                                    'social_id'=>$siteRow->id,
+                                    'social_username'=>$username,
+                                    'created_at'=>now(),
+                                    'updated_at'=>now(),
+                                ]);
+                            }
                         }
                     }
 
