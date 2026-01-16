@@ -10,21 +10,19 @@ class ProfileLike extends Model
   use HasFactory;
   protected $guarded = [];
   
-  // Map to the actual database column names
-  const CREATED_AT = 'created_on';
-  const UPDATED_AT = 'updated_on';
+  // Use Laravel's default timestamp column names
+  const CREATED_AT = 'created_at';
+  const UPDATED_AT = 'updated_at';
   
   protected $fillable = [
     'user_id',
     'profile_id', 
     'is_liked',
-    'status',
     'is_deleted'
   ];
   
   protected $attributes = [
     'is_liked' => 1,
-    'status' => 1,
     'is_deleted' => 0
   ];
 }
