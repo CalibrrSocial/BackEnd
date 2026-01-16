@@ -110,7 +110,6 @@ class AuthController extends Controller
             "first_name" => $request->firstName,
             "last_name" => $request->lastName,
             "dob" => $request->dob,
-            "created_on" => now(),  // Fix: Add created_on timestamp
         ]);
         if (!empty($user)) {
             $data = [
