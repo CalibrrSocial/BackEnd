@@ -150,7 +150,12 @@ class ProfileController extends Controller
                 $data['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
 
                 $user->update($data);
-                return response()->json(new UserResource($user));
+                $user = User::Where('id', $id)->first(); // Query again
+                if(!empty($user)){
+                    return response()->json(new UserResource($user));
+                } else {
+                    // TODO
+                }
             } else {
                 return response()->json([
                     'massage' => 'Fail',
