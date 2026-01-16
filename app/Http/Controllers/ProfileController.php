@@ -276,11 +276,13 @@ class ProfileController extends Controller
                     }
                     
                     $club = $pi['club'] ?? [];
+                    $data['club'] = null;
+                    $data['jersey_number'] = null;
                     if (\Schema::hasColumn('users', 'club')) {
-                        $data['club'] = $club['club'] ?? $user->club;
+                        $data['club'] = isset($club['club']) ? $club['club'] : $user->club;
                     }
                     if (\Schema::hasColumn('users', 'jersey_number')) {
-                        $data['jersey_number'] = $club['jersey_number'] ?? ($club['number'] ?? $user->jersey_number);
+                        $data['jersey_number'] = isset($club['jersey_number']) ? $club['jersey_number'] : (isset($club['number']) ? $club['number'] : $user->jersey_number);
                     }
                     $ghost_mode_flag = 0;
                     if (!empty($request->ghostMode)) {
@@ -300,31 +302,31 @@ class ProfileController extends Controller
                         }
 
                         $updateData = [
-                            'dob' => $data['dob'],
+                            'dob' => $data['dob'] ?? $user->dob,
                             'locationTimestamp' => $data['locationTimestamp'],
-                            'gender' => $data['gender'],
-                            'bio' => $data['bio'],
-                            'education' => $data['education'],
-                            'occupation' => $data['occupation'],
-                            'politics' => $data['politics'],
-                            'religion' => $data['religion'],
-                            'sexuality' => $data['sexuality'],
-                            'relationship' => $data['relationship'],
-                            'city' => $data['city'],
-                            'favorite_music' => $data['favorite_music'],
-                            'favorite_tv' => $data['favorite_tv'],
-                            'favorite_games' => $data['favorite_games'],
-                            'greek_life' => $data['greek_life'],
-                            'club' => $data['club'],
-                            'jersey_number' => $data['jersey_number'],
+                            'gender' => $data['gender'] ?? null,
+                            'bio' => $data['bio'] ?? null,
+                            'education' => $data['education'] ?? null,
+                            'occupation' => $data['occupation'] ?? null,
+                            'politics' => $data['politics'] ?? null,
+                            'religion' => $data['religion'] ?? null,
+                            'sexuality' => $data['sexuality'] ?? null,
+                            'relationship' => $data['relationship'] ?? null,
+                            'city' => $data['city'] ?? null,
+                            'favorite_music' => $data['favorite_music'] ?? null,
+                            'favorite_tv' => $data['favorite_tv'] ?? null,
+                            'favorite_games' => $data['favorite_games'] ?? null,
+                            'greek_life' => $data['greek_life'] ?? null,
+                            'club' => $data['club'] ?? null,
+                            'jersey_number' => $data['jersey_number'] ?? null,
                             'ghost_mode_flag' => $ghost_mode_flag,
                             // extra profile fields
-                            'hometown' => $data['hometown'],
-                            'high_school' => $data['high_school'],
-                            'campus' => $data['campus'],
-                            'career_aspirations' => $data['career_aspirations'],
-                            'postgraduate' => $data['postgraduate'],
-                            'postgraduate_plans' => $data['postgraduate_plans'],
+                            'hometown' => $data['hometown'] ?? null,
+                            'high_school' => $data['high_school'] ?? null,
+                            'campus' => $data['campus'] ?? null,
+                            'career_aspirations' => $data['career_aspirations'] ?? null,
+                            'postgraduate' => $data['postgraduate'] ?? null,
+                            'postgraduate_plans' => $data['postgraduate_plans'] ?? null,
                         ];
                         // Only add studying if the column exists
                         if (isset($data['studying'])) {
@@ -340,6 +342,12 @@ class ProfileController extends Controller
                                 $safeUpdate[$column] = $value;
                             }
                         }
+                        \Log::info('Profile update data', [
+                            'user_id' => $id,
+                            'updateData_keys' => array_keys($updateData),
+                            'safeUpdate_keys' => array_keys($safeUpdate),
+                            'safeUpdate' => $safeUpdate
+                        ]);
                         if (!empty($safeUpdate)) {
                             DB::table('users')->where('id', $id)->update($safeUpdate);
                         }
@@ -937,42 +945,44 @@ class ProfileController extends Controller
                     }
                     
                     $club = $pi2['club'] ?? [];
+                    $data['club'] = null;
+                    $data['jersey_number'] = null;
                     if (\Schema::hasColumn('users', 'club')) {
-                        $data['club'] = $club['club'] ?? $user->club;
+                        $data['club'] = isset($club['club']) ? $club['club'] : $user->club;
                     }
                     if (\Schema::hasColumn('users', 'jersey_number')) {
-                        $data['jersey_number'] = $club['jersey_number'] ?? ($club['number'] ?? $user->jersey_number);
+                        $data['jersey_number'] = isset($club['jersey_number']) ? $club['jersey_number'] : (isset($club['number']) ? $club['number'] : $user->jersey_number);
                     }
                     $ghost_mode_flag = 0;
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
                     }
                     $updateBlock = [
-                        'dob' => $data['dob'],
+                        'dob' => $data['dob'] ?? $user->dob,
                         'locationTimestamp' => $data['locationTimestamp'],
-                        'gender' => $data['gender'],
-                        'bio' => $data['bio'],
-                        'education' => $data['education'],
-                        'occupation' => $data['occupation'],
-                        'politics' => $data['politics'],
-                        'religion' => $data['religion'],
-                        'sexuality' => $data['sexuality'],
-                        'relationship' => $data['relationship'],
-                        'city' => $data['city'],
-                        'favorite_music' => $data['favorite_music'],
-                        'favorite_tv' => $data['favorite_tv'],
-                        'favorite_games' => $data['favorite_games'],
-                        'greek_life' => $data['greek_life'],
-                        'club' => $data['club'],
-                        'jersey_number' => $data['jersey_number'],
+                        'gender' => $data['gender'] ?? null,
+                        'bio' => $data['bio'] ?? null,
+                        'education' => $data['education'] ?? null,
+                        'occupation' => $data['occupation'] ?? null,
+                        'politics' => $data['politics'] ?? null,
+                        'religion' => $data['religion'] ?? null,
+                        'sexuality' => $data['sexuality'] ?? null,
+                        'relationship' => $data['relationship'] ?? null,
+                        'city' => $data['city'] ?? null,
+                        'favorite_music' => $data['favorite_music'] ?? null,
+                        'favorite_tv' => $data['favorite_tv'] ?? null,
+                        'favorite_games' => $data['favorite_games'] ?? null,
+                        'greek_life' => $data['greek_life'] ?? null,
+                        'club' => $data['club'] ?? null,
+                        'jersey_number' => $data['jersey_number'] ?? null,
                         'ghost_mode_flag' => $ghost_mode_flag,
                         // extra profile fields
-                        'hometown' => $data['hometown'],
-                        'high_school' => $data['high_school'],
-                        'campus' => $data['campus'],
-                        'career_aspirations' => $data['career_aspirations'],
-                        'postgraduate' => $data['postgraduate'],
-                        'postgraduate_plans' => $data['postgraduate_plans'],
+                        'hometown' => $data['hometown'] ?? null,
+                        'high_school' => $data['high_school'] ?? null,
+                        'campus' => $data['campus'] ?? null,
+                        'career_aspirations' => $data['career_aspirations'] ?? null,
+                        'postgraduate' => $data['postgraduate'] ?? null,
+                        'postgraduate_plans' => $data['postgraduate_plans'] ?? null,
                     ];
                     // Only add studying if the column exists
                     if (isset($data['studying'])) {
@@ -1000,6 +1010,12 @@ class ProfileController extends Controller
                                 $safeUpdate2[$column] = $value;
                             }
                         }
+                        \Log::info('updateUserLocation data', [
+                            'user_id' => $id,
+                            'updateBlock_keys' => array_keys($updateBlock),
+                            'safeUpdate2_keys' => array_keys($safeUpdate2),
+                            'personalInfo' => $pi2
+                        ]);
                         if (!empty($safeUpdate2)) {
                             \DB::table('users')->where('id', $id)->update($safeUpdate2);
                         }
