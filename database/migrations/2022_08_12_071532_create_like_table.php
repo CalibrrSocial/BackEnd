@@ -13,7 +13,7 @@ class CreateLikeTable extends Migration
      */
     public function up()
     {
-        Schema::create('likes', function (Blueprint $table) {
+        Schema::create('profile_likes', function (Blueprint $table) {
             $table->id();
             $table->string('user_id');
             $table->string('profile_id');

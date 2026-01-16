@@ -11,7 +11,7 @@ use App\Http\Resources\RelationshipResource;
 use App\Http\Resources\ReportResource;
 use App\Models\Relationship;
 use App\Models\Report;
-use App\Models\Like;
+use App\Models\ProfileLike;
 use App\Models\SocialSiteInfo;
 use App\Models\LocationInfo;
 use Symfony\Component\HttpFoundation\Response;
@@ -1441,7 +1441,7 @@ class ProfileController extends Controller
         if (!$id) {
             return 0;
         } else {
-            $user = Like::Where('profile_id', $id)->get();
+            $user = ProfileLike::Where('profile_id', $id)->get();
             if ($user) {
                 return count($user);
             } else {
@@ -1499,17 +1499,17 @@ class ProfileController extends Controller
             ], 404);
         } else {
             $profileLikeId = $request->profileLikeId;
-            $user = Like::where('user_id', $id)->where('profile_id', $profileLikeId)->get();
+            $user = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->get();
             if (count($user) > 0) {
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User and friend is liked'
                 ], 400);
             } else {
-                $user = Like::create(
+                $user = ProfileLike::create(
                     [
                         'user_id' => $id,
-                        'friend_id' => $profileLikeId,
+                        'profile_id' => $profileLikeId,
                     ],
                 );
                 return response()->json([
@@ -1565,7 +1565,7 @@ class ProfileController extends Controller
             ], 404);
         } else {
             $profileLikeId = $request->profileLikeId;
-            $user = Like::where('user_id', $id)->where('friend_id', $profileLikeId)->first();
+            $user = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->first();
             if ($user) {
                 $user->delete($user);
                 return response()->json([

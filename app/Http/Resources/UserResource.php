@@ -17,7 +17,7 @@ class UserResource extends JsonResource
   public function toArray($request)
   {
     $user_id = $this->id;
-    $like = DB::table('likes')->select('*')->where('profile_id', '=', $user_id)->get();
+    $like = DB::table('profile_likes')->select('*')->where('profile_id', '=', $user_id)->get();
     $countLike = count($like);
 
     $locationInfo = DB::table('location_infos')->select('*')->where('user_id', '=', $user_id)->first();
