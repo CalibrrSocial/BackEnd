@@ -904,6 +904,45 @@ class ProfileController extends Controller
                     $data['sexuality'] = $pi2['sexuality'] ?? $user->sexuality;
                     $data['relationship'] = $pi2['relationship'] ?? $user->relationship;
                     $data['city'] = $pi2['city'] ?? $user->city;
+                    
+                    // Additional camelCase -> snake_case mappings
+                    $data['hometown'] = $pi2['hometown'] ?? $user->hometown;
+                    $data['high_school'] = $pi2['highSchool'] ?? $pi2['high_school'] ?? $user->high_school;
+                    // Track whether client explicitly sent this field to avoid overwriting with stale values
+                    $classYearProvided = array_key_exists('classYear', $pi2) || array_key_exists('class_year', $pi2);
+                    if ($classYearProvided) {
+                        $data['class_year'] = $pi2['classYear'] ?? $pi2['class_year'];
+                    }
+                    $data['campus'] = $pi2['campus'] ?? $user->campus;
+                    $data['career_aspirations'] = $pi2['careerAspirations'] ?? $pi2['career_aspirations'] ?? $user->career_aspirations;
+                    $data['postgraduate'] = $pi2['postgraduate'] ?? $user->postgraduate;
+                    $data['postgraduate_plans'] = $pi2['postgraduatePlans'] ?? $pi2['postgraduate_plans'] ?? $user->postgraduate_plans;
+                    $data['favorite_music'] = $pi2['favorite_music'] ?? ($pi2['favoriteMusic'] ?? ($user->favorite_music ?? null));
+                    $data['favorite_tv'] = $pi2['favorite_tv'] ?? ($pi2['favoriteTV'] ?? ($user->favorite_tv ?? null));
+                    $data['favorite_games'] = $pi2['favorite_games'] ?? ($pi2['favoriteGame'] ?? $pi2['favoriteGames'] ?? ($user->favorite_games ?? null));
+                    $data['greek_life'] = $pi2['greek_life'] ?? ($pi2['greekLife'] ?? ($user->greek_life ?? null));
+                    
+                    // Handle education and studying fields properly
+                    if (\Schema::hasColumn('users', 'studying')) {
+                        // Both columns exist - handle them separately
+                        $data['education'] = $pi2['education'] ?? $user->education;
+                        $data['studying'] = $pi2['studying'] ?? $user->studying;
+                    } else {
+                        // Only education column exists - prioritize studying input for education field
+                        if (isset($pi2['studying']) && !empty($pi2['studying'])) {
+                            $data['education'] = $pi2['studying'];
+                        } else {
+                            $data['education'] = $pi2['education'] ?? $user->education;
+                        }
+                    }
+                    
+                    $club = $pi2['club'] ?? [];
+                    if (\Schema::hasColumn('users', 'club')) {
+                        $data['club'] = $club['club'] ?? $user->club;
+                    }
+                    if (\Schema::hasColumn('users', 'jersey_number')) {
+                        $data['jersey_number'] = $club['jersey_number'] ?? ($club['number'] ?? $user->jersey_number);
+                    }
                     $ghost_mode_flag = 0;
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
@@ -920,16 +959,59 @@ class ProfileController extends Controller
                         'sexuality' => $data['sexuality'],
                         'relationship' => $data['relationship'],
                         'city' => $data['city'],
+                        'favorite_music' => $data['favorite_music'],
+                        'favorite_tv' => $data['favorite_tv'],
+                        'favorite_games' => $data['favorite_games'],
+                        'greek_life' => $data['greek_life'],
+                        'club' => $data['club'],
+                        'jersey_number' => $data['jersey_number'],
                         'ghost_mode_flag' => $ghost_mode_flag,
+                        // extra profile fields
+                        'hometown' => $data['hometown'],
+                        'high_school' => $data['high_school'],
+                        'campus' => $data['campus'],
+                        'career_aspirations' => $data['career_aspirations'],
+                        'postgraduate' => $data['postgraduate'],
+                        'postgraduate_plans' => $data['postgraduate_plans'],
                     ];
-                    $safeUpdate2 = [];
-                    foreach ($updateBlock as $column => $value) {
-                        if (Schema::hasColumn('users', $column)) {
-                            $safeUpdate2[$column] = $value;
-                        }
+                    // Only add studying if the column exists
+                    if (isset($data['studying'])) {
+                        $updateBlock['studying'] = $data['studying'];
                     }
-                    if (!empty($safeUpdate2)) {
-                        \DB::table('users')->where('id', $id)->update($safeUpdate2);
+                    if ($classYearProvided) {
+                        $updateBlock['class_year'] = $data['class_year'];
+                    }
+                    
+                    DB::beginTransaction();
+                    try {
+                        // update best friends
+                        if (isset($request->bestFriends)) {
+                            $this->updateBestFriends($request, $user);
+                        }
+
+                        // update courses
+                        if (isset($request->courses)) {
+                            $this->updateCourses($request, $user);
+                        }
+                        
+                        $safeUpdate2 = [];
+                        foreach ($updateBlock as $column => $value) {
+                            if (Schema::hasColumn('users', $column)) {
+                                $safeUpdate2[$column] = $value;
+                            }
+                        }
+                        if (!empty($safeUpdate2)) {
+                            \DB::table('users')->where('id', $id)->update($safeUpdate2);
+                        }
+                        
+                        DB::commit();
+                    } catch (\Exception $e) {
+                        DB::rollBack();
+                        \Log::error('Profile update failed: ' . $e->getMessage());
+                        return response()->json([
+                            'message' => 'fail',
+                            'details' => 'Profile update failed'
+                        ], Response::HTTP_INTERNAL_SERVER_ERROR);
                     }
                     $user = User::where('id', $id)->first();
                     return response()->json(new UserResource($user));
