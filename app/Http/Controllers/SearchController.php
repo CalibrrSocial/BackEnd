@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Exceptions\Exception;
+use App\Http\Requests\User\SearchRequest;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -73,10 +75,10 @@ class SearchController extends Controller
         $result = DB::table("location_infos")
             ->select(
                 "user_id",
-                DB::raw("$type_value * acos(cos(radians(" . $lat . ")) 
-                * cos(radians(location_infos.latitude)) 
-                * cos(radians(location_infos.longitude) - radians(" . $lon . ")) 
-                + sin(radians(" . $lat . ")) 
+                DB::raw("$type_value * acos(cos(radians(" . $lat . "))
+                * cos(radians(location_infos.latitude))
+                * cos(radians(location_infos.longitude) - radians(" . $lon . "))
+                + sin(radians(" . $lat . "))
                 * sin(radians(location_infos.latitude))) AS distance")
             )
             ->having("distance", "<=", $max_amount)
@@ -156,21 +158,36 @@ class SearchController extends Controller
      * )
      */
 
-    public function searchByName(Request $request)
+    public function searchByName(SearchRequest $request)
     {
         $my_id = Auth::user()->id;
         $data = $request->all();
-        $name = $data['name'];
 
-        if (strlen($name) < 3) {
+        if (strlen($request->name) < 3) {
             return response()->json([
                 'message' => 'fail',
                 'details' => 'User not found'
             ], Response::HTTP_BAD_REQUEST);
         } else {
-            $user = User::select("*")->where('ghost_mode_flag', false)
-                ->Where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $name . "%")
-                ->get();
+            $query = User::select("*")->where('ghost_mode_flag', false);
+
+            $query = $query->where(function ($q) use ($request) {
+                $q = $q->orWhere(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $request->name . "%");
+
+                if ($request->search_in_course) {
+                    $q = $q->orWhereHas('courses', function (Builder $qr) use ($request) {
+                        return $qr->where('name', 'LIKE', "%" . $request->name . "%");
+                    });
+                }
+
+                if ($request->search_in_studying) {
+                    $q = $q->orWhere('studying', 'LIKE', "%" . $request->name . "%");
+                }
+
+                return $q;
+            });
+
+            $user = $query->get();
 
             for ($i = 0; $i < count($user); $i++) {
                 if ($user[$i]->id == $my_id) {
