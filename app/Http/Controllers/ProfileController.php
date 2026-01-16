@@ -527,209 +527,55 @@ class ProfileController extends Controller
                         ]);
                     }
 
-                    $dataSocial['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
-                    $dataSocial['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
-                    $dataSocial['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
-                    $dataSocial['vsco'] = !empty($request->socialInfo['vsco']) ? $request->socialInfo['vsco'] : '';
-                    $dataSocial['tiktok'] = !empty($request->socialInfo['tiktok']) ? $request->socialInfo['tiktok'] : '';
-                    $dataSocial['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
-                    $dataSocial['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
-                    $dataSocial['coverLetter'] = !empty($request->socialInfo['coverLetter']) ? $request->socialInfo['coverLetter'] : '';
-                    $dataSocial['email'] = !empty($request->socialInfo['email']) ? $request->socialInfo['email'] : '';
-                    $dataSocial['website'] = !empty($request->socialInfo['website']) ? $request->socialInfo['website'] : '';
-                    $dataSocial['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
+                    // Extract social media data from request
+                    $socialFields = ['facebook', 'instagram', 'snapchat', 'vsco', 'tiktok', 'twitter'];
+                    $dataSocial = [];
+                    
+                    foreach ($socialFields as $field) {
+                        $dataSocial[$field] = $request->socialInfo[$field] ?? '';
+                    }
 
-                    if ($dataSocial['facebook']) {
-                        $name = "facebook";
-                        $social_name = DB::table('social_sites')
-                            ->select("*")
-                            ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
+                    // Process each social media field
+                    foreach ($socialFields as $field) {
+                        $username = $dataSocial[$field];
+                        
+                        // Find the social site in the database
+                        $socialSite = DB::table('social_sites')
+                            ->where('social_site_name', 'LIKE', '%' . $field . '%')
                             ->first();
-
-                        $social_id = $social_name->id;
-
-                        $userSocialInfo = SocialSiteInfo::select('*')
-                            ->where('user_id', '=', $id)
-                            ->where('social_id', $social_id)
+                            
+                        if (!$socialSite) {
+                            \Log::warning("Social site not found: {$field}");
+                            continue;
+                        }
+                        
+                        // Find existing user social info record
+                        $userSocialInfo = SocialSiteInfo::where('user_id', $id)
+                            ->where('social_id', $socialSite->id)
                             ->first();
-
-                        if ($userSocialInfo) {
-                            $userSocialInfo->update(
-                                [
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['facebook']
-                                ]
-                            );
-                        } else {
-                            $userSocialInfo = SocialSiteInfo::create(
-                                [
+                        
+                        if (!empty($username)) {
+                            // Save or update the social media username
+                            if ($userSocialInfo) {
+                                $userSocialInfo->update([
+                                    'social_username' => $username
+                                ]);
+                            } else {
+                                SocialSiteInfo::create([
                                     'user_id' => $id,
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['facebook']
-                                ]
-                            );
+                                    'social_id' => $socialSite->id,
+                                    'social_username' => $username
+                                ]);
+                            }
+                        } else {
+                            // Delete the record if username is empty (user cleared the field)
+                            if ($userSocialInfo) {
+                                $userSocialInfo->delete();
+                            }
                         }
                     }
 
-                    if ($dataSocial['instagram']) {
-                        $name = "instagram";
-                        $social_name = DB::table('social_sites')
-                            ->select("*")
-                            ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
-                            ->first();
 
-                        $social_id = $social_name->id;
-
-                        $userSocialInfo = SocialSiteInfo::select('*')
-                            ->where('user_id', '=', $id)
-                            ->where('social_id', $social_id)
-                            ->first();
-
-                        if ($userSocialInfo) {
-                            $userSocialInfo->update(
-                                [
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['instagram']
-                                ]
-                            );
-                        } else {
-                            $userSocialInfo = SocialSiteInfo::create(
-                                [
-                                    'user_id' => $id,
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['instagram']
-                                ]
-                            );
-                        }
-                    }
-
-                    if ($dataSocial['snapchat']) {
-                        $name = "snapchat";
-                        $social_name = DB::table('social_sites')
-                            ->select("*")
-                            ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
-                            ->first();
-
-                        $social_id = $social_name->id;
-
-                        $userSocialInfo = SocialSiteInfo::select('*')
-                            ->where('user_id', '=', $id)
-                            ->where('social_id', $social_id)
-                            ->first();
-
-                        if ($userSocialInfo) {
-                            $userSocialInfo->update(
-                                [
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['snapchat']
-                                ]
-                            );
-                        } else {
-                            $userSocialInfo = SocialSiteInfo::create(
-                                [
-                                    'user_id' => $id,
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['snapchat']
-                                ]
-                            );
-                        }
-                    }
-
-                    if ($dataSocial['vsco']) {
-                        $name = "vsco";
-                        $social_name = DB::table('social_sites')
-                            ->select("*")
-                            ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
-                            ->first();
-
-                        $social_id = $social_name->id;
-
-                        $userSocialInfo = SocialSiteInfo::select('*')
-                            ->where('user_id', '=', $id)
-                            ->where('social_id', $social_id)
-                            ->first();
-
-                        if ($userSocialInfo) {
-                            $userSocialInfo->update(
-                                [
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['vsco']
-                                ]
-                            );
-                        } else {
-                            $userSocialInfo = SocialSiteInfo::create(
-                                [
-                                    'user_id' => $id,
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['vsco']
-                                ]
-                            );
-                        }
-                    }
-
-                    if ($dataSocial['tiktok']) {
-                        $name = "tiktok";
-                        $social_name = DB::table('social_sites')
-                            ->select("*")
-                            ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
-                            ->first();
-
-                        $social_id = $social_name->id;
-
-                        $userSocialInfo = SocialSiteInfo::select('*')
-                            ->where('user_id', '=', $id)
-                            ->where('social_id', $social_id)
-                            ->first();
-
-                        if ($userSocialInfo) {
-                            $userSocialInfo->update(
-                                [
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['tiktok']
-                                ]
-                            );
-                        } else {
-                            $userSocialInfo = SocialSiteInfo::create(
-                                [
-                                    'user_id' => $id,
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['tiktok']
-                                ]
-                            );
-                        }
-                    }
-
-                    if ($dataSocial['twitter']) {
-                        $name = "twitter";
-                        $social_name = DB::table('social_sites')
-                            ->select("*")
-                            ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
-                            ->first();
-
-                        $social_id = $social_name->id;
-
-                        $userSocialInfo = SocialSiteInfo::select('*')
-                            ->where('user_id', '=', $id)
-                            ->where('social_id', $social_id)
-                            ->first();
-
-                        if ($userSocialInfo) {
-                            $userSocialInfo->update(
-                                [
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['twitter']
-                                ]
-                            );
-                        } else {
-                            $userSocialInfo = SocialSiteInfo::create(
-                                [
-                                    'user_id' => $id,
-                                    'social_id' => $social_name->id,
-                                    'social_username' => $dataSocial['twitter']
-                                ]
-                            );
-                        }
-                    }
 
                     if ($dataSocial['resume']) {
                         $name = "resume";
