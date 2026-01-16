@@ -57,7 +57,7 @@ class AuthController extends Controller
         $before = $dt->subYears(13)->format('Y-m-d');
 
         $rules = [
-            'email' => 'required|email:rfc,dns',
+            'email' => 'required|email:rfc,dns|unique:users',
             'password' => [
                 'required',
                 'string',
@@ -67,12 +67,14 @@ class AuthController extends Controller
                 'regex:/[0-9]/',      // must contain at least one digit
             ],
             'dob' => 'required|date|before:' . $before,
-            'phone' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
+            'phone' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:users',
         ];
 
         $customMessages = [
             'required' => 'The :attribute field is required.',
-            'dob.before' => 'You must be over 13 years old to signup'
+            'dob.before' => 'You must be over 13 years old to signup',
+            'phone.unique' => 'Phone already in use',
+            'email.unique' => 'Email already in use'
         ];
 
         $validation = Validator::make($request->all(), $rules, $customMessages);
@@ -84,21 +86,22 @@ class AuthController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $checkEmail = DB::table('users')->where('email', $request->email)->where('password', '!=', null)->first();
-        if ($checkEmail) {
-            return response([
-                "message" => 'fail',
-                "details" => "Email already in use",
-            ], Response::HTTP_BAD_REQUEST);
-        }
+        // $checkEmail = DB::table('users')->where('email', $request->email)->where('password', '!=', null)->first();
+        // if ($checkEmail) {
+        //     return response([
+        //         "message" => 'fail',
+        //         "details" => "Email already in use",
+        //     ], Response::HTTP_BAD_REQUEST);
+        // }
 
-        $checkPhone = DB::table('users')->where('phone', $request->phone)->where('password', '!=', null)->first();
-        if ($checkPhone) {
-            return response([
-                "message" => 'fail',
-                "details" => "Phone already in use",
-            ], Response::HTTP_BAD_REQUEST);
-        }
+        // $checkPhone = DB::table('users')->where('phone', null)->orWhere('phone', $request->phone)->where('password', '!=', null)->first();
+
+        // if ($checkPhone) {
+        //     return response([
+        //         "message" => 'fail',
+        //         "details" => "Phone already in use",
+        //     ], Response::HTTP_BAD_REQUEST);
+        // }
 
         $user = User::create([
             "email" => $request->email,
