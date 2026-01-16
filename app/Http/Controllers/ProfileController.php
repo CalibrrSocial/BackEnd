@@ -131,9 +131,12 @@ class ProfileController extends Controller
         } else {
             $user = User::Where('id', $id)->first();
             if ($user) {
+                $time_zone = env('TIME_ZONE');
+                $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
                 $data = $request->all();
                 $data['latitude'] = !empty($request->location['latitude'])? $request->location['latitude'] : '';
                 $data['longitude'] = !empty($request->location['longitude'])? $request->location['longitude'] : '';
+                $data['locationTimestamp'] = $actionTime;
                 $data['facebook'] = !empty($request->location['facebook'])? $request->location['facebook'] : '';
                 $data['instagram'] = !empty($request->location['instagram'])? $request->location['instagram'] : '';
                 $data['snapchat'] = !empty($request->location['snapchat'])? $request->location['snapchat'] : '';
@@ -144,6 +147,7 @@ class ProfileController extends Controller
                 $data['email_2'] = !empty($request->location['email'])? $request->location['email'] : '';
                 $data['website'] = !empty($request->location['website'])? $request->location['website'] : '';
                 $data['contact'] = !empty($request->location['contact'])? $request->location['contact'] : '';
+
                 $user->update($data);
                 return response()->json(new UserResource($user));
             } else {
