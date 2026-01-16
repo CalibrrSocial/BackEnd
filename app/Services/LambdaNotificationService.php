@@ -28,11 +28,30 @@ class LambdaNotificationService
         ]);
 
         try {
-            $this->client->invoke([
+            $debug = filter_var(env('LAMBDA_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $params = [
                 'FunctionName' => $this->functionName,
-                'InvocationType' => 'Event', // async
                 'Payload' => $payload,
-            ]);
+            ];
+            if ($debug) {
+                // Synchronous call with logs for troubleshooting
+                $params['InvocationType'] = 'RequestResponse';
+                $params['LogType'] = 'Tail';
+                $result = $this->client->invoke($params);
+                $status = $result['StatusCode'] ?? null;
+                $funcErr = $result['FunctionError'] ?? null;
+                $log = isset($result['LogResult']) ? base64_decode($result['LogResult']) : null;
+                \Log::info('Lambda notifyProfileLiked debug', [
+                    'status' => $status,
+                    'functionError' => $funcErr,
+                    'log' => $log,
+                    'function' => $this->functionName,
+                ]);
+            } else {
+                // Async fire-and-forget in production
+                $params['InvocationType'] = 'Event';
+                $this->client->invoke($params);
+            }
         } catch (\Throwable $e) {
             \Log::warning('Lambda notifyProfileLiked failed: '.$e->getMessage());
         }
