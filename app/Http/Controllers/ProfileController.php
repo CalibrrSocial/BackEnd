@@ -1673,7 +1673,7 @@ class ProfileController extends Controller
                 if (!$profileLikeId) {
                     return response()->json(['message' => 'fail','details' => 'profileLikedId missing'], Response::HTTP_BAD_REQUEST);
                 }
-                $deleted = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->delete();
+                $deleted = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->update(['is_deleted' => 1]);
                 return response()->json([
                     'success' => true,
                     'deleted' => $deleted > 0,

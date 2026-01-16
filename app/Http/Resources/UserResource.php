@@ -18,7 +18,11 @@ class UserResource extends JsonResource
   public function toArray($request)
   {
     $user_id = $this->id;
-    $like = DB::table('profile_likes')->select('*')->where('profile_id', '=', $user_id)->get();
+    $like = DB::table('profile_likes')
+      ->where('profile_id', '=', $user_id)
+      ->where('is_liked', 1)
+      ->where('is_deleted', 0)
+      ->get();
     $countLike = count($like);
 
     $locationInfo = DB::table('location_infos')->select('*')->where('user_id', '=', $user_id)->first();
@@ -56,7 +60,12 @@ class UserResource extends JsonResource
     $like = false;
     if ($viewerId) {
       // Consider self-like as liked as well
-      $liked = DB::table('profile_likes')->where('user_id', $viewerId)->where('profile_id', $user_id)->first();
+      $liked = DB::table('profile_likes')
+        ->where('user_id', $viewerId)
+        ->where('profile_id', $user_id)
+        ->where('is_liked', 1)
+        ->where('is_deleted', 0)
+        ->first();
       $like = $liked ? true : false;
     }
     $count_visit = 0;
