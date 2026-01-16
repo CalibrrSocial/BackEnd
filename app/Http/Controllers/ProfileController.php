@@ -1714,15 +1714,20 @@ class ProfileController extends Controller
                         'profile_id' => $profileLikeId,
                         'notified_at' => now(),
                     ]);
-                    // Enrich Lambda payload so it can send email without DB lookups
-                    $recipient = User::where('id', $profileLikeId)->first();
-                    $sender = User::where('id', $id)->first();
-                    $recipientEmail = $recipient ? $recipient->email : null;
-                    $senderName = $sender ? trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? '')) : null;
-                    $additionalData = [];
-                    if (!empty($recipientEmail)) { $additionalData['recipientEmail'] = $recipientEmail; }
-                    if (!empty($senderName)) { $additionalData['senderName'] = $senderName; }
-                    try { app(LambdaNotificationService::class)->notifyProfileLiked((int)$profileLikeId, (int)$id, $additionalData); } catch (\Throwable $e) { }
+                    // Include recipient email and sender name so Lambda doesn't need DB
+                    $recipient = DB::table('users')->select('email','first_name','last_name')->where('id', $profileLikeId)->first();
+                    $sender = DB::table('users')->select('first_name','last_name')->where('id', $id)->first();
+                    $additional = [];
+                    if ($recipient) {
+                        $additional['recipientEmail'] = $recipient->email ?? null;
+                        $additional['recipientFirstName'] = $recipient->first_name ?? null;
+                        $additional['recipientLastName'] = $recipient->last_name ?? null;
+                    }
+                    if ($sender) {
+                        $additional['senderFirstName'] = $sender->first_name ?? null;
+                        $additional['senderLastName'] = $sender->last_name ?? null;
+                    }
+                    try { app(LambdaNotificationService::class)->notifyProfileLiked((int)$profileLikeId, (int)$id, $additional); } catch (\Throwable $e) { }
                 }
                 return $created ? response()->noContent(Response::HTTP_CREATED) : response()->noContent(Response::HTTP_OK);
             } else {
