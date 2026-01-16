@@ -231,7 +231,6 @@ class ProfileController extends Controller
                     $pi = $request->personalInfo ?? [];
                     $data['gender'] = $pi['gender'] ?? $user->gender;
                     $data['bio'] = $pi['bio'] ?? $user->bio;
-                    $data['education'] = $pi['education'] ?? $user->education;
                     $data['occupation'] = $pi['occupation'] ?? $user->occupation;
                     $data['politics'] = $pi['politics'] ?? $user->politics;
                     $data['religion'] = $pi['religion'] ?? $user->religion;
@@ -254,13 +253,18 @@ class ProfileController extends Controller
                     $data['favorite_tv'] = $pi['favorite_tv'] ?? ($pi['favoriteTV'] ?? ($user->favorite_tv ?? null));
                     $data['favorite_games'] = $pi['favorite_games'] ?? ($pi['favoriteGame'] ?? $pi['favoriteGames'] ?? ($user->favorite_games ?? null));
                     $data['greek_life'] = $pi['greek_life'] ?? ($pi['greekLife'] ?? ($user->greek_life ?? null));
-                    // Map studying to education field if studying doesn't exist
+                    
+                    // Handle education and studying fields properly
                     if (\Schema::hasColumn('users', 'studying')) {
+                        // Both columns exist - handle them separately
+                        $data['education'] = $pi['education'] ?? $user->education;
                         $data['studying'] = $pi['studying'] ?? $user->studying;
                     } else {
-                        // Store studying/major in education field if studying column doesn't exist
+                        // Only education column exists - prioritize studying input for education field
                         if (isset($pi['studying']) && !empty($pi['studying'])) {
                             $data['education'] = $pi['studying'];
+                        } else {
+                            $data['education'] = $pi['education'] ?? $user->education;
                         }
                     }
                     
@@ -304,7 +308,6 @@ class ProfileController extends Controller
                             'favorite_tv' => $data['favorite_tv'],
                             'favorite_games' => $data['favorite_games'],
                             'greek_life' => $data['greek_life'],
-                            'studying' => $data['studying'],
                             'club' => $data['club'],
                             'jersey_number' => $data['jersey_number'],
                             'ghost_mode_flag' => $ghost_mode_flag,
@@ -316,6 +319,10 @@ class ProfileController extends Controller
                             'postgraduate' => $data['postgraduate'],
                             'postgraduate_plans' => $data['postgraduate_plans'],
                         ];
+                        // Only add studying if the column exists
+                        if (isset($data['studying'])) {
+                            $updateData['studying'] = $data['studying'];
+                        }
                         if ($classYearProvided) {
                             $updateData['class_year'] = $data['class_year'];
                         }
