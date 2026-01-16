@@ -132,18 +132,18 @@ class ProfileController extends Controller
             $user = User::Where('id', $id)->first();
             if ($user) {
                 $data = $request->all();
-                $data['latitude'] = $request->location['latitude'];
-                $data['longitude'] = $request->location['longitude'];
-                $data['facebook'] = $request->socialInfo['facebook'];
-                $data['instagram'] = $request->socialInfo['instagram'];
-                $data['snapchat'] = $request->socialInfo['snapchat'];
-                $data['linkedIn'] = $request->socialInfo['linkedIn'];
-                $data['twitter'] = $request->socialInfo['twitter'];
-                $data['resume'] = $request->socialInfo['resume'];
-                $data['coverLetter'] = $request->socialInfo['coverLetter'];
-                $data['email_2'] = $request->socialInfo['email'];
-                $data['website'] = $request->socialInfo['website'];
-                $data['contact'] = $request->socialInfo['contact'];
+                $data['latitude'] = !empty($request->location['latitude'])? $request->location['latitude'] : '';
+                $data['longitude'] = !empty($request->location['longitude'])? $request->location['longitude'] : '';
+                $data['facebook'] = !empty($request->location['facebook'])? $request->location['facebook'] : '';
+                $data['instagram'] = !empty($request->location['instagram'])? $request->location['instagram'] : '';
+                $data['snapchat'] = !empty($request->location['snapchat'])? $request->location['snapchat'] : '';
+                $data['linkedIn'] = !empty($request->location['linkedIn'])? $request->location['linkedIn'] : '';
+                $data['twitter'] = !empty($request->location['twitter'])? $request->location['twitter'] : '';
+                $data['resume'] = !empty($request->location['resume'])? $request->location['resume'] : '';
+                $data['coverLetter'] = !empty($request->location['coverLetter'])? $request->location['coverLetter'] : '';
+                $data['email_2'] = !empty($request->location['email'])? $request->location['email'] : '';
+                $data['website'] = !empty($request->location['website'])? $request->location['website'] : '';
+                $data['contact'] = !empty($request->location['contact'])? $request->location['contact'] : '';
                 $user->update($data);
                 return response()->json(new UserResource($user));
             } else {
