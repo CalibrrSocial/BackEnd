@@ -182,48 +182,36 @@ class ProfileController extends Controller
                         ]);
                     }
 
-                    $dataSocial['facebook'] = !empty($request->socialInfo['facebook']) ? $request->socialInfo['facebook'] : '';
-                    $dataSocial['instagram'] = !empty($request->socialInfo['instagram']) ? $request->socialInfo['instagram'] : '';
-                    $dataSocial['snapchat'] = !empty($request->socialInfo['snapchat']) ? $request->socialInfo['snapchat'] : '';
-                    $dataSocial['vsco'] = !empty($request->socialInfo['vsco']) ? $request->socialInfo['vsco'] : '';
-                    $dataSocial['tiktok'] = !empty($request->socialInfo['tiktok']) ? $request->socialInfo['tiktok'] : '';
-                    $dataSocial['twitter'] = !empty($request->socialInfo['twitter']) ? $request->socialInfo['twitter'] : '';
-                    $dataSocial['resume'] = !empty($request->socialInfo['resume']) ? $request->socialInfo['resume'] : '';
-                    $dataSocial['coverLetter'] = !empty($request->socialInfo['coverLetter']) ? $request->socialInfo['coverLetter'] : '';
-                    $dataSocial['email'] = !empty($request->socialInfo['email']) ? $request->socialInfo['email'] : '';
-                    $dataSocial['website'] = !empty($request->socialInfo['website']) ? $request->socialInfo['website'] : '';
-                    $dataSocial['contact'] = !empty($request->socialInfo['contact']) ? $request->socialInfo['contact'] : '';
+                    $dataSocial['facebook'] = $request->input('socialInfo.facebook','');
+                    $dataSocial['instagram'] = $request->input('socialInfo.instagram','');
+                    $dataSocial['snapchat'] = $request->input('socialInfo.snapchat','');
+                    $dataSocial['vsco'] = $request->input('socialInfo.vsco','');
+                    $dataSocial['tiktok'] = $request->input('socialInfo.tiktok','');
+                    $dataSocial['twitter'] = $request->input('socialInfo.twitter','');
+                    $dataSocial['linkedin'] = $request->input('socialInfo.linkedIn','');
 
-                    if (!empty($dataSocial['facebook'])) {
-                        $name = "facebook";
-                        $social_name = DB::table('social_sites')
-                            ->select("*")
-                            ->where('social_sites.social_site_name', 'LIKE', '%' . $name . '%')
+                    // Persist socials to actual schema social_site_infos(social_id, social_username)
+                    foreach (['facebook','instagram','snapchat','vsco','tiktok','twitter','linkedin'] as $site) {
+                        $username = $dataSocial[$site] ?? '';
+                        if ($username === '') { continue; }
+                        $siteRow = DB::table('social_sites')->where('social_site_name', $site)->first();
+                        if (!$siteRow) { continue; }
+                        $existing = DB::table('social_site_infos')
+                            ->where('user_id',$id)
+                            ->where('social_id',$siteRow->id)
                             ->first();
-                        if ($social_name) {
-                            $social_id = $social_name->id;
-
-                            $userSocialInfo = SocialSiteInfo::select('*')
-                                ->where('user_id', '=', $id)
-                                ->where('socila_site_row_id', $social_id)
-                                ->first();
-
-                            if ($userSocialInfo) {
-                                $userSocialInfo->update(
-                                    [
-                                        'socila_site_row_id' => $social_name->id,
-                                        'social_siteUsername' => $dataSocial['facebook']
-                                    ]
-                                );
-                            } else {
-                                $userSocialInfo = SocialSiteInfo::create(
-                                    [
-                                        'user_id' => $id,
-                                        'socila_site_row_id' => $social_name->id,
-                                        'social_siteUsername' => $dataSocial['facebook']
-                                    ]
-                                );
-                            }
+                        if ($existing) {
+                            DB::table('social_site_infos')
+                              ->where('id',$existing->id)
+                              ->update(['social_username'=>$username,'updated_at'=>now()]);
+                        } else {
+                            DB::table('social_site_infos')->insert([
+                                'user_id'=>$id,
+                                'social_id'=>$siteRow->id,
+                                'social_username'=>$username,
+                                'created_at'=>now(),
+                                'updated_at'=>now(),
+                            ]);
                         }
                     }
 

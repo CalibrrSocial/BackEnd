@@ -26,52 +26,27 @@ class UserResource extends JsonResource
     $longitude = !empty($locationInfo->longitude) ? (float)($locationInfo->longitude) : 0;
 
 
-    $social_list = DB::table('social_sites')->select('*')->get();
-    $socialInfo = DB::table('social_site_infos')->select('*')->where('user_id', '=', $user_id)->get();
-
-    $socials = [];
-    for ($i = 0; $i < count($social_list); $i++) {
-      $socials[$i]['name'] = $social_list[$i]->social_site_name;
-      $socials[$i]['id'] = $social_list[$i]->id;
-    }
-    // Ensure arrays are initialized to avoid undefined variable notices
-    $social_info = [];
-    $social_name = [];
-    if (count($socialInfo) > 0) {
-      for ($i = 0; $i < count($socialInfo); $i++) {
-        $socila_site_row_id = $socialInfo[$i]->socila_site_row_id;
-        $social_name[$i] = DB::table('social_sites')->select('social_site_name', 'id')->where('id', $socila_site_row_id)->first();
-        $social_info[$i]['socila_site_row_id'] = $social_name[$i]->id;
-        $social_info[$i]['info_name'] = $socialInfo[$i]->social_siteUsername;
-      }
-      $info = [];
-      if (count($socials) > 0) {
-        for ($i = 0; $i < count($socials); $i++) {
-          $name = $socials[$i]['name'];
-          $id = $socials[$i]['id'];
-          for ($j = 0; $j < count($social_info); $j++) {
-            if ($social_info[$j]['socila_site_row_id'] == $id) {
-              $info_name = $social_info[$j]['info_name'];
-              break;
-            } else {
-              $info_name = 'null';
-            }
-          }
-          $ifo = [
-            "$name" => $info_name,
-          ];
-          $info = $info + $ifo;
-        }
-      }
-    } else {
-      $info = [];
-      for ($i = 0; $i < count($socials); $i++) {
-        $name = $socials[$i]['name'];
-        $id = $socials[$i]['id'];
-        $ifo = [
-          "$name" => 'null',
-        ];
-        $info = $info + $ifo;
+    // Build social info keyed object based on actual schema: social_site_infos(social_id,social_username)
+    $desiredKeys = ['instagram','facebook','snapchat','linkedIn','twitter','vsco','tiktok'];
+    $rows = DB::table('social_site_infos')
+      ->leftJoin('social_sites','social_site_infos.social_id','=','social_sites.id')
+      ->select('social_sites.social_site_name as name','social_site_infos.social_username as username')
+      ->where('user_id', '=', $user_id)
+      ->get();
+    $info = [];
+    foreach ($desiredKeys as $k) { $info[$k] = ''; }
+    foreach ($rows as $row) {
+      $name = $row->name ?? null;
+      $username = $row->username ?? '';
+      if (!$name) { continue; }
+      // Normalize names to client keys
+      if ($name === 'linkedin') { $name = 'linkedIn'; }
+      if ($name === 'x') { $name = 'twitter'; }
+      if (array_key_exists($name, $info)) {
+        $info[$name] = $username ?: '';
+      } else {
+        // Include any extra names as-is
+        $info[$name] = $username ?: '';
       }
     }
 
