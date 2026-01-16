@@ -555,22 +555,25 @@ class ProfileController extends Controller
                         $data['dob'] = $user->dob;
                     }
                     $data['locationTimestamp'] = $actionTime;
-                    $data['gender'] = !empty($request->personalInfo['gender']) ? $request->personalInfo['gender'] : '';
-                    $data['bio'] = !empty($request->personalInfo['bio']) ? $request->personalInfo['bio'] : '';
-                    $data['education'] = !empty($request->personalInfo['education']) ? $request->personalInfo['education'] : '';
-                    $data['occupation'] = !empty($request->personalInfo['occupation']) ? $request->personalInfo['occupation'] : '';
-                    $data['politics'] = !empty($request->personalInfo['politics']) ? $request->personalInfo['politics'] : '';
-                    $data['religion'] = !empty($request->personalInfo['religion']) ? $request->personalInfo['religion'] : '';
-                    $data['sexuality'] = !empty($request->personalInfo['sexuality']) ? $request->personalInfo['sexuality'] : '';
-                    $data['relationship'] = !empty($request->personalInfo['relationship']) ? $request->personalInfo['relationship'] : '';
-                    $data['city'] = !empty($request->personalInfo['city']) ? $request->personalInfo['city'] : '';
-                    $data['favorite_music'] = !empty($request->personalInfo['favorite_music']) ? $request->personalInfo['favorite_music'] : '';
-                    $data['favorite_tv'] = !empty($request->personalInfo['favorite_tv']) ? $request->personalInfo['favorite_tv'] : '';
-                    $data['favorite_games'] = !empty($request->personalInfo['favorite_games']) ? $request->personalInfo['favorite_games'] : '';
-                    $data['greek_life'] = !empty($request->personalInfo['greek_life']) ? $request->personalInfo['greek_life'] : '';
-                    $data['studying'] = !empty($request->personalInfo['studying']) ? $request->personalInfo['studying'] : '';
-                    $data['club'] = !empty($request->personalInfo['club']['club']) ? $request->personalInfo['club']['club'] : '';
-                    $data['jersey_number'] = !empty($request->personalInfo['club']['jersey_number']) ? $request->personalInfo['club']['jersey_number'] : '';
+                    // Accept both snake_case and camelCase from clients
+                    $pi = $request->personalInfo ?? [];
+                    $data['gender'] = $pi['gender'] ?? '';
+                    $data['bio'] = $pi['bio'] ?? '';
+                    $data['education'] = $pi['education'] ?? '';
+                    $data['occupation'] = $pi['occupation'] ?? '';
+                    $data['politics'] = $pi['politics'] ?? '';
+                    $data['religion'] = $pi['religion'] ?? '';
+                    $data['sexuality'] = $pi['sexuality'] ?? '';
+                    $data['relationship'] = $pi['relationship'] ?? '';
+                    $data['city'] = $pi['city'] ?? '';
+                    $data['favorite_music'] = $pi['favorite_music'] ?? ($pi['favoriteMusic'] ?? '');
+                    $data['favorite_tv'] = $pi['favorite_tv'] ?? ($pi['favoriteTV'] ?? '');
+                    $data['favorite_games'] = $pi['favorite_games'] ?? ($pi['favoriteGame'] ?? $pi['favoriteGames'] ?? '');
+                    $data['greek_life'] = $pi['greek_life'] ?? ($pi['greekLife'] ?? '');
+                    $data['studying'] = $pi['studying'] ?? '';
+                    $club = $pi['club'] ?? [];
+                    $data['club'] = $club['club'] ?? '';
+                    $data['jersey_number'] = $club['jersey_number'] ?? ($club['number'] ?? '');
                     $ghost_mode_flag = 0;
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
@@ -1158,15 +1161,16 @@ class ProfileController extends Controller
                     }
 
                     $data['locationTimestamp'] = $actionTime;
-                    $data['gender'] = !empty($request->personalInfo['gender']) ? $request->personalInfo['gender'] : '';
-                    $data['bio'] = !empty($request->personalInfo['bio']) ? $request->personalInfo['bio'] : '';
-                    $data['education'] = !empty($request->personalInfo['education']) ? $request->personalInfo['education'] : '';
-                    $data['occupation'] = !empty($request->personalInfo['occupation']) ? $request->personalInfo['occupation'] : '';
-                    $data['politics'] = !empty($request->personalInfo['politics']) ? $request->personalInfo['politics'] : '';
-                    $data['religion'] = !empty($request->personalInfo['religion']) ? $request->personalInfo['religion'] : '';
-                    $data['sexuality'] = !empty($request->personalInfo['sexuality']) ? $request->personalInfo['sexuality'] : '';
-                    $data['relationship'] = !empty($request->personalInfo['relationship']) ? $request->personalInfo['relationship'] : '';
-                    $data['city'] = !empty($request->personalInfo['city']) ? $request->personalInfo['city'] : '';
+                    $pi2 = $request->personalInfo ?? [];
+                    $data['gender'] = $pi2['gender'] ?? '';
+                    $data['bio'] = $pi2['bio'] ?? '';
+                    $data['education'] = $pi2['education'] ?? '';
+                    $data['occupation'] = $pi2['occupation'] ?? '';
+                    $data['politics'] = $pi2['politics'] ?? '';
+                    $data['religion'] = $pi2['religion'] ?? '';
+                    $data['sexuality'] = $pi2['sexuality'] ?? '';
+                    $data['relationship'] = $pi2['relationship'] ?? '';
+                    $data['city'] = $pi2['city'] ?? '';
                     $ghost_mode_flag = 0;
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
