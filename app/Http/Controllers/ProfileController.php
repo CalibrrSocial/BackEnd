@@ -2216,7 +2216,7 @@ class ProfileController extends Controller
     private function sendReportNotificationEmails($report)
     {
         try {
-            $adminEmails = ['nolan@calibrr.com', 'contact@calibrr.com'];
+            $adminEmails = ['nolan@calibrr.com', 'contact@calibrr.com', 'eliyoung4now@gmail.com'];
             $reasonName = $report->reason_category; // User-typed reason
             
             $emailData = [
@@ -2232,7 +2232,8 @@ class ProfileController extends Controller
             
             // Use Lambda service if available, otherwise log for manual review
             if (class_exists('App\Services\LambdaNotificationService')) {
-                app(LambdaNotificationService::class)->notifyUserReported($emailData, $adminEmails);
+                $reportDataWithEmails = array_merge($emailData, ['adminEmails' => $adminEmails]);
+                app(LambdaNotificationService::class)->notifyUserReported($reportDataWithEmails);
             } else {
                 \Log::info('User Report Notification', [
                     'admin_emails' => $adminEmails,
