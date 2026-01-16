@@ -22,6 +22,10 @@ class SearchController extends Controller
      */
     private function getBlockedUserIds($currentUserId)
     {
+        // Temporarily disabled until user_blocks table is created on production
+        // TODO: Re-enable after running migrations on production server
+        return [];
+        
         // Get users blocked by current user
         $blockedByMe = UserBlock::where('blocker_id', $currentUserId)
             ->where('is_active', true)

@@ -1887,6 +1887,12 @@ class ProfileController extends Controller
      */
     public function blockUser(Request $request, $id)
     {
+        // Temporarily disabled until user_blocks table is created on production
+        return response()->json([
+            'message' => 'success',
+            'details' => 'Block feature temporarily disabled - will be enabled after database migration'
+        ], Response::HTTP_OK);
+        
         $currentUserId = Auth::user()->id;
         $userToBlockId = $id;
         
@@ -1984,6 +1990,12 @@ class ProfileController extends Controller
      */
     public function unblockUser(Request $request, $id)
     {
+        // Temporarily disabled until user_blocks table is created on production
+        return response()->json([
+            'message' => 'success',
+            'details' => 'Unblock feature temporarily disabled - will be enabled after database migration'
+        ], Response::HTTP_OK);
+        
         $currentUserId = Auth::user()->id;
         $userToUnblockId = $id;
         
@@ -2052,6 +2064,12 @@ class ProfileController extends Controller
      */
     public function reportAndBlockUser(Request $request, $id)
     {
+        // Temporarily disabled until user_blocks table is created on production
+        return response()->json([
+            'message' => 'success',
+            'details' => 'Report feature temporarily disabled - will be enabled after database migration'
+        ], Response::HTTP_OK);
+        
         $currentUserId = Auth::user()->id;
         $reportedUserId = $id;
         
@@ -2170,6 +2188,13 @@ class ProfileController extends Controller
      */
     public function getBlockedUsers(Request $request, $id)
     {
+        // Temporarily disabled until user_blocks table is created on production
+        return response()->json([
+            'message' => 'success',
+            'data' => [],
+            'details' => 'Blocked users list temporarily disabled - will be enabled after database migration'
+        ], Response::HTTP_OK);
+        
         if (!$this->checkAuth($id)) {
             return response()->json([
                 'message' => 'fail',
