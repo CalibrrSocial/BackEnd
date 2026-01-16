@@ -1718,6 +1718,12 @@ class ProfileController extends Controller
         } else {
             if ($this->checkAuth($id)) {
                 $profileLikeId = $request->profileLikeId ?? $request->query('profileLikedId');
+                \Log::info('likeProfile request', [
+                    'authId' => (string)$id,
+                    'profileLikedId' => (string)($profileLikeId ?? ''),
+                    'LAMBDA_DEBUG' => env('LAMBDA_DEBUG'),
+                    'lambda_function' => env('LAMBDA_PROFILE_LIKED_FUNCTION')
+                ]);
                 if (!$profileLikeId) {
                     return response()->json(['message' => 'fail','details' => 'profileLikedId missing'], Response::HTTP_BAD_REQUEST);
                 }
@@ -1728,7 +1734,13 @@ class ProfileController extends Controller
                     $created = true;
                 } catch (\Throwable $e) {
                     // duplicate -> already liked
+                    \Log::info('likeProfile duplicate like detected', [
+                        'authId' => (string)$id,
+                        'profileLikedId' => (string)$profileLikeId,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
+                \Log::info('likeProfile state', ['created' => $created, 'self_like' => $id === $profileLikeId]);
                 // First-like notification (once per pair), suppress for self-like
                 if ($created && $id !== $profileLikeId && !DB::table('profile_like_events')->where('user_id',$id)->where('profile_id',$profileLikeId)->exists()) {
                     DB::table('profile_like_events')->insert([
@@ -1749,6 +1761,11 @@ class ProfileController extends Controller
                         $additional['senderFirstName'] = $sender->first_name ?? null;
                         $additional['senderLastName'] = $sender->last_name ?? null;
                     }
+                    \Log::info('likeProfile invoking lambda', [
+                        'recipientUserId' => (int)$profileLikeId,
+                        'senderUserId' => (int)$id,
+                        'hasRecipientEmail' => !empty($additional['recipientEmail']),
+                    ]);
                     try { app(LambdaNotificationService::class)->notifyProfileLiked((int)$profileLikeId, (int)$id, $additional); } catch (\Throwable $e) { }
                 }
                 return $created ? response()->noContent(Response::HTTP_CREATED) : response()->noContent(Response::HTTP_OK);
