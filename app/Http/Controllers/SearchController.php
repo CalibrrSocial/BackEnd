@@ -35,7 +35,7 @@ class SearchController extends Controller
      *    ),
      *    in="query",
      *    required=true,
-     *    example={"minDistance" = {"type":"feet", "amount":0}},
+     *    example={"minDistance" = {"type":"Feet", "amount":0}},
      * ),
      * @OA\Parameter(
      *    name="maxDistance",
@@ -44,7 +44,7 @@ class SearchController extends Controller
      *    ),
      *    in="query",
      *    required=true,
-     *    example={"maxDistance" = {"type":"feet", "amount":0}},
+     *    example={"maxDistance" = {"type":"Feet", "amount":0}},
      * ),
      * @OA\Response(
      *    response=200,
@@ -73,10 +73,10 @@ class SearchController extends Controller
         }
 
         switch ($type) {
-            case "feet":
+            case "Feet":
                 $type_value = 6371000 * 3.2808399;
                 break;
-            case "meters":
+            case "Meters":
                 $type_value = 6371000;
                 break;
             default:
