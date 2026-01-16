@@ -2181,7 +2181,7 @@ class ProfileController extends Controller
             $blockedUsers = UserBlock::where('blocker_id', $id)
                 ->where('is_active', true)
                 ->with(['blocked' => function($query) {
-                    $query->select('id', 'first_name', 'last_name', 'profile_pic');
+                    $query->select('id', 'first_name', 'last_name', 'picture_profile');
                 }])
                 ->orderBy('created_at', 'desc')
                 ->get()
@@ -2190,7 +2190,7 @@ class ProfileController extends Controller
                         'id' => $block->blocked->id,
                         'firstName' => $block->blocked->first_name,
                         'lastName' => $block->blocked->last_name,
-                        'avatarUrl' => $block->blocked->profile_pic,
+                        'avatarUrl' => $block->blocked->picture_profile,
                         'blockedAt' => $block->created_at->toISOString(),
                         'reason' => $block->reason
                     ];
