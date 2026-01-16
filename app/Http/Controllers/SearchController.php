@@ -120,17 +120,6 @@ class SearchController extends Controller
                 }
             }
 
-            // get users who has same courses
-            $query = DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->join('courses', function($join) use ($authUser) {
-                return $join->on('users.id', '=', 'courses.user_id')->whereIn('courses.name', function ($q) use ($authUser) {
-                    return $q->select('courses.name')->from('users')->where('users.id', $authUser->id)
-                        ->join('courses', 'users.id', '=', 'courses.user_id');
-                });
-            });
-
-            // get users who has same studying
-            $query = $query->union(DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->where('studying', $authUser->studying));
-
             // get auth course names
             $courseNames = Course::where('user_id', $authUser->id)->get();
             $courseNames = $courseNames->map(function ($i) {
@@ -144,9 +133,6 @@ class SearchController extends Controller
                 ->where('ghost_mode_flag', false)
                 ->whereIn('id', $arr_user)
                 ->whereNotIn('id', $hide_user)
-                ->whereIn('users.id', function ($q) use ($query) {
-                    return $q->select('accounts.id')->from($query, 'accounts');
-                })
                 ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
                 ->get();
 
