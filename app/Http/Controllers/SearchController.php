@@ -51,6 +51,7 @@ class SearchController extends Controller
     public function searchByDistance(Request $request)
     {
         $authUser = Auth::user();
+        $fields = ['users.id', 'first_name', 'last_name', 'profile_pic', 'location', 'city', 'dob', 'studying', 'education', 'club', 'jersey_number', 'greek_life'];
         $lat = $request->position['latitude'];
         $lon = $request->position['longitude'];
         // $min_amount = $request->minDistance['amount'];
@@ -130,9 +131,16 @@ class SearchController extends Controller
             // get users who has same studying
             $query = $query->union(DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->where('studying', $authUser->studying));
 
+            // get auth course names
+            $courseNames = Course::where('user_id', $authUser->id)->get();
+            $courseNames = $courseNames->map(function ($i) {
+                return $i->name;
+            });
 
-            $users = DB::table('users')
-                ->select('*')
+            $users = User::select($fields)
+                ->with(['courses' => function ($q) use ($courseNames) {
+                    return $q->whereIn('name', $courseNames);
+                }])
                 ->where('ghost_mode_flag', false)
                 ->whereIn('id', $arr_user)
                 ->whereNotIn('id', $hide_user)
@@ -142,7 +150,8 @@ class SearchController extends Controller
                 ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
                 ->get();
 
-            return response()->json(UserResource::collection($users));
+
+            return response()->json(UserSearchResource::collection($users));
         } else {
             return response()->json([]);
         }
