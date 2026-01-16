@@ -161,7 +161,7 @@ class AuthController extends Controller
             return response()->json([
                 'massage' => 'Login fail',
                 'details' => 'Incorrect email or password'
-            ], 400);
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -219,7 +219,7 @@ class AuthController extends Controller
             return response()->json([
                 'massage' => 'Refresh fail',
                 'details' => 'Incorrect refresh token'
-            ], 400);
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -279,7 +279,7 @@ class AuthController extends Controller
             return response()->json([
                 'response' => 2,
                 'message' => 'Email is not registered'
-            ], 400);
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -316,7 +316,7 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Change password failed',
                 'details' => 'Your current password does not matches with the password'
-            ], 400);
+            ], Response::HTTP_BAD_REQUEST);
         } else {
             $user = User::where('id', Auth::user()->id)->first();
             $updatePasswordUser = $user->update([

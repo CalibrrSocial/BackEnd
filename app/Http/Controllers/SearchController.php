@@ -118,7 +118,7 @@ class SearchController extends Controller
             return response()->json([
                 'message' => 'Search failed',
                 'details' => 'User not found'
-            ], 400);
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -164,7 +164,7 @@ class SearchController extends Controller
             return response()->json([
                 'message' => 'Search failed',
                 'details' => 'User not found'
-            ], 400);
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 }

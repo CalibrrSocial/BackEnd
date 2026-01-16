@@ -56,7 +56,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $user = User::Where('id', $id)->first();
             if ($user) {
@@ -65,7 +65,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not registered'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -130,7 +130,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $user = User::Where('id', $id)->first();
             $userLocationInfo = LocationInfo::Where('user_id', $id)->first();
@@ -522,7 +522,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not registered'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -565,7 +565,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $user = User::whereid($id)->first();
             if ($user) {
@@ -579,7 +579,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not registered'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -644,7 +644,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $user = User::Where('id', $id)->first();
             $userLocationInfo = LocationInfo::Where('user_id', $id)->first();
@@ -1036,7 +1036,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not registered'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -1076,7 +1076,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $rela_list = Relationship::where('user_id', '=', $id)->get();
             if (count($rela_list) > 0) {
@@ -1085,7 +1085,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not reglationship'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -1133,7 +1133,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $rela = Relationship::where('user_id', '=', $userId)
                 ->where('friend_id', '=', $friendId)
@@ -1144,7 +1144,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not relationships'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -1192,7 +1192,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $relaUserToFriend = $relaFriendToUser = '';
             $status = 'requested';
@@ -1254,7 +1254,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not relationships'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -1309,7 +1309,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $time_zone = env('TIME_ZONE');
             $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
@@ -1349,7 +1349,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not requested relationships'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -1397,7 +1397,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $relaUserToFriend = Relationship::where('user_id', '=', $userId)
                 ->where('friend_id', '=', $friendId)
@@ -1417,7 +1417,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is blocked. Unblock to remove'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -1463,7 +1463,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not regiter'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -1511,7 +1511,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $profileLikeId = $request->profileLikeId;
             $user = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->get();
@@ -1519,7 +1519,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User and friend is liked'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             } else {
                 $user = ProfileLike::create(
                     [
@@ -1577,7 +1577,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $profileLikeId = $request->profileLikeId;
             $user = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->first();
@@ -1590,7 +1590,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User and friend is not liked'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -1635,7 +1635,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $userReport = Report::where('user_id', $id)->get();
             if (count($userReport) > 0) {
@@ -1644,7 +1644,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not reported'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
@@ -1693,7 +1693,7 @@ class ProfileController extends Controller
             return response()->json([
                 'massage' => 'Fail',
                 'details' => 'Id not found'
-            ], 400);
+            ], Response::HTTP_NOT_FOUND);
         } else {
             $time_zone = env('TIME_ZONE');
             $createdTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
@@ -1733,7 +1733,7 @@ class ProfileController extends Controller
                 return response()->json([
                     'massage' => 'Fail',
                     'details' => 'User is not reported'
-                ], 400);
+                ], Response::HTTP_BAD_REQUEST);
             }
         }
     }
