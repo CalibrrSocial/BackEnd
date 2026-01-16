@@ -49,17 +49,23 @@ class ProfileController extends Controller
 
     public function getUser($id)
     {
-
-        $user = User::Where('id', $id)->first();
-        if ($user) {
-            return response()->json([
-                'user' => new UserResource($user),
-            ], Response::HTTP_OK);
-        } else {
+        if (!$id) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not registered'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $user = User::Where('id', $id)->first();
+            if ($user) {
+                return response()->json([
+                    new UserResource($user),
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not registered'
+                ], 400);
+            }
         }
     }
 
@@ -104,7 +110,7 @@ class ProfileController extends Controller
      *          @OA\Property(property="twitter", type="string",example="Không có"),
      *          @OA\Property(property="resume", type="string",example="Không có"),
      *          @OA\Property(property="coverLetter", type="string",example="Không có"),
-     *          @OA\Property(property="email_2", type="string",example="Không có"),
+     *          @OA\Property(property="email", type="string",example="Không có"),
      *          @OA\Property(property="website", type="string",example="Không có"),
      *          @OA\Property(property="contact", type="string",example="Không có"),
      *          )
@@ -119,18 +125,37 @@ class ProfileController extends Controller
 
     public function updateUserProfile(Request $request, $id)
     {
-        $user = User::Where('id', $id)->first();
-        if ($user) {
-            $data = $request->all();
-            $user->update($data);
-            return response()->json([
-                'user' => new UserResource($user),
-            ], Response::HTTP_OK);
-        } else {
+        if (!$id) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not registered'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $user = User::Where('id', $id)->first();
+            if ($user) {
+                $data = $request->all();
+                $data['latitude'] = $request->location['latitude'];
+                $data['longitude'] = $request->location['longitude'];
+                $data['facebook'] = $request->socialInfo['facebook'];
+                $data['instagram'] = $request->socialInfo['instagram'];
+                $data['snapchat'] = $request->socialInfo['snapchat'];
+                $data['linkedIn'] = $request->socialInfo['linkedIn'];
+                $data['twitter'] = $request->socialInfo['twitter'];
+                $data['resume'] = $request->socialInfo['resume'];
+                $data['coverLetter'] = $request->socialInfo['coverLetter'];
+                $data['email_2'] = $request->socialInfo['email'];
+                $data['website'] = $request->socialInfo['website'];
+                $data['contact'] = $request->socialInfo['contact'];
+                $user->update($data);
+                return response()->json([
+                    new UserResource($user),
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not registered'
+                ], 400);
+            }
         }
     }
 
@@ -168,17 +193,24 @@ class ProfileController extends Controller
 
     public function removeUserAccount($id)
     {
-        $user = User::whereid($id)->first();
-        if ($user) {
-            $user->delete($user);
-            return response()->json([
-                'message' => Exception::DELETE_SUCCESS,
-            ], Response::HTTP_OK);
-        } else {
+        if (!$id) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not registered'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $user = User::whereid($id)->first();
+            if ($user) {
+                $user->delete($user);
+                return response()->json([
+                    'message' => Exception::DELETE_SUCCESS,
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not registered'
+                ], 400);
+            }
         }
     }
 
@@ -223,7 +255,7 @@ class ProfileController extends Controller
      *          @OA\Property(property="twitter", type="string",example="Không có"),
      *          @OA\Property(property="resume", type="string",example="Không có"),
      *          @OA\Property(property="coverLetter", type="string",example="Không có"),
-     *          @OA\Property(property="email_2", type="string",example="Không có"),
+     *          @OA\Property(property="email", type="string",example="Không có"),
      *          @OA\Property(property="website", type="string",example="Không có"),
      *          @OA\Property(property="contact", type="string",example="Không có"),
      *          )
@@ -238,18 +270,37 @@ class ProfileController extends Controller
 
     public function updateUserLocation(Request $request, $id)
     {
-        $user = User::Where('id', $id)->first();
-        if ($user) {
-            $data = $request->all();
-            $user->update($data);
-            return response()->json([
-                'user' => new UserResource($user),
-            ], Response::HTTP_OK);
-        } else {
+        if (!$id) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not registered'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $user = User::Where('id', $id)->first();
+            if ($user) {
+                $data = $request->all();
+                $data['latitude'] = $request->location['latitude'];
+                $data['longitude'] = $request->location['longitude'];
+                $data['facebook'] = $request->socialInfo['facebook'];
+                $data['instagram'] = $request->socialInfo['instagram'];
+                $data['snapchat'] = $request->socialInfo['snapchat'];
+                $data['linkedIn'] = $request->socialInfo['linkedIn'];
+                $data['twitter'] = $request->socialInfo['twitter'];
+                $data['resume'] = $request->socialInfo['resume'];
+                $data['coverLetter'] = $request->socialInfo['coverLetter'];
+                $data['email_2'] = $request->socialInfo['email'];
+                $data['website'] = $request->socialInfo['website'];
+                $data['contact'] = $request->socialInfo['contact'];
+                $user->update($data);
+                return response()->json([
+                    new UserResource($user),
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not registered'
+                ], 400);
+            }
         }
     }
 
@@ -284,14 +335,23 @@ class ProfileController extends Controller
 
     public function getUserRelationships($id)
     {
-        $rela_list = Relationship::where('user_id', '=', $id)->get();
-        if ($rela_list) {
-            return RelationshipResource::collection($rela_list);
-        } else {
+        if (!$id) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not registered'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $rela_list = Relationship::where('user_id', '=', $id)->get();
+            if (count($rela_list) > 0) {
+                return response()->json([
+                    RelationshipResource::collection($rela_list),
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not registered'
+                ], 400);
+            }
         }
     }
 
@@ -334,18 +394,25 @@ class ProfileController extends Controller
 
     public function getRelationship($userId, $friendId)
     {
-        $rela = Relationship::where('user_id', '=', $userId)
-            ->where('friend_id', '=', $friendId)
-            ->first();
-        if ($rela) {
-            return response()->json([
-                'relationships' => new RelationshipResource($rela),
-            ], Response::HTTP_OK);
-        } else {
+        if (!$userId) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not relationships'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $rela = Relationship::where('user_id', '=', $userId)
+                ->where('friend_id', '=', $friendId)
+                ->first();
+            if ($rela) {
+                return response()->json([
+                    new RelationshipResource($rela),
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not relationships'
+                ], 400);
+            }
         }
     }
 
@@ -388,67 +455,74 @@ class ProfileController extends Controller
 
     public function requestFriend($userId, $friendId)
     {
-        $relaUserToFriend = $relaFriendToUser = '';
-        $status = 'requested';
-        $time_zone = env('TIME_ZONE');
-        $requestedTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
-
-        $countRela = Relationship::where('user_id', $userId)
-            ->where('friend_id', $friendId)
-            ->get();
-
-
-        if (count($countRela) > 0) {
-            $relaUserToFriend = Relationship::where('user_id', '=', $userId)
-                ->where('friend_id', '=', $friendId)
-                ->update([
-                    'status' => $status,
-                    'dateRequested' => $requestedTime
-                ]);
-
-            $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
-                ->where('friend_id', '=', $userId)
-                ->update([
-                    'status' => $status,
-                    'dateRequested' => $requestedTime
-                ]);
-
-            $relaUserToFriend = Relationship::where('user_id', '=', $userId)
-                ->where('friend_id', '=', $friendId)
-                ->first();
-
-            $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
-                ->where('friend_id', '=', $userId)
-                ->first();
-        } else {
-            $relaUserToFriend = Relationship::create(
-                [
-                    'user_id' => $userId,
-                    'friend_id' => $friendId,
-                    "status" => $status,
-                    "dateRequested" => $requestedTime,
-                ],
-            );
-
-            $relaFriendToUser = Relationship::create(
-                [
-                    'user_id' => $friendId,
-                    'friend_id' => $userId,
-                    "status" => $status,
-                    "dateRequested" => $requestedTime,
-                ],
-            );
-        }
-
-        if ($relaFriendToUser && $relaUserToFriend) {
-            return response()->json([
-                'Success'
-            ], Response::HTTP_OK);
-        } else {
+        if (!$userId) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not relationships'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $relaUserToFriend = $relaFriendToUser = '';
+            $status = 'requested';
+            $time_zone = env('TIME_ZONE');
+            $requestedTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
+
+            $countRela = Relationship::where('user_id', $userId)
+                ->where('friend_id', $friendId)
+                ->get();
+
+
+            if (count($countRela) > 0) {
+                $relaUserToFriend = Relationship::where('user_id', '=', $userId)
+                    ->where('friend_id', '=', $friendId)
+                    ->update([
+                        'status' => $status,
+                        'dateRequested' => $requestedTime
+                    ]);
+
+                $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
+                    ->where('friend_id', '=', $userId)
+                    ->update([
+                        'status' => $status,
+                        'dateRequested' => $requestedTime
+                    ]);
+
+                $relaUserToFriend = Relationship::where('user_id', '=', $userId)
+                    ->where('friend_id', '=', $friendId)
+                    ->first();
+
+                $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
+                    ->where('friend_id', '=', $userId)
+                    ->first();
+            } else {
+                $relaUserToFriend = Relationship::create(
+                    [
+                        'user_id' => $userId,
+                        'friend_id' => $friendId,
+                        "status" => $status,
+                        "dateRequested" => $requestedTime,
+                    ],
+                );
+
+                $relaFriendToUser = Relationship::create(
+                    [
+                        'user_id' => $friendId,
+                        'friend_id' => $userId,
+                        "status" => $status,
+                        "dateRequested" => $requestedTime,
+                    ],
+                );
+            }
+
+            if ($relaFriendToUser && $relaUserToFriend) {
+                return response()->json([
+                    'Success'
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not relationships'
+                ], 400);
+            }
         }
     }
 
@@ -498,45 +572,52 @@ class ProfileController extends Controller
 
     public function updateFriend(Request $request, $userId, $friendId)
     {
-        $time_zone = env('TIME_ZONE');
-        $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
-
-        $relaUserToFriend = Relationship::where('user_id', '=', $userId)
-            ->where('friend_id', '=', $friendId)
-            ->first();
-
-        $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
-            ->where('friend_id', '=', $userId)
-            ->first();
-
-        if ($relaUserToFriend && $relaFriendToUser) {
-
-            $data = $request->all();
-
-            $relaUserToFriend->update($data);
-            $relaFriendToUser->update($data);
-
-            if ($request->status === 'accepted') {
-                $relaUserToFriend->update(['dateAccepted' => $actionTime]);
-                $relaFriendToUser->update(['dateAccepted' => $actionTime]);
-            }
-            if ($request->status === 'rejected') {
-                $relaUserToFriend->update(['dateRejected' => $actionTime]);
-                $relaFriendToUser->update(['dateRejected' => $actionTime]);
-            }
-            if ($request->status === 'blocked') {
-                $relaUserToFriend->update(['dateBlocked' => $actionTime]);
-                $relaFriendToUser->update(['dateBlocked' => $actionTime]);
-            }
-
-            return response()->json([
-                "Success"
-            ], Response::HTTP_OK);
-        } else {
+        if (!$userId) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not relationships'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $time_zone = env('TIME_ZONE');
+            $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
+
+            $relaUserToFriend = Relationship::where('user_id', '=', $userId)
+                ->where('friend_id', '=', $friendId)
+                ->first();
+
+            $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
+                ->where('friend_id', '=', $userId)
+                ->first();
+
+            if ($relaUserToFriend && $relaFriendToUser) {
+
+                $data = $request->all();
+
+                $relaUserToFriend->update($data);
+                $relaFriendToUser->update($data);
+
+                if ($request->status === 'accepted') {
+                    $relaUserToFriend->update(['dateAccepted' => $actionTime]);
+                    $relaFriendToUser->update(['dateAccepted' => $actionTime]);
+                }
+                if ($request->status === 'rejected') {
+                    $relaUserToFriend->update(['dateRejected' => $actionTime]);
+                    $relaFriendToUser->update(['dateRejected' => $actionTime]);
+                }
+                if ($request->status === 'blocked') {
+                    $relaUserToFriend->update(['dateBlocked' => $actionTime]);
+                    $relaFriendToUser->update(['dateBlocked' => $actionTime]);
+                }
+
+                return response()->json([
+                    "Success"
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not relationships'
+                ], 400);
+            }
         }
     }
 
@@ -579,25 +660,32 @@ class ProfileController extends Controller
 
     public function unblockAndDeleteUserRelationship($userId, $friendId)
     {
-        $relaUserToFriend = Relationship::where('user_id', '=', $userId)
-            ->where('friend_id', '=', $friendId)
-            ->first();
-
-        $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
-            ->where('friend_id', '=', $userId)
-            ->first();
-
-        if ($relaUserToFriend->status != 'blocked' && $relaFriendToUser->status != 'blocked') {
-            $relaUserToFriend->delete($relaUserToFriend);
-            $relaFriendToUser->delete($relaFriendToUser);
-            return response()->json([
-                "Success"
-            ], Response::HTTP_OK);
-        } else {
+        if (!$userId) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not relationships'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $relaUserToFriend = Relationship::where('user_id', '=', $userId)
+                ->where('friend_id', '=', $friendId)
+                ->first();
+
+            $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
+                ->where('friend_id', '=', $userId)
+                ->first();
+
+            if ($relaUserToFriend->status != 'blocked' && $relaFriendToUser->status != 'blocked') {
+                $relaUserToFriend->delete($relaUserToFriend);
+                $relaFriendToUser->delete($relaFriendToUser);
+                return response()->json([
+                    "Success"
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not relationships'
+                ], 400);
+            }
         }
     }
 
@@ -632,14 +720,21 @@ class ProfileController extends Controller
 
     public function getLikes($id)
     {
-        $user = User::Where('id', $id)->first();
-        if ($user) {
-            return $user->likeCount;
-        } else {
+        if (!$id) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not regiter'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $user = User::Where('id', $id)->first();
+            if ($user) {
+                return $user->likeCount;
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not regiter'
+                ], 400);
+            }
         }
     }
 
@@ -682,23 +777,30 @@ class ProfileController extends Controller
 
     public function likeProfile(Request $request, $id)
     {
-        $user = User::Where('id', $id)->first();
-        $user->update(['liked' => 'true']);
-
-        $profileLikeId = $request->profileLikeId;
-        $profileLike = User::Where('id', $profileLikeId)->first();
-        $currentProfileLiked = $profileLike->likeCount;
-        $profileLike->update(['likeCount' => $currentProfileLiked + 1]);
-
-        if ($user) {
-            return response()->json([
-                "Success",
-            ], Response::HTTP_OK);
-        } else {
+        if (!$id) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not regiter'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $user = User::Where('id', $id)->first();
+            $user->update(['liked' => '1']);
+
+            $profileLikeId = $request->profileLikeId;
+            $profileLike = User::Where('id', $profileLikeId)->first();
+            $currentProfileLiked = $profileLike->likeCount;
+            $profileLike->update(['likeCount' => $currentProfileLiked + 1]);
+
+            if ($user) {
+                return response()->json([
+                    "Success",
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not regiter'
+                ], 400);
+            }
         }
     }
 
@@ -741,23 +843,30 @@ class ProfileController extends Controller
 
     public function unlikeProfile(Request $request, $id)
     {
-        $user = User::Where('id', $id)->first();
-        $user->update(['liked' => 'false']);
-
-        $profileLikeId = $request->proprofileLikeId;
-        $profileLike = User::Where('id', $profileLikeId)->first();
-        $currentProfileLiked = $profileLike->likeCount;
-        $profileLike->update(['likeCount' => $currentProfileLiked - 1]);
-
-        if ($user) {
-            return response()->json([
-                'Success'
-            ], Response::HTTP_OK);
-        } else {
+        if (!$id) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not regiter'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $user = User::Where('id', $id)->first();
+            $user->update(['liked' => '0']);
+
+            $profileLikeId = $request->profileLikeId;
+            $profileLike = User::Where('id', $profileLikeId)->first();
+            $currentProfileLiked = $profileLike->likeCount;
+            $profileLike->update(['likeCount' => $currentProfileLiked - 1]);
+
+            if ($user) {
+                return response()->json([
+                    'Success'
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not regiter'
+                ], 400);
+            }
         }
     }
 
@@ -797,14 +906,21 @@ class ProfileController extends Controller
 
     public function getUserReports($id)
     {
-        $userReport = Report::where('user_id', $id)->get();
-        if ($userReport) {
-            return ReportResource::collection($userReport);
-        } else {
+        if (!$id) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not reported'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $userReport = Report::where('user_id', $id)->get();
+            if (count($userReport) > 0) {
+                return ReportResource::collection($userReport);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not reported'
+                ], 400);
+            }
         }
     }
 
@@ -848,46 +964,54 @@ class ProfileController extends Controller
 
     public function reportUser(Request $request, $id)
     {
-        $time_zone = env('TIME_ZONE');
-        $createdTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
-        $user_id = Auth::user()->id;
-        $existReport = Report::where('id', $id)
-            ->where('user_id', $user_id)
-            ->first();
-
-        $noExistReport = Report::where('user_id', $user_id)
-            ->where('id', '!=', $id)
-            ->first();
-
-        if ($existReport) {
-            $existReport->update(
-                [
-                    'info' => $request->info,
-                    'dateCreated' => $createdTime,
-                ]
-            );
-            return response()->json([
-                'status' => "Success",
-                'message' => Exception::SHOW,
-                'report' => new ReportResource($existReport),
-            ], Response::HTTP_OK);
-        } else if ($noExistReport) {
-            $noExistReport->create(
-                [
-                    'id' => $id,
-                    'user_id' => $user_id,
-                    'info' => $request->info,
-                    'dateCreated' => $createdTime
-                ]
-            );
-            return response()->json([
-                "Success",
-            ], Response::HTTP_OK);
-        } else {
+        if (!$id) {
             return response()->json([
                 'massage' => 'Fail',
-                'details' => 'User is not reported'
-            ], 400);
+                'details' => 'Id not found'
+            ], 404);
+        } else {
+            $time_zone = env('TIME_ZONE');
+            $createdTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
+            $user_id = Auth::user()->id;
+
+            $existReport = Report::where('id', $id)
+                ->where('user_id', $user_id)
+                ->first();
+
+            $noExistReport = Report::where('user_id', $user_id)
+                ->where('id', '!=', $id)
+                ->first();
+
+            if ($existReport) {
+                $existReport->update(
+                    [
+                        'info' => $request->info,
+                        'dateCreated' => $createdTime,
+                    ]
+                );
+                return response()->json([
+                    'status' => "Success",
+                    'message' => Exception::SHOW,
+                    'report' => new ReportResource($existReport),
+                ], Response::HTTP_OK);
+            } else if ($noExistReport) {
+                $noExistReport->create(
+                    [
+                        'id' => $id,
+                        'user_id' => "$user_id",
+                        'info' => $request->info,
+                        'dateCreated' => $createdTime
+                    ]
+                );
+                return response()->json([
+                    "Success",
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User is not reported'
+                ], 400);
+            }
         }
     }
 }

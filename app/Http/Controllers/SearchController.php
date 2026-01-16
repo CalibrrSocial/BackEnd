@@ -136,15 +136,14 @@ class SearchController extends Controller
             ->orWhere(DB::raw("concat(firstname, lastname)"), 'LIKE', "%" . $name . "%")
             ->get();
 
-        if ($user) {
+        if (count($user) > 0) {
             return response()->json([
-                'status' => "Success",
-                'message' => Exception::SHOW,
-                'user' => UserResource::collection($user),
+                UserResource::collection($user),
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not registered'
+                'message' => 'Search failed',
+                'details' => 'User not found'
             ], Response::HTTP_NOT_FOUND);
         }
     }

@@ -308,7 +308,6 @@ class AuthController extends Controller
                 $message->to($mail_details['email']);
                 $message->subject($mail_details['subject']);
             });
-            // dd($send_result);
             if ($send_result == null) {
                 $updatePasswordUser = $user->update([
                     'password' => bcrypt($data['my_password'])
@@ -318,12 +317,14 @@ class AuthController extends Controller
                 ]);
             } else {
                 return response()->json([
-                    'message' => 'Send mail fail'
+                    'message' => 'Fail',
+                    'details' => 'Send mail fail',
                 ]);
             }
         } else {
             return response()->json([
-                'message' => 'Email is not registered'
+                'message' => 'Send mail failed',
+                'details' => 'Email is not registered'
             ], Response::HTTP_NOT_FOUND);
         }
     }
@@ -359,8 +360,9 @@ class AuthController extends Controller
     {
         if (!(Hash::check($request->oldPassword, Auth::user()->password))) {
             return response()->json([
-                'message' => 'Your current password does not matches with the password'
-            ]);
+                'message' => 'Change password failed',
+                'details' => 'Your current password does not matches with the password'
+            ], 400);
         } else {
             $user = User::where('id', Auth::user()->id)->first();
             $updatePasswordUser = $user->update([
