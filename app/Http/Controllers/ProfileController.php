@@ -150,6 +150,7 @@ class ProfileController extends Controller
 
     public function updateUserProfile(Request $request, $id)
     {
+        \Log::info('updateUserProfile payload', $request->all());
         if (!$id) {
             return response()->json([
                 'message' => 'fail',
@@ -750,6 +751,7 @@ class ProfileController extends Controller
 
     public function updateUserLocation(Request $request, $id)
     {
+        \Log::info('updateUserLocation payload', $request->all());
         if (!$id) {
             return response()->json([
                 'message' => 'fail',
