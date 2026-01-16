@@ -1996,14 +1996,29 @@ class ProfileController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
+        // Get total count of likes for this attribute
         $count = AttributeLike::where('profile_id', $id)
             ->where('category', $category)
             ->where('attribute', $attribute)
             ->where('is_deleted', 0)
             ->count();
             
+        // Check if current authenticated user has liked this attribute
+        $likedByUser = false;
+        if (Auth::check()) {
+            $currentUserId = Auth::user()->id;
+            $userLike = AttributeLike::where('profile_id', $id)
+                ->where('category', $category)
+                ->where('attribute', $attribute)
+                ->where('user_id', $currentUserId)
+                ->where('is_deleted', 0)
+                ->first();
+            $likedByUser = $userLike !== null;
+        }
+            
         return response()->json([
-            'count' => $count
+            'total_likes' => $count,
+            'liked_by_user' => $likedByUser
         ]);
     }
 
