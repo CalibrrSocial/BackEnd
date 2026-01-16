@@ -2178,6 +2178,12 @@ class ProfileController extends Controller
         }
         
         try {
+            \Log::info("Getting blocked users for user ID: $id");
+            
+            // First check if any blocks exist
+            $blockCount = UserBlock::where('blocker_id', $id)->where('is_active', true)->count();
+            \Log::info("Found $blockCount active blocks for user $id");
+            
             $blockedUsers = UserBlock::where('blocker_id', $id)
                 ->where('is_active', true)
                 ->with(['blocked' => function($query) {
@@ -2186,6 +2192,10 @@ class ProfileController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function($block) {
+                    if (!$block->blocked) {
+                        \Log::warning("Block record found but blocked user is null: " . $block->id);
+                        return null;
+                    }
                     return [
                         'id' => $block->blocked->id,
                         'firstName' => $block->blocked->first_name,
@@ -2194,7 +2204,10 @@ class ProfileController extends Controller
                         'blockedAt' => $block->created_at->toISOString(),
                         'reason' => $block->reason
                     ];
-                });
+                })
+                ->filter(); // Remove null entries
+            
+            \Log::info("Returning " . $blockedUsers->count() . " blocked users");
             
             return response()->json([
                 'message' => 'success',
@@ -2203,9 +2216,10 @@ class ProfileController extends Controller
             
         } catch (\Exception $e) {
             \Log::error('Get blocked users error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'message' => 'fail',
-                'details' => 'Failed to get blocked users'
+                'details' => 'Failed to get blocked users: ' . $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
