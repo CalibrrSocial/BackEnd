@@ -134,8 +134,8 @@ class ProfileController extends Controller
                 $time_zone = env('TIME_ZONE');
                 $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
                 $data = $request->all();
-                $data['latitude'] = !empty($request->location['latitude'])? $request->location['latitude'] : '';
-                $data['longitude'] = !empty($request->location['longitude'])? $request->location['longitude'] : '';
+                $data['latitude'] = !empty($request->location['latitude'])? (double)($request->location['latitude']) : 0;
+                $data['longitude'] = !empty($request->location['longitude'])? (double)($request->location['longitude']) : 0;
                 $data['locationTimestamp'] = $actionTime;
                 $data['facebook'] = !empty($request->location['facebook'])? $request->location['facebook'] : '';
                 $data['instagram'] = !empty($request->location['instagram'])? $request->location['instagram'] : '';
