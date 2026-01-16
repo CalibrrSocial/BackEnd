@@ -55,17 +55,20 @@ class SearchController extends Controller
         $my_id = Auth::user()->id;
 
         $type = $request->maxDistance['type'];
-
-        switch ($type) {
-            case "Feet":
-                $type_value = 6371000 * 3.2808399;
-                break;
-            case "Meters":
-                $type_value = 6371000;
-                break;
-            default:
-                $type_value = 6371;
-        }
+        $type_value = 6371000 * 0.000621371;
+        // switch ($type) {
+        //     case "Feet":
+        //         $type_value = 6371000 * 3.2808399;
+        //         break;
+        //     case "Meters":
+        //         $type_value = 6371000;
+        //         break;
+        //     case "Miles":
+        //         $type_value = 6371000 * 0.000621371;
+        //         break;
+        //     default:
+        //         $type_value = 6371;
+        // }
         $result = DB::table("location_infos")
             ->select(
                 "user_id",
