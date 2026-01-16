@@ -79,16 +79,16 @@ class AuthController extends Controller
 
         if ($validation->fails()) {
             return response([
-                "status" => 'error',
-                "message" => $validation->errors()->all(),
+                "message" => 'fail',
+                "details" => $validation->errors()->all(),
             ], Response::HTTP_BAD_REQUEST);
         }
 
         $check = DB::table('users')->where('email', $request->email)->where('password', '!=', null)->first();
         if ($check) {
             return response([
-                "status" => 'error',
-                "message" => "Email already in use",
+                "message" => 'fail',
+                "details" => "Email already in use",
             ], Response::HTTP_BAD_REQUEST);
         }
 
