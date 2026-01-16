@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -1740,6 +1741,69 @@ class ProfileController extends Controller
                 return response()->json([
                     'message' => 'fail',
                     'details' => 'User is not reported'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+        }
+    }
+    /**
+     * @OA\Post(
+     * path="/profile/{id}/upload",
+     * summary="Upload user avatar",
+     * description="Upload user avatar",
+     * operationId="uploadAvatar",
+     * security={{"bearerAuth":{}}},
+     * tags={"Profile"},
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(
+     *      type="string",
+     *    ),
+     *    in="path",
+     *    required=true,
+     * ),
+     *      @OA\RequestBody(
+     *          @OA\MediaType(
+     *              mediaType="multipart/form-data",
+     *              @OA\Schema(
+     *                  @OA\Property(
+     *                      description="Upload avatar",
+     *                      property="avatar",
+     *                      type="string",
+     *                      format="binary",
+     *                  ),
+     *              )
+     *          )
+     *      ),
+     * @OA\Response(
+     *    response=200,
+     *    description="Success",
+     *   )
+     * )
+     */
+
+    public function uploadAvatar(Request $request, $id)
+    {
+        if (!$id) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Id not found'
+            ], Response::HTTP_NOT_FOUND);
+        } else {
+            $user = User::where('id', $id)->first();
+            $avatar = $request->file('avatar');
+
+            if ($avatar != null) {
+                $avatar_path = $avatar->store('avatar', 's3');
+                $avatar_path = Storage::disk('s3')->url($avatar_path);
+                $user->update(['profile_pic' => $avatar_path]);
+                return response()->json([
+                    'message' => 'success',
+                    'details' => 'Upload avatar success'
+                ], Response::HTTP_OK);
+            } else {
+                return response()->json([
+                    'message' => 'fail',
+                    'details' => 'Avatar is null'
                 ], Response::HTTP_BAD_REQUEST);
             }
         }
