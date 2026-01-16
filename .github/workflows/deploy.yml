@@ -26,7 +26,12 @@ jobs:
             sudo apt-get install -y "php${PHPV}-xml" "php${PHPV}-curl" || sudo apt-get install -y php-xml php-curl
             php -m | grep -E 'dom|SimpleXML|curl' || true
 
-            # Git pull from your repo using HTTPS
+            # Configure git to use token authentication
+            git config --global credential.helper store
+            echo "https://${{ secrets.GITHUB_TOKEN }}:x-oauth-basic@github.com" > ~/.git-credentials
+            chmod 600 ~/.git-credentials
+
+            # Git pull from your repo using HTTPS with token
             git remote set-url origin https://github.com/EYoung21/calibrr-social-backend.git
             git fetch origin
             git checkout -B ${{ secrets.BRANCH }} origin/${{ secrets.BRANCH }}
