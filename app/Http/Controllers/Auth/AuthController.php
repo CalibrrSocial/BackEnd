@@ -131,8 +131,9 @@ class AuthController extends Controller
      *    required=true,
      *    description="Pass user credentials",
      *    @OA\JsonContent(
-     *       required={"username","password"},
-     *       @OA\Property(property="username", type="string",example="example@gmail.com"),
+     *       required={"password"},
+     *       @OA\Property(property="email", type="string",example="example@gmail.com"),
+     *       @OA\Property(property="username", type="string",example="0987654321"),
      *       @OA\Property(property="password", type="string", example="123456aA"),
      * 
      *    ),
@@ -147,17 +148,18 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $username = $request->username;
+        $email = $request->email;
+        $phone = $request->username;
 
-        if (empty($username)) {
+        if (empty($email) && empty($phone)) {
             return response()->json([
                 'message' => 'fail',
                 'details' => 'Incorrect username or password'
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $user = User::where('email', $username)
-            ->orWhere('phone', $username)
+        $user = User::where('email', $email)
+            ->orWhere('phone', $phone)
             ->first();
 
         if (!empty($user)) {
@@ -166,13 +168,13 @@ class AuthController extends Controller
                 'email' => $email,
                 'password' => $request->password
             ];
+            return $this->login_return($data);
         } else {
             return response()->json([
                 'message' => 'fail',
                 'details' => 'Incorrect username or password'
             ], Response::HTTP_BAD_REQUEST);
         }
-        return $this->login_return($data);
     }
     private function login_return($data)
     {
