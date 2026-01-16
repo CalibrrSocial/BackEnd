@@ -228,7 +228,8 @@ class ProfileController extends Controller
                     }
                     $data['locationTimestamp'] = $actionTime;
                     // Accept both snake_case and camelCase from clients and preserve existing when omitted
-                    $pi = $request->personalInfo ?? [];
+                    // Important: use input() to correctly read nested JSON payloads
+                    $pi = (array) $request->input('personalInfo', []);
                     $data['gender'] = $pi['gender'] ?? $user->gender;
                     $data['bio'] = $pi['bio'] ?? $user->bio;
                     $data['occupation'] = $pi['occupation'] ?? $user->occupation;
@@ -892,7 +893,8 @@ class ProfileController extends Controller
                     }
 
                     $data['locationTimestamp'] = $actionTime;
-                    $pi2 = $request->personalInfo ?? [];
+                    // Important: use input() to correctly read nested JSON payloads
+                    $pi2 = (array) $request->input('personalInfo', []);
                     $data['gender'] = $pi2['gender'] ?? $user->gender;
                     $data['bio'] = $pi2['bio'] ?? $user->bio;
                     $data['education'] = $pi2['education'] ?? $user->education;
