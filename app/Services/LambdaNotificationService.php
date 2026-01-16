@@ -13,16 +13,15 @@ class LambdaNotificationService
 
     public function __construct()
     {
-        // Read from OS env first, then Laravel env() as fallback
-        $region = getenv('LAMBDA_REGION') ?: env('LAMBDA_REGION');
-        if (!$region) { $region = getenv('AWS_DEFAULT_REGION') ?: env('AWS_DEFAULT_REGION', 'us-east-1'); }
+        // Prefer Laravel config (reads from .env) with getenv() fallbacks
+        $region = config('lambda.region') ?: (getenv('LAMBDA_REGION') ?: (getenv('AWS_DEFAULT_REGION') ?: 'us-east-1'));
         $config = [
             'version' => 'latest',
             'region' => $region,
         ];
-        $key = getenv('AWS_ACCESS_KEY_ID') ?: env('AWS_ACCESS_KEY_ID');
-        $secret = getenv('AWS_SECRET_ACCESS_KEY') ?: env('AWS_SECRET_ACCESS_KEY');
-        $token = getenv('AWS_SESSION_TOKEN') ?: env('AWS_SESSION_TOKEN');
+        $key = config('lambda.aws_key') ?: (getenv('AWS_ACCESS_KEY_ID') ?: env('AWS_ACCESS_KEY_ID'));
+        $secret = config('lambda.aws_secret') ?: (getenv('AWS_SECRET_ACCESS_KEY') ?: env('AWS_SECRET_ACCESS_KEY'));
+        $token = config('lambda.aws_token') ?: (getenv('AWS_SESSION_TOKEN') ?: env('AWS_SESSION_TOKEN'));
         if ($key && $secret) {
             $config['credentials'] = new Credentials($key, $secret, $token ?: null);
             \Log::warning('LambdaNotificationService using explicit AWS credentials from env', [
@@ -36,8 +35,8 @@ class LambdaNotificationService
             ]);
         }
         $this->client = new LambdaClient($config);
-        $this->functionName = getenv('LAMBDA_PROFILE_LIKED_FUNCTION') ?: env('LAMBDA_PROFILE_LIKED_FUNCTION', 'emailNotificationFinal');
-        $this->debug = filter_var((getenv('LAMBDA_DEBUG') ?: env('LAMBDA_DEBUG', 'false')), FILTER_VALIDATE_BOOLEAN);
+        $this->functionName = config('lambda.function') ?: (getenv('LAMBDA_PROFILE_LIKED_FUNCTION') ?: 'emailNotificationFinal');
+        $this->debug = filter_var((config('lambda.debug') !== null ? config('lambda.debug') : (getenv('LAMBDA_DEBUG') ?: 'false')), FILTER_VALIDATE_BOOLEAN);
     }
 
     public function notifyProfileLiked(int $recipientUserId, int $senderUserId, array $additionalData = []): void
