@@ -70,8 +70,15 @@ class UserResource extends JsonResource
       }
     }
 
-    $ghostMode = $this->ghostMode == 1 ? true : false;
-    $liked = $this->liked == 1 ? true : false;
+    $ghostMode = $this->ghost_mode_flag == 1 ? true : false;
+    $liked = DB::table('profile_likes')->where('user_id', $user_id)->first();
+    if ($liked) {
+      $like = true;
+    } else {
+      $like = false;
+    }
+    $visited = DB::table('profile_visit_analytics')->where('visited_profile_id', $user_id)->get();
+    $count_visit = count($visited);
 
     return [
       'id' => "$this->id",
@@ -80,14 +87,14 @@ class UserResource extends JsonResource
       'email' => $this->email,
       'phone' => $this->phone,
       'ghostMode' => $ghostMode,
-      'subscription' => $this->subscription,
+      'subscription' => $this->subscription_type,
       'location' => [
         'latitude' => $latitude,
         'longitude' => $longitude,
       ],
       'locationTimestamp' => $this->locationTimestamp,
-      'pictureProfile' => $this->pictureProfile,
-      'pictureCover' => $this->pictureCover,
+      'pictureProfile' => $this->profile_pic,
+      'pictureCover' => $this->cover_image,
       'personalInfo' => [
         'dob' => $this->dob,
         'gender' => $this->gender,
@@ -100,9 +107,9 @@ class UserResource extends JsonResource
         'city' => $this->city,
       ],
       'socialInfo' => $info,
-      'liked' => $liked,
+      'liked' => $like,
       'likeCount' => $countLike,
-      'visitCount' => $this->visitCount,
+      'visitCount' => $count_visit,
     ];
   }
 }

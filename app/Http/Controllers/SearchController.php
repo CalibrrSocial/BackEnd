@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Exceptions\Exception;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class SearchController extends Controller
@@ -82,24 +83,38 @@ class SearchController extends Controller
             default:
                 $type_value = 6371;
         }
-        $result = DB::table("users")
+        $result = DB::table("location_infos")
             ->select(
-                "*",
+                "user_id",
                 DB::raw("$type_value * acos(cos(radians(" . $lat . ")) 
-                * cos(radians(users.latitude)) 
-                * cos(radians(users.longitude) - radians(" . $lon . ")) 
+                * cos(radians(location_infos.latitude)) 
+                * cos(radians(location_infos.longitude) - radians(" . $lon . ")) 
                 + sin(radians(" . $lat . ")) 
-                * sin(radians(users.latitude))) AS distance")
+                * sin(radians(location_infos.latitude))) AS distance")
             )
             ->having("distance", "<=", $max_amount)
             ->having("distance", ">=", $min_amount)
             ->orderBy("distance")
             ->get();
+        foreach ($result as $re) {
+            unset($re->distance);
+        }
+        $arr_user = json_decode(json_encode($result), true);
 
-        // dd($result, count($result));
+        $arr_users = [];
+        foreach ($arr_user as $user) {
+            $arr_use = array_values($user);
+            $arr_users = array_merge($arr_users, $arr_use);
+        }
+        $tempStr = implode(',', $arr_users);
+        $users = DB::table('users')
+            ->select('*')
+            ->whereIn('id', $arr_user)
+            ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
+            ->get();
 
         if (count($result) > 0) {
-            return response()->json(UserResource::collection($result));
+            return response()->json(UserResource::collection($users));
         } else {
             return response()->json([
                 'message' => 'Search failed',
