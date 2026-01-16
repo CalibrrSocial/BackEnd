@@ -12,15 +12,16 @@ class LambdaNotificationService
 
     public function __construct()
     {
-        // Use getenv() so this works reliably even when config is cached
-        $region = getenv('LAMBDA_REGION') ?: (getenv('AWS_DEFAULT_REGION') ?: 'us-east-1');
+        // Read from OS env first, then Laravel env() as fallback
+        $region = getenv('LAMBDA_REGION') ?: env('LAMBDA_REGION');
+        if (!$region) { $region = getenv('AWS_DEFAULT_REGION') ?: env('AWS_DEFAULT_REGION', 'us-east-1'); }
         $config = [
             'version' => 'latest',
             'region' => $region,
         ];
-        $key = getenv('AWS_ACCESS_KEY_ID') ?: null;
-        $secret = getenv('AWS_SECRET_ACCESS_KEY') ?: null;
-        $token = getenv('AWS_SESSION_TOKEN') ?: null;
+        $key = getenv('AWS_ACCESS_KEY_ID') ?: env('AWS_ACCESS_KEY_ID');
+        $secret = getenv('AWS_SECRET_ACCESS_KEY') ?: env('AWS_SECRET_ACCESS_KEY');
+        $token = getenv('AWS_SESSION_TOKEN') ?: env('AWS_SESSION_TOKEN');
         if ($key && $secret) {
             $config['credentials'] = [
                 'key' => $key,
@@ -39,8 +40,8 @@ class LambdaNotificationService
             ]);
         }
         $this->client = new LambdaClient($config);
-        $this->functionName = getenv('LAMBDA_PROFILE_LIKED_FUNCTION') ?: 'emailNotificationFinal';
-        $this->debug = filter_var(getenv('LAMBDA_DEBUG') ?: 'false', FILTER_VALIDATE_BOOLEAN);
+        $this->functionName = getenv('LAMBDA_PROFILE_LIKED_FUNCTION') ?: env('LAMBDA_PROFILE_LIKED_FUNCTION', 'emailNotificationFinal');
+        $this->debug = filter_var((getenv('LAMBDA_DEBUG') ?: env('LAMBDA_DEBUG', 'false')), FILTER_VALIDATE_BOOLEAN);
     }
 
     public function notifyProfileLiked(int $recipientUserId, int $senderUserId, array $additionalData = []): void
