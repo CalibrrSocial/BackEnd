@@ -44,7 +44,7 @@
         </div>
         
         <div class="logo">
-            <img src="https://calibrr-email-logo-1753077694.s3.amazonaws.com/calibrr-logo.png" alt="Calibrr Social App" style="max-width: 200px; height: auto;">
+            <img src="https://calibrr-email-logo-1753077694.s3.amazonaws.com/CalibrrIcon.png" alt="Calibrr Social App" style="max-width: 200px; height: auto;">
         </div>
     </div>
 </body>
