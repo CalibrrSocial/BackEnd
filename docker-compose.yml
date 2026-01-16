@@ -1,0 +1,106 @@
+version: "3.7"
+# Container services
+services:
+    app:
+        container_name: ${PROJECT_PREFIX}${HOST_APP_NAME}
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        tty: true
+        depends_on: 
+            - mysql
+        volumes:
+            - ./:/var/www/html
+            - ./docker/config/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        networks:
+            - app-network
+    
+    webserver:
+        container_name: ${PROJECT_PREFIX}${HOST_WEBSERVER_NAME}
+        image: nginx:1.21-alpine
+        restart: unless-stopped
+        tty: true
+        depends_on: 
+            - mysql
+            - app
+        working_dir: /var/www/html
+        ports:
+            - "${HOST_WEBSERVER_PORT}:80"
+        volumes:
+            - ./:/var/www/html
+            - ./docker/config/nginx/conf.d/:/etc/nginx/conf.d/
+            - ./docker/data/log/nginx/:/var/log/nginx/
+        networks:
+            - app-network
+    
+    mysql:
+        container_name: ${PROJECT_PREFIX}${HOST_MYSQL_NAME}
+        image: mysql:5.7.22
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "${HOST_MYSQL_PORT}:3306"
+        environment:
+            MYSQL_HOST:          ${DB_HOST} # NOT USED
+            MYSQL_PORT:          ${DB_PORT} # NOT USED
+            MYSQL_DATABASE:      ${DB_DATABASE}
+            MYSQL_USER:          ${DB_USERNAME}
+            MYSQL_PASSWORD:      ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+        volumes:
+            - ./docker/config/mysql/my.cnf:/etc/mysql/my.cnf
+            - ./docker/config/mysql/conf.d/:/etc/mysql/conf.d/
+            - ./docker/data/log/mysql/:/var/log/mysql/
+        networks:
+            - app-network
+    
+    redis:
+        container_name: ${PROJECT_PREFIX}${HOST_REDIS_NAME}
+        image: redis:5.0.8
+        restart: always
+        ports: 
+            - ${HOST_REDIS_PORT}:6379
+        volumes: 
+            - ./docker/data/log/redis:/var/log/redis
+            - redis-data:/data
+        networks: 
+            - app-network
+
+    phpmyadmin:
+        container_name: ${PROJECT_PREFIX}${HOST_PHPMYADMIN_NAME}
+        image: phpmyadmin/phpmyadmin:5.0.1
+        environment:
+            - PMA_HOST=${PROJECT_PREFIX}${HOST_MYSQL_NAME}
+            - PMA_PORT=3306
+            - UPLOAD_LIMIT=1000M
+            - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+        restart: always
+        depends_on: 
+            - mysql
+        ports:
+            - ${HOST_PHPMYADMIN_PORT}:80
+        volumes: 
+            - ./docker/config/phpmyadmin/php/conf.d:/usr/local/etc/php/conf.d/
+        networks: 
+            - app-network
+
+    mailhog:
+        container_name: ${PROJECT_PREFIX}${HOST_MAILHOG_NAME}
+        image: mailhog/mailhog:v1.0.1
+        restart: always
+        ports:
+            - ${HOST_MAILHOG_SMTP_PORT}:1025
+            - ${HOST_MAILHOG_HTTP_PORT}:8025
+        networks:
+            - app-network
+
+#Docker Networks
+networks:
+    app-network:
+        driver: bridge
+
+#Volumes
+volumes:
+    mysql-data:
+    redis-data:

@@ -1,0 +1,186 @@
+stages:
+  - build
+  - deploy
+  - migrate
+
+variables:
+  GIT_CLEAN_FLAGS: ''
+
+.development: &development
+  variables:
+    SOME_VAR: for_development
+  tags:
+    - build
+    - development
+    - deploy
+  environment: development
+  only:
+    - develop
+
+.staging: &staging
+  variables:
+    SOME_VAR: for_staging
+  tags:
+    - build
+    - staging
+    - deploy
+  environment: staging
+  only:
+    - /^releases\/.*/
+
+.production: &production
+  variables:
+    SOME_VAR: for_production
+  tags:
+    - build
+    - production
+    - deploy
+  environment: production
+  only:
+    - /^v.*/
+  except:
+    - branches
+
+# #######################################
+# # Reuse Scripts
+# #######################################
+.deploy_script: &deploy_script
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - echo "Deploying application..."
+    - docker-compose -f docker-compose.deployment.yml up -d
+    - echo "Application successfully deployed."
+
+.migrate_script: &migrate_script
+  stage: migrate
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - pwd
+    - echo "Migrating database..."
+    - docker-compose -f docker-compose.deployment.yml run --rm app php artisan migrate:status || true
+    - docker-compose -f docker-compose.deployment.yml run --rm app php artisan migrate --force
+    - echo "Database successfully migrated."
+
+.generate_env: &generate_env
+  stage: build
+  script:
+  - whoami
+  - pwd
+  - cp .env.example .env
+  - echo >> .env
+  - echo "# --- ENV CI ---" >> env
+  - echo "APP_ENV=testing" >> .env
+  - echo "APP_STAGE=development" >> .env
+  - echo "APP_URL=https://try-ci.wedigi.info" >> .env
+  - echo "L5_SWAGGER_CONST_HOST=${APP_URL}/api" >> .env
+  - echo "REDIRECT_HTTPS=true" >> .env
+  - echo "CI_PIPELINE_ID=$CI_PIPELINE_ID" >> .env
+  - echo "PERSISTENCE_FOLDER=/containers/laravel_try_cu" >> .env
+  - docker-compose -f docker-compose.deployment.yml config
+
+
+
+before_script:
+  - echo "Before script"
+
+
+# #######################################
+# # DEVELOPMENT JOBS
+# #######################################
+build-development-job:
+  <<: *development
+  stage: build
+  script:
+    - whoami
+    - pwd
+    - cp ./deployment/dotfiles/.env.development .env
+    - echo >> .env
+    - echo "# --- ENV CI ---" >> env
+    - echo "REDIRECT_HTTPS=true" >> .env
+    - echo "APP_STAGE=development" >> .env
+    - echo "CI_PIPELINE_ID=$CI_PIPELINE_ID" >> .env
+    - docker-compose -f docker-compose.deployment.yml config
+    - echo "Compiling the code..."
+    - docker-compose -f docker-compose.deployment.yml build
+    - echo "Compile complete."
+
+deploy-development-job:
+  <<: *development
+  <<: *deploy_script
+  dependencies:
+    - build-development-job
+
+migrate-development-job:
+  <<: *development
+  <<: *migrate_script
+  dependencies:
+    - deploy-development-job
+
+
+# #######################################
+# # STAGING JOBS
+# #######################################
+build-staging-job:
+  <<: *staging
+  stage: build
+  script:
+    - whoami
+    - pwd
+    - cp ./deployment/dotfiles/.env.staging .env
+    - echo >> .env
+    - echo "# --- ENV CI ---" >> env
+    - echo "REDIRECT_HTTPS=true" >> .env
+    - echo "APP_STAGE=staging" >> .env
+    - echo "CI_PIPELINE_ID=$CI_PIPELINE_ID" >> .env
+    - docker-compose -f docker-compose.deployment.yml config
+    - echo "Compiling the code..."
+    - docker-compose -f docker-compose.deployment.yml build
+    - echo "Compile complete."
+
+deploy-staging-job:
+  <<: *staging
+  <<: *deploy_script
+  dependencies:
+    - build-staging-job
+
+migrate-staging-job:
+  <<: *staging
+  <<: *migrate_script
+  dependencies:
+    - deploy-staging-job
+
+
+# #######################################
+# # PRODUCTION JOBS
+# #######################################
+build-production-job:
+  <<: *production
+  stage: build
+  script:
+    - whoami
+    - pwd
+    - cp ./deployment/dotfiles/.env.production .env
+    - echo >> .env
+    - echo "# --- ENV CI ---" >> env
+    - echo "REDIRECT_HTTPS=true" >> .env
+    - echo "APP_STAGE=production" >> .env
+    - echo "CI_PIPELINE_ID=$CI_PIPELINE_ID" >> .env
+    - docker-compose -f docker-compose.deployment.yml config
+    - echo "Compiling the code..."
+    - docker-compose -f docker-compose.deployment.yml build
+    - echo "Compile complete."
+
+deploy-production-job:
+  <<: *production
+  <<: *deploy_script
+  dependencies:
+    - build-production-job
+
+migrate-production-job:
+  <<: *production
+  <<: *migrate_script
+  dependencies:
+    - deploy-production-job

@@ -1,0 +1,38 @@
+**/*.log
+**/*.md
+**/*.php~
+**/._*
+**/.dockerignore
+**/.DS_Store
+**/.idea/
+**/.git/
+**/.gitattributes
+**/.gitignore
+**/.gitkeep
+**/.gitmodules
+**/Dockerfile
+**/Thumbs.db
+.editorconfig
+.php_cs.cache
+.travis.yml
+composer.phar
+docker-compose*.yaml
+docker-compose*.yml
+docker/data/
+etc/build/*
+node_modules/
+var/*
+vendor/
+bootstrap/cache/*
+database/*.sqlite
+storage/app/public/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+storage/logs/*
+# public/assets/
+# public/bundles/
+# public/css/
+# public/js/
+# public/media/
