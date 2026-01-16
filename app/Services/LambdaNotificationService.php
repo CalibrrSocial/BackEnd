@@ -18,13 +18,13 @@ class LambdaNotificationService
         $this->functionName = env('LAMBDA_PROFILE_LIKED_FUNCTION', 'emailNotificationFinal');
     }
 
-    public function notifyProfileLiked(int $recipientUserId, int $senderUserId): void
+    public function notifyProfileLiked(int $recipientUserId, int $senderUserId, array $additionalData = []): void
     {
         $payload = json_encode([
             'notificationType' => 'profile_liked',
             'recipientUserId' => $recipientUserId,
             'senderUserId' => $senderUserId,
-            'additionalData' => (object)[],
+            'additionalData' => (object)$additionalData,
         ]);
 
         try {
