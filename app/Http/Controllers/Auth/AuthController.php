@@ -82,7 +82,7 @@ class AuthController extends Controller
         if ($validation->fails()) {
             return response([
                 "message" => 'fail',
-                "details" => $validation->errors()->all(),
+                "details" => implode(',', $validation->errors()->all()),
             ], Response::HTTP_BAD_REQUEST);
         }
 
