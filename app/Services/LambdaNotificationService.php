@@ -132,10 +132,10 @@ class LambdaNotificationService
             'notificationType' => 'attribute_liked',
             'additionalData' => [
                 'recipientEmail' => $recipient->email,
-                'senderFirstName' => $sender->firstName,
-                'senderLastName' => $sender->lastName,
-                'category' => $additionalData['attributeCategory'] ?? '',
-                'attribute' => $additionalData['attributeName'] ?? '',
+                'senderFirstName' => $sender->first_name,
+                'senderLastName' => $sender->last_name,
+                'category' => $additionalData['category'] ?? '',
+                'attribute' => $additionalData['attribute'] ?? '',
             ],
         ]);
 
