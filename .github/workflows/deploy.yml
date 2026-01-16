@@ -6,6 +6,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: SSH deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -13,32 +14,32 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          timeout: 60s
+          command_timeout: 8m
           script: |
             set -e
             cd ${{ secrets.PROJECT_DIR }}
-
-            # Ensure required PHP extensions are present (DOM, SimpleXML, cURL)
-            sudo apt-get update -y || sudo apt-get update --allow-releaseinfo-change -y
-            sudo apt-get install -y software-properties-common || true
-            sudo add-apt-repository -y ppa:ondrej/php || true
-            sudo apt-get update -y || true
+            
+            # Update package lists
+            sudo apt-get update -y
+            
+            # Install PHP extensions if needed
             PHPV=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
-            sudo apt-get install -y "php${PHPV}-xml" "php${PHPV}-curl" || sudo apt-get install -y php-xml php-curl
-            php -m | grep -E 'dom|SimpleXML|curl' || true
-
-            # Configure git to use token authentication
-            git config --global credential.helper store
-            echo "https://${{ secrets.GITHUB_TOKEN }}:x-oauth-basic@github.com" > ~/.git-credentials
-            chmod 600 ~/.git-credentials
-
-            # Git pull from your repo using HTTPS with token
-            git remote set-url origin https://github.com/EYoung21/calibrr-social-backend.git
+            sudo apt-get install -y "php${PHPV}-xml" "php${PHPV}-curl" || true
+            
+            # Pull latest code
             git fetch origin
-            git checkout -B ${{ secrets.BRANCH }} origin/${{ secrets.BRANCH }}
-
-            # Deploy
-            composer --version || true
+            git reset --hard origin/${{ secrets.BRANCH }}
+            
+            # Install dependencies
             composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-dom --ignore-platform-req=ext-simplexml
+            
+            # Run Laravel commands
             php artisan migrate --force
-            php artisan config:clear && php artisan cache:clear && php artisan config:cache && php artisan route:cache
-            sudo systemctl reload apache2 || sudo service apache2 reload
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan config:cache
+            php artisan route:cache
+            
+            # Restart Apache
+            sudo systemctl reload apache2
