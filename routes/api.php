@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,7 +31,7 @@ Route::group(['prefix' => 'auth'], function () {
 });
 
 Route::group(['prefix' => 'profile'], function () {
-  Route::group(['middleware' => 'auth:api'], function () {
+  Route::group(['middleware' => ['auth:api', 'check.moderation']], function () {
     //Profile Information
     Route::get('/{id}', [ProfileController::class, 'getUser'])->name('getUser');
     Route::post('/{id}', [ProfileController::class, 'updateUserProfile'])->name('updateUserProfile');
@@ -63,8 +64,17 @@ Route::group(['prefix' => 'profile'], function () {
 });
 
 Route::group(['prefix' => 'search'], function () {
-  Route::group(['middleware' => 'auth:api'], function () {
+  Route::group(['middleware' => ['auth:api', 'check.moderation']], function () {
     Route::post('/distance', [SearchController::class, 'searchByDistance'])->name('searchByDistance');
     Route::post('/name', [SearchController::class, 'searchByName'])->name('searchByName');
   });
+});
+
+// Admin routes - simple endpoints for admin panel
+Route::group(['prefix' => 'admin'], function () {
+  Route::get('/users', [AdminController::class, 'getUsers'])->name('admin.getUsers');
+  Route::get('/users/{id}', [AdminController::class, 'getUser'])->name('admin.getUser');
+  Route::post('/users/{id}/moderate', [AdminController::class, 'moderateUser'])->name('admin.moderateUser');
+  Route::get('/moderation-history', [AdminController::class, 'getModerationHistory'])->name('admin.getModerationHistory');
+  Route::get('/stats', [AdminController::class, 'getStats'])->name('admin.getStats');
 });
