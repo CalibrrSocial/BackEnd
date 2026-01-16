@@ -9,7 +9,6 @@
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { text-align: center; margin-bottom: 30px; }
         .header h2 { font-size: 24px; margin: 0; }
-        .header .highlight { background-color: #f5d742; padding: 2px 6px; }
         .content { margin-bottom: 30px; }
         .content h3 { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
         .content p { margin: 10px 0; }
@@ -17,15 +16,14 @@
         .password-box .password { font-family: 'Courier New', monospace; font-size: 28px; font-weight: bold; color: #333; letter-spacing: 2px; }
         .password-box .note { font-size: 12px; color: #999; margin-top: 10px; }
         .footer { text-align: center; margin-top: 30px; }
-        .footer .highlight { background-color: #f5d742; padding: 2px 6px; }
-        .app-link { color: #007bff; text-decoration: none; font-weight: bold; background-color: #f5d742; padding: 2px 6px; }
+        .app-link { color: #007bff; text-decoration: none; font-weight: bold; }
         .logo { text-align: center; margin-top: 40px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h2><span class="highlight">Calibrr</span> Social App</h2>
+            <h2>Calibrr Social App</h2>
         </div>
         
         <div class="content">
@@ -42,7 +40,7 @@
         </div>
         
         <div class="footer">
-            <p>Open <span class="highlight">Calibrr</span> Social <a href="https://apps.apple.com/us/app/calibrr-social/id1377015871" class="app-link">HERE</a></p>
+            <p>Open Calibrr Social <a href="https://apps.apple.com/us/app/calibrr-social/id1377015871" class="app-link">HERE</a></p>
         </div>
         
         <div class="logo">
