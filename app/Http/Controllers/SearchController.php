@@ -137,9 +137,7 @@ class SearchController extends Controller
             ->get();
 
         if (count($user) > 0) {
-            return response()->json([
-                UserResource::collection($user),
-            ], Response::HTTP_OK);
+            return response()->json(UserResource::collection($user));
         } else {
             return response()->json([
                 'message' => 'Search failed',

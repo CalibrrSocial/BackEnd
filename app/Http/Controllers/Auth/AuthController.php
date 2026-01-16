@@ -234,19 +234,17 @@ class AuthController extends Controller
 
     public function refresh(Request $request)
     {
-        return Auth::user()->id;
         $path = env('APP_URL') . '/oauth/token';
+        $clients = DB::table('oauth_clients')->select('*')->where('provider', 'users')->orderByRaw('id DESC')->first();
         $response = Http::asForm()->post($path, [
             'grant_type' => 'refresh_token',
             'refresh_token' => $request->refreshToken,
-            'client_id' => '2',
-            'client_secret' => 'POU6G4TMVzoFqxNMOqRxJ8Wv8CgmrATLUeUNtGpL',
+            'client_id' => $clients->id,
+            'client_secret' => $clients->secret,
             'scope' => '',
         ]);
 
-        return $response->json();
         return response()->json([
-            'access_token' => $response->json()['access_token'],
             'refresh_token' => $response->json()['refresh_token'],
         ]);
     }
@@ -295,18 +293,18 @@ class AuthController extends Controller
                     'password' => bcrypt($data['my_password'])
                 ]);
                 return response()->json([
-                    'message' => 'We have sent your new password by email'
+                    'response' => 1, 'message' => 'A mail has been sent to your mail id'
                 ]);
             } else {
                 return response()->json([
-                    'message' => 'Fail',
-                    'details' => 'Send mail fail',
+                    'response' => 2,
+                    'message' => 'Unable to send mail'
                 ]);
             }
         } else {
             return response()->json([
-                'message' => 'Send mail failed',
-                'details' => 'Email is not registered'
+                'response' => 2,
+                'message' => 'Email is not registered'
             ], Response::HTTP_NOT_FOUND);
         }
     }

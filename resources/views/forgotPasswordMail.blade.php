@@ -1,6 +1,6 @@
 <table>
     <tr>
-        <td>Your password:</td>
+        <td>Your new password is:</td>
         <td>{{$my_password}}</td>
     </tr>
 </table>

@@ -605,7 +605,7 @@ class ProfileController extends Controller
             } else {
                 return response()->json([
                     'massage' => 'Fail',
-                    'details' => 'User is not relationships'
+                    'details' => 'User is not requested relationships'
                 ], 400);
             }
         }
@@ -673,7 +673,7 @@ class ProfileController extends Controller
             } else {
                 return response()->json([
                     'massage' => 'Fail',
-                    'details' => 'User is not relationships'
+                    'details' => 'User is blocked. Unblock to remove'
                 ], 400);
             }
         }
