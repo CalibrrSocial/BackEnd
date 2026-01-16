@@ -334,37 +334,53 @@ class AuthController extends Controller
      */
     public function forgotPasswordSendMail(Request $request)
     {
-        $user = User::where('email', $request->email)->first();
+        // Get email from query parameter or body
+        $email = $request->input('email') ?? $request->query('email');
+        
+        if (empty($email)) {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Email is required'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+        
+        $user = User::where('email', $email)->first();
         if ($user) {
             $data = [
                 'my_password' => Str::lower(Str::random(4)) . Str::upper(Str::random(3)) . random_int(0, 9)
             ];
             $mail_details = [
-                'email' => $request->email,
-                'subject' => 'Forgot password',
+                'email' => $email,
+                'subject' => 'Calibrr - Password Reset',
             ];
-            $send_result = Mail::send('forgotPasswordMail', $data, function ($message) use ($mail_details) {
-                $message->to($mail_details['email']);
-                $message->subject($mail_details['subject']);
-            });
-            if ($send_result == null) {
-                $updatePasswordUser = $user->update([
+            
+            try {
+                Mail::send('forgotPasswordMail', $data, function ($message) use ($mail_details) {
+                    $message->to($mail_details['email']);
+                    $message->subject($mail_details['subject']);
+                    $message->from(config('mail.from.address'), config('mail.from.name'));
+                });
+                
+                // Only update password if email was sent successfully
+                $user->update([
                     'password' => bcrypt($data['my_password'])
                 ]);
+                
                 return response()->json([
                     'message' => 'success',
-                    'details' => 'A mail has been sent to your mail id'
+                    'details' => 'A mail has been sent to your email'
                 ]);
-            } else {
+            } catch (\Exception $e) {
+                \Log::error('Forgot password email failed: ' . $e->getMessage());
                 return response()->json([
                     'message' => 'fail',
-                    'details' => 'Unable to send mail'
-                ]);
+                    'details' => 'Unable to send email. Please try again later.'
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } else {
             return response()->json([
                 'message' => 'fail',
-                'details' => 'Email is not register'
+                'details' => 'Email is not registered'
             ], Response::HTTP_BAD_REQUEST);
         }
     }
