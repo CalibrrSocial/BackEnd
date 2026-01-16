@@ -1,7 +1,7 @@
 name: Deploy to EC2
 on:
   push:
-    branches: [ feature/profile-liking ]  # change to main later
+    branches: [ feature/profile-liking ]
 
 jobs:
   deploy:
@@ -15,12 +15,16 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
+            mkdir -p ~/.ssh
+            printf "Host github.com\n  User git\n  IdentityFile ~/.ssh/ec2-github\n  StrictHostKeyChecking accept-new\n" > ~/.ssh/config
+            chmod 600 ~/.ssh/config
+            git config --global core.sshCommand 'ssh -i ~/.ssh/ec2-github -o StrictHostKeyChecking=accept-new'
             cd ${{ secrets.PROJECT_DIR }}
-            # Ensure remote points to your repo
             (git remote -v | grep -q 'myrepo') || git remote add myrepo git@github.com:EYoung21/calibrr-social-backend.git
             git remote set-url myrepo git@github.com:EYoung21/calibrr-social-backend.git
             git fetch myrepo
             git checkout -B ${{ secrets.BRANCH }} myrepo/${{ secrets.BRANCH }}
+            echo "Composer version:" && composer --version || true
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
             php artisan config:clear && php artisan cache:clear && php artisan config:cache && php artisan route:cache
