@@ -568,12 +568,12 @@ class ProfileController extends Controller
                     $data['city'] = $pi['city'] ?? '';
                     // Additional camelCase -> snake_case mappings
                     $data['hometown'] = $pi['hometown'] ?? '';
-                    $data['high_school'] = $pi['highSchool'] ?? '';
-                    $data['class_year'] = $pi['classYear'] ?? '';
+                    $data['high_school'] = $pi['highSchool'] ?? $pi['high_school'] ?? '';
+                    $data['class_year'] = $pi['classYear'] ?? $pi['class_year'] ?? '';
                     $data['campus'] = $pi['campus'] ?? '';
-                    $data['career_aspirations'] = $pi['careerAspirations'] ?? '';
+                    $data['career_aspirations'] = $pi['careerAspirations'] ?? $pi['career_aspirations'] ?? '';
                     $data['postgraduate'] = $pi['postgraduate'] ?? '';
-                    $data['postgraduate_plans'] = $pi['postgraduatePlans'] ?? '';
+                    $data['postgraduate_plans'] = $pi['postgraduatePlans'] ?? $pi['postgraduate_plans'] ?? '';
                     $data['favorite_music'] = $pi['favorite_music'] ?? ($pi['favoriteMusic'] ?? '');
                     $data['favorite_tv'] = $pi['favorite_tv'] ?? ($pi['favoriteTV'] ?? '');
                     $data['favorite_games'] = $pi['favorite_games'] ?? ($pi['favoriteGame'] ?? $pi['favoriteGames'] ?? '');
