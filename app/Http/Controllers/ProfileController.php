@@ -2084,8 +2084,10 @@ class ProfileController extends Controller
                         ], Response::HTTP_BAD_REQUEST);
                     }
 
-                    $avatar_path = $avatar->store('profile', 's3');
-                    $avatar_path = Storage::disk('s3')->url($avatar_path);
+                    // Prefer S3 when configured; otherwise fall back to public storage
+                    $disk = config('filesystems.disks.s3.bucket') ? 's3' : 'public';
+                    $stored = $avatar->store('profile', $disk);
+                    $avatar_path = $disk === 's3' ? Storage::disk('s3')->url($stored) : Storage::disk('public')->url($stored);
                     $user->update(['profile_pic' => $avatar_path]);
                     return response()->json([
                         'message' => 'success',
@@ -2169,8 +2171,10 @@ class ProfileController extends Controller
                         ], Response::HTTP_BAD_REQUEST);
                     }
 
-                    $ci_path = $avatar->store('banner', 's3');
-                    $ci_path = Storage::disk('s3')->url($ci_path);
+                    // Prefer S3 when configured; otherwise fall back to public storage
+                    $disk = config('filesystems.disks.s3.bucket') ? 's3' : 'public';
+                    $stored = $avatar->store('banner', $disk);
+                    $ci_path = $disk === 's3' ? Storage::disk('s3')->url($stored) : Storage::disk('public')->url($stored);
                     $user->update(['cover_image' => $ci_path]);
                     return response()->json([
                         'message' => 'success',

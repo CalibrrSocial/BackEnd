@@ -101,9 +101,12 @@ class SearchController extends Controller
                 $arr_users = array_merge($arr_users, $arr_use);
             }
             $tempStr = implode(',', $arr_users);
-            $user_dob_list = DB::table('users')
-                ->select('*')
-                ->where('ghost_mode_flag', false)
+            $userQuery = DB::table('users')->select('*');
+            // Guard for schema mismatch on ghost_mode_flag
+            if (\Schema::hasColumn('users', 'ghost_mode_flag')) {
+                $userQuery = $userQuery->where('ghost_mode_flag', false);
+            }
+            $user_dob_list = $userQuery
                 ->whereIn('id', $arr_user)
                 ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
                 ->get();
@@ -130,7 +133,9 @@ class SearchController extends Controller
                 ->with(['courses' => function ($q) use ($courseNames) {
                     return $q->whereIn('name', $courseNames);
                 }])
-                ->where('ghost_mode_flag', false)
+                ->when(\Schema::hasColumn('users', 'ghost_mode_flag'), function ($q) {
+                    return $q->where('ghost_mode_flag', false);
+                })
                 ->whereIn('id', $arr_user)
                 ->whereNotIn('id', $hide_user)
                 ->orderByRaw(DB::raw("FIELD(id, $tempStr)"))
@@ -180,7 +185,10 @@ class SearchController extends Controller
         if (!$request->search_in_course && !$request->search_in_studying) {
             $users = User::select($fields)->with(['courses' => function ($q) use ($courseNames) {
                 return $q->whereIn('courses.name', $courseNames);
-            }])->where('ghost_mode_flag', false)
+            }])
+            ->when(\Schema::hasColumn('users', 'ghost_mode_flag'), function ($q) {
+                return $q->where('ghost_mode_flag', false);
+            })
             ->where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $request->name . "%")
             ->get();
 
@@ -190,7 +198,11 @@ class SearchController extends Controller
         $query = '';
 
         if ($request->search_in_course) {
-            $query = DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->join('courses', function($join) use ($user) {
+            $query = DB::table('users')->select('users.*')
+                ->when(\Schema::hasColumn('users', 'ghost_mode_flag'), function ($q) {
+                    return $q->where('ghost_mode_flag', false);
+                })
+                ->join('courses', function($join) use ($user) {
                 return $join->on('users.id', '=', 'courses.user_id')->whereIn('courses.name', function ($q) use ($user) {
                     return $q->select('courses.name')->from('users')->where('users.id', $user->id)
                         ->join('courses', 'users.id', '=', 'courses.user_id');
@@ -199,7 +211,11 @@ class SearchController extends Controller
         }
 
         if ($request->search_in_studying && $user->studying) {
-            $secondQuery = DB::table('users')->select('users.*')->where('ghost_mode_flag', false)->where('studying', $user->studying);
+            $secondQuery = DB::table('users')->select('users.*')
+                ->when(\Schema::hasColumn('users', 'ghost_mode_flag'), function ($q) {
+                    return $q->where('ghost_mode_flag', false);
+                })
+                ->where('studying', $user->studying);
 
             $query = $query ? $query->union($secondQuery) : $secondQuery;
         }

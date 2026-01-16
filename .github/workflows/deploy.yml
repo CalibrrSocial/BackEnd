@@ -64,6 +64,8 @@ jobs:
             php artisan cache:clear
             php artisan config:cache
             php artisan route:cache
+            # Ensure public storage symlink exists for local avatar/cover fallback
+            php artisan storage:link || true
             
             # Restart Apache (clear opcache)
             sudo systemctl restart apache2
