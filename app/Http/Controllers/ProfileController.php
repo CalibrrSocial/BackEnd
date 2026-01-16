@@ -2184,23 +2184,40 @@ class ProfileController extends Controller
             $blockCount = UserBlock::where('blocker_id', $id)->where('is_active', true)->count();
             \Log::info("Found $blockCount active blocks for user $id");
             
+            // Determine the correct profile picture column name
+            $profilePicColumn = \Schema::hasColumn('users', 'profile_pic') ? 'profile_pic' : 
+                               (\Schema::hasColumn('users', 'pictureProfile') ? 'pictureProfile' : null);
+            
+            \Log::info("Using profile picture column: " . ($profilePicColumn ?? 'none'));
+            
+            $selectFields = ['id', 'first_name', 'last_name'];
+            if ($profilePicColumn) {
+                $selectFields[] = $profilePicColumn;
+            }
+            
             $blockedUsers = UserBlock::where('blocker_id', $id)
                 ->where('is_active', true)
-                ->with(['blocked' => function($query) {
-                    $query->select('id', 'first_name', 'last_name', 'picture_profile');
+                ->with(['blocked' => function($query) use ($selectFields) {
+                    $query->select($selectFields);
                 }])
                 ->orderBy('created_at', 'desc')
                 ->get()
-                ->map(function($block) {
+                ->map(function($block) use ($profilePicColumn) {
                     if (!$block->blocked) {
                         \Log::warning("Block record found but blocked user is null: " . $block->id);
                         return null;
                     }
+                    
+                    $avatarUrl = null;
+                    if ($profilePicColumn && isset($block->blocked->{$profilePicColumn})) {
+                        $avatarUrl = $block->blocked->{$profilePicColumn};
+                    }
+                    
                     return [
                         'id' => $block->blocked->id,
                         'firstName' => $block->blocked->first_name,
                         'lastName' => $block->blocked->last_name,
-                        'avatarUrl' => $block->blocked->picture_profile,
+                        'avatarUrl' => $avatarUrl,
                         'blockedAt' => $block->created_at->toISOString(),
                         'reason' => $block->reason
                     ];
