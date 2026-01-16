@@ -566,37 +566,37 @@ class ProfileController extends Controller
                         $data['dob'] = $user->dob;
                     }
                     $data['locationTimestamp'] = $actionTime;
-                    // Accept both snake_case and camelCase from clients
+                    // Accept both snake_case and camelCase from clients and preserve existing when omitted
                     $pi = $request->personalInfo ?? [];
-                    $data['gender'] = $pi['gender'] ?? '';
-                    $data['bio'] = $pi['bio'] ?? '';
-                    $data['education'] = $pi['education'] ?? '';
-                    $data['occupation'] = $pi['occupation'] ?? '';
-                    $data['politics'] = $pi['politics'] ?? '';
-                    $data['religion'] = $pi['religion'] ?? '';
-                    $data['sexuality'] = $pi['sexuality'] ?? '';
-                    $data['relationship'] = $pi['relationship'] ?? '';
-                    $data['city'] = $pi['city'] ?? '';
+                    $data['gender'] = $pi['gender'] ?? $user->gender;
+                    $data['bio'] = $pi['bio'] ?? $user->bio;
+                    $data['education'] = $pi['education'] ?? $user->education;
+                    $data['occupation'] = $pi['occupation'] ?? $user->occupation;
+                    $data['politics'] = $pi['politics'] ?? $user->politics;
+                    $data['religion'] = $pi['religion'] ?? $user->religion;
+                    $data['sexuality'] = $pi['sexuality'] ?? $user->sexuality;
+                    $data['relationship'] = $pi['relationship'] ?? $user->relationship;
+                    $data['city'] = $pi['city'] ?? $user->city;
                     // Additional camelCase -> snake_case mappings
-                    $data['hometown'] = $pi['hometown'] ?? '';
-                    $data['high_school'] = $pi['highSchool'] ?? $pi['high_school'] ?? '';
+                    $data['hometown'] = $pi['hometown'] ?? $user->hometown;
+                    $data['high_school'] = $pi['highSchool'] ?? $pi['high_school'] ?? $user->high_school;
                     // Track whether client explicitly sent this field to avoid overwriting with stale values
                     $classYearProvided = array_key_exists('classYear', $pi) || array_key_exists('class_year', $pi);
                     if ($classYearProvided) {
                         $data['class_year'] = $pi['classYear'] ?? $pi['class_year'];
                     }
-                    $data['campus'] = $pi['campus'] ?? '';
+                    $data['campus'] = $pi['campus'] ?? $user->campus;
                     $data['career_aspirations'] = $pi['careerAspirations'] ?? $pi['career_aspirations'] ?? $user->career_aspirations;
                     $data['postgraduate'] = $pi['postgraduate'] ?? $user->postgraduate;
                     $data['postgraduate_plans'] = $pi['postgraduatePlans'] ?? $pi['postgraduate_plans'] ?? $user->postgraduate_plans;
-                    $data['favorite_music'] = $pi['favorite_music'] ?? ($pi['favoriteMusic'] ?? '');
-                    $data['favorite_tv'] = $pi['favorite_tv'] ?? ($pi['favoriteTV'] ?? '');
-                    $data['favorite_games'] = $pi['favorite_games'] ?? ($pi['favoriteGame'] ?? $pi['favoriteGames'] ?? '');
-                    $data['greek_life'] = $pi['greek_life'] ?? ($pi['greekLife'] ?? '');
-                    $data['studying'] = $pi['studying'] ?? '';
+                    $data['favorite_music'] = $pi['favorite_music'] ?? ($pi['favoriteMusic'] ?? $user->favorite_music);
+                    $data['favorite_tv'] = $pi['favorite_tv'] ?? ($pi['favoriteTV'] ?? $user->favorite_tv);
+                    $data['favorite_games'] = $pi['favorite_games'] ?? ($pi['favoriteGame'] ?? $pi['favoriteGames'] ?? $user->favorite_games);
+                    $data['greek_life'] = $pi['greek_life'] ?? ($pi['greekLife'] ?? $user->greek_life);
+                    $data['studying'] = $pi['studying'] ?? $user->studying;
                     $club = $pi['club'] ?? [];
-                    $data['club'] = $club['club'] ?? '';
-                    $data['jersey_number'] = $club['jersey_number'] ?? ($club['number'] ?? '');
+                    $data['club'] = $club['club'] ?? $user->club;
+                    $data['jersey_number'] = $club['jersey_number'] ?? ($club['number'] ?? $user->jersey_number);
                     $ghost_mode_flag = 0;
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
@@ -1196,15 +1196,15 @@ class ProfileController extends Controller
 
                     $data['locationTimestamp'] = $actionTime;
                     $pi2 = $request->personalInfo ?? [];
-                    $data['gender'] = $pi2['gender'] ?? '';
-                    $data['bio'] = $pi2['bio'] ?? '';
-                    $data['education'] = $pi2['education'] ?? '';
-                    $data['occupation'] = $pi2['occupation'] ?? '';
-                    $data['politics'] = $pi2['politics'] ?? '';
-                    $data['religion'] = $pi2['religion'] ?? '';
-                    $data['sexuality'] = $pi2['sexuality'] ?? '';
-                    $data['relationship'] = $pi2['relationship'] ?? '';
-                    $data['city'] = $pi2['city'] ?? '';
+                    $data['gender'] = $pi2['gender'] ?? $user->gender;
+                    $data['bio'] = $pi2['bio'] ?? $user->bio;
+                    $data['education'] = $pi2['education'] ?? $user->education;
+                    $data['occupation'] = $pi2['occupation'] ?? $user->occupation;
+                    $data['politics'] = $pi2['politics'] ?? $user->politics;
+                    $data['religion'] = $pi2['religion'] ?? $user->religion;
+                    $data['sexuality'] = $pi2['sexuality'] ?? $user->sexuality;
+                    $data['relationship'] = $pi2['relationship'] ?? $user->relationship;
+                    $data['city'] = $pi2['city'] ?? $user->city;
                     $ghost_mode_flag = 0;
                     if (!empty($request->ghostMode)) {
                         $ghost_mode_flag = ($request->ghostMode == 'true') ? 1 : 0;
