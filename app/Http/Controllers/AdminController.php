@@ -328,4 +328,108 @@ class AdminController extends Controller
             return response()->json(['error' => 'Failed to update email'], 500);
         }
     }
+    
+    /**
+     * Admin self-service password reset
+     */
+    public function resetAdminPassword(Request $request)
+    {
+        try {
+            $currentPassword = $request->input('currentPassword');
+            $newPassword = $request->input('newPassword');
+            $adminEmail = $request->input('adminEmail');
+            
+            if (!$currentPassword || !$newPassword || !$adminEmail) {
+                return response()->json(['error' => 'All fields are required'], 400);
+            }
+            
+            if (strlen($newPassword) < 8) {
+                return response()->json(['error' => 'New password must be at least 8 characters long'], 400);
+            }
+            
+            // Find admin user by email
+            $adminUser = User::where('email', $adminEmail)->first();
+            if (!$adminUser) {
+                return response()->json(['error' => 'Admin user not found'], 404);
+            }
+            
+            // Verify current password
+            if (!Hash::check($currentPassword, $adminUser->password)) {
+                return response()->json(['error' => 'Current password is incorrect'], 401);
+            }
+            
+            DB::beginTransaction();
+            
+            // Update password
+            $adminUser->password = Hash::make($newPassword);
+            $adminUser->save();
+            
+            DB::commit();
+            
+            Log::info("Admin self-service password reset for user {$adminUser->id} by {$adminEmail}");
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Password updated successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin resetAdminPassword error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to reset password'], 500);
+        }
+    }
+    
+    /**
+     * Admin self-service email update
+     */
+    public function updateAdminEmail(Request $request)
+    {
+        try {
+            $newEmail = $request->input('newEmail');
+            $adminEmail = $request->input('adminEmail');
+            
+            if (!$newEmail || !$adminEmail) {
+                return response()->json(['error' => 'All fields are required'], 400);
+            }
+            
+            if (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+                return response()->json(['error' => 'Valid email address is required'], 400);
+            }
+            
+            // Find admin user by current email
+            $adminUser = User::where('email', $adminEmail)->first();
+            if (!$adminUser) {
+                return response()->json(['error' => 'Admin user not found'], 404);
+            }
+            
+            // Check if new email already exists
+            $existingUser = User::where('email', $newEmail)->where('id', '!=', $adminUser->id)->first();
+            if ($existingUser) {
+                return response()->json(['error' => 'Email address already in use'], 400);
+            }
+            
+            DB::beginTransaction();
+            
+            $oldEmail = $adminUser->email;
+            
+            // Update email
+            $adminUser->email = $newEmail;
+            $adminUser->save();
+            
+            DB::commit();
+            
+            Log::info("Admin self-service email update for user {$adminUser->id} from {$oldEmail} to {$newEmail}");
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Email updated successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin updateAdminEmail error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update email'], 500);
+        }
+    }
 }
