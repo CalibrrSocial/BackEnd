@@ -2247,7 +2247,7 @@ class ProfileController extends Controller
     private function sendReportNotificationEmails($report)
     {
         try {
-            $adminEmails = ['nolan@calibrr.com', 'contact@calibrr.com', 'eliyoung4now@gmail.com'];
+            $adminEmails = ['nolan@calibrr.com', 'contact@calibrr.com'];
             $reasonName = $report->reason_category; // User-typed reason
             
             $emailData = [
