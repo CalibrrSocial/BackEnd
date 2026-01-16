@@ -104,6 +104,7 @@ class UserResource extends JsonResource
         'religion' => $this->religion,
         'occupation' => $this->occupation,
         'sexuality' => $this->sexuality,
+        'relationship' => $this->relationship,
         'city' => $this->city,
       ],
       'socialInfo' => $info,

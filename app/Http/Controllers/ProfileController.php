@@ -493,7 +493,7 @@ class ProfileController extends Controller
                     $dob_txt = $request->personalInfo['dob'];
                     $dob_obj = Carbon::parse($dob_txt);
                     if (!empty($dob_obj)) {
-                        $data['dob'] =  $dob_obj->format("Y-m-d H:m:s");
+                        $data['dob'] =  $dob_obj->format("Y-m-d");
                     }
                 }
                 $data['locationTimestamp'] = $actionTime;
@@ -508,6 +508,7 @@ class ProfileController extends Controller
                 $data['city'] = !empty($request->personalInfo['city']) ? $request->personalInfo['city'] : '';
 
                 $user->update([
+                    'dob' => $data['dob'],
                     'locationTimestamp' => $data['locationTimestamp'],
                     'gender' => $data['gender'],
                     'bio' => $data['bio'],
@@ -1002,12 +1003,11 @@ class ProfileController extends Controller
                     }
                 }
 
-
                 if (!empty($request->personalInfo['dob'])) {
                     $dob_txt = $request->personalInfo['dob'];
                     $dob_obj = Carbon::parse($dob_txt);
                     if (!empty($dob_obj)) {
-                        $data['dob'] =  $dob_obj->format("Y-m-d H:m:s");
+                        $data['dob'] =  $dob_obj->format("Y-m-d");
                     }
                 }
                 $data['locationTimestamp'] = $actionTime;
@@ -1022,6 +1022,7 @@ class ProfileController extends Controller
                 $data['city'] = !empty($request->personalInfo['city']) ? $request->personalInfo['city'] : '';
 
                 $user->update([
+                    'dob' => $data['dob'],
                     'locationTimestamp' => $data['locationTimestamp'],
                     'gender' => $data['gender'],
                     'bio' => $data['bio'],
