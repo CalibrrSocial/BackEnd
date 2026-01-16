@@ -374,7 +374,34 @@ class ProfileController extends Controller
     public function requestFriend($userId, $friendId)
     {
         $status = 'requested';
-        $requestedTime = Carbon::now('Asia/Ho_Chi_Minh')->format('Y-m-d H:i:s');
+        $time_zone = env('TIME_ZONE');
+        $requestedTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
+
+        $relaUserToFriend = Relationship::where('user_id', '!=', $userId)
+            ->where('friend_id', '!=', $friendId)
+            ->orWhereNull('user_id')
+            ->orWhereNull('friend_id')
+            ->create(
+                [
+                    'user_id' => $userId,
+                    'friend_id' => $friendId,
+                    "status" => $status,
+                    "dateRequested" => $requestedTime,
+                ],
+            );
+
+        $relaFriendToUser = Relationship::where('user_id', '!=', $friendId)
+            ->where('friend_id', '!=', $userId)
+            ->orWhereNull('user_id')
+            ->orWhereNull('friend_id')
+            ->create(
+                [
+                    'user_id' => $friendId,
+                    'friend_id' => $userId,
+                    "status" => $status,
+                    "dateRequested" => $requestedTime,
+                ],
+            );
 
         $relaUserToFriend = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
@@ -397,10 +424,10 @@ class ProfileController extends Controller
         $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
             ->where('friend_id', '=', $userId)
             ->first();
+
 
         if ($relaFriendToUser && $relaUserToFriend) {
             return response()->json([
-                'time' => $requestedTime,
                 'status' => "Success",
                 'message' => Exception::UPDATE_SUCCESS,
                 'relationship_user_to_friend' => new RelationshipResource($relaUserToFriend),
@@ -459,7 +486,8 @@ class ProfileController extends Controller
 
     public function updateFriend(Request $request, $userId, $friendId)
     {
-        $actionTime = Carbon::now('Asia/Ho_Chi_Minh')->format('Y-m-d H:i:s');
+        $time_zone = env('TIME_ZONE');
+        $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
         $relaUserToFriend = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
             ->first();

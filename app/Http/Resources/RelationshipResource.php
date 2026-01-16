@@ -27,7 +27,7 @@ class RelationshipResource extends JsonResource
     } else if ($status == 'blocked') {
       $dateAction = 'dateBlocked';
     } else {
-      $dateAction = null;
+      $dateAction = 'Undefined';
     }
 
     return [
