@@ -529,9 +529,16 @@ class ProfileController extends Controller
 
                     // Extract social media data from request
                     $socialFields = ['facebook', 'instagram', 'snapchat', 'vsco', 'tiktok', 'twitter'];
+                    $additionalFields = ['resume', 'coverLetter', 'email', 'website', 'contact'];
                     $dataSocial = [];
                     
+                    // Populate standard social media fields
                     foreach ($socialFields as $field) {
+                        $dataSocial[$field] = $request->socialInfo[$field] ?? '';
+                    }
+                    
+                    // Populate additional fields (resume, coverLetter, etc.)
+                    foreach ($additionalFields as $field) {
                         $dataSocial[$field] = $request->socialInfo[$field] ?? '';
                     }
 
@@ -577,7 +584,7 @@ class ProfileController extends Controller
 
 
 
-                    if ($dataSocial['resume']) {
+                    if (!empty($dataSocial['resume'])) {
                         $name = "resume";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -609,7 +616,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['coverLetter']) {
+                    if (!empty($dataSocial['coverLetter'])) {
                         $name = "coverLetter";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -641,7 +648,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['email']) {
+                    if (!empty($dataSocial['email'])) {
                         $name = "email";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -673,7 +680,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['website']) {
+                    if (!empty($dataSocial['website'])) {
                         $name = "website";
                         $social_name = DB::table('social_sites')
                             ->select("*")
@@ -705,7 +712,7 @@ class ProfileController extends Controller
                         }
                     }
 
-                    if ($dataSocial['contact']) {
+                    if (!empty($dataSocial['contact'])) {
                         $name = "contact";
                         $social_name = DB::table('social_sites')
                             ->select("*")
