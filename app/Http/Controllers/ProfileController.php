@@ -2005,8 +2005,9 @@ class ProfileController extends Controller
             
         // Check if current authenticated user has liked this attribute
         $likedByUser = false;
-        if (Auth::check()) {
-            $currentUserId = Auth::user()->id;
+        $user = auth('api')->user();
+        if ($user) {
+            $currentUserId = $user->id;
             $userLike = AttributeLike::where('profile_id', $id)
                 ->where('category', $category)
                 ->where('attribute', $attribute)
