@@ -149,6 +149,7 @@ class ProfileController extends Controller
                     ]);
                 } else {
                     $userLocationInfo = LocationInfo::create([
+                        'user_id' => $id,
                         'latitude' => $dataLocation['latitude'],
                         'longitude' => $dataLocation['longitude']
                     ]);
@@ -662,6 +663,7 @@ class ProfileController extends Controller
                     ]);
                 } else {
                     $userLocationInfo = LocationInfo::create([
+                        'user_id' => $id,
                         'latitude' => $dataLocation['latitude'],
                         'longitude' => $dataLocation['longitude']
                     ]);
