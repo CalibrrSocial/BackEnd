@@ -76,9 +76,10 @@ Route::group(['prefix' => 'admin'], function () {
   Route::get('/users/{id}', [AdminController::class, 'getUser'])->name('admin.getUser');
   Route::post('/users/{id}/moderate', [AdminController::class, 'moderateUser'])->name('admin.moderateUser');
   Route::post('/users/{id}/reset-password', [AdminController::class, 'resetUserPassword'])->name('admin.resetUserPassword');
-  Route::post('/users/{id}/update-email', [AdminController::class, 'updateUserEmail'])->name('admin.updateUserEmail');  Route::get('/moderation-history', [AdminController::class, 'getModerationHistory'])->name('admin.getModerationHistory');
+  Route::post('/users/{id}/update-email', [AdminController::class, 'updateUserEmail'])->name('admin.updateUserEmail');
+  Route::get('/moderation-history', [AdminController::class, 'getModerationHistory'])->name('admin.getModerationHistory');
   Route::get('/stats', [AdminController::class, 'getStats'])->name('admin.getStats');
   
   // Admin self-service routes
-  Route::post('/reset-password', [AdminController::class, 'resetAdminPassword'])->name('admin.resetAdminPassword');
-  Route::post('/update-email', [AdminController::class, 'updateAdminEmail'])->name('admin.updateAdminEmail');});
+  Route::post('/update-email', [AdminController::class, 'updateAdminEmail'])->name('admin.updateAdminEmail');
+});
