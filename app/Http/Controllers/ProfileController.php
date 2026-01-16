@@ -1606,42 +1606,75 @@ class ProfileController extends Controller
                     }
                 }
                 \Log::info('likeProfile state', ['created' => $created, 'self_like' => $id === $profileLikeId]);
-                // Email notification policy: allow up to 2 notifications per A->B lifetime, suppress for self-like
+                // Email notification policy: refined logic for liking notifications, suppress for self-like
                 if ($created && $id !== $profileLikeId) {
                     $event = DB::table('profile_like_events')->where('user_id',$id)->where('profile_id',$profileLikeId)->first();
                     $notifyCount = $event->notify_count ?? 0;
-                    if ($notifyCount < 2) {
-                        if (!$event) {
-                            DB::table('profile_like_events')->insert([
-                                'user_id' => $id,
-                                'profile_id' => $profileLikeId,
-                                'notified_at' => now(),
-                                'notify_count' => 1,
+                    $canNotifyAgain = $event->can_notify_again ?? false;
+                    
+                    $shouldNotify = false;
+                    
+                    if (!$event) {
+                        // First like from this person - always notify
+                        $shouldNotify = true;
+                        DB::table('profile_like_events')->insert([
+                            'user_id' => $id,
+                            'profile_id' => $profileLikeId,
+                            'notified_at' => now(),
+                            'notify_count' => 1,
+                            'can_notify_again' => false,
+                        ]);
+                        \Log::info('likeProfile first like notification', [
+                            'user_id' => $id,
+                            'profile_id' => $profileLikeId,
+                        ]);
+                    } else if ($notifyCount === 1 && $canNotifyAgain) {
+                        // Second like after an unlike - notify once more
+                        $shouldNotify = true;
+                        DB::table('profile_like_events')
+                            ->where('user_id',$id)->where('profile_id',$profileLikeId)
+                            ->update([
+                                'notified_at' => now(), 
+                                'notify_count' => 2,
+                                'can_notify_again' => false
                             ]);
-                        } else {
-                            DB::table('profile_like_events')
-                                ->where('user_id',$id)->where('profile_id',$profileLikeId)
-                                ->update(['notified_at' => now(), 'notify_count' => $notifyCount + 1]);
+                        \Log::info('likeProfile second like after unlike notification', [
+                            'user_id' => $id,
+                            'profile_id' => $profileLikeId,
+                        ]);
+                    } else {
+                        \Log::info('likeProfile notification suppressed', [
+                            'user_id' => $id,
+                            'profile_id' => $profileLikeId,
+                            'notify_count' => $notifyCount,
+                            'can_notify_again' => $canNotifyAgain,
+                        ]);
+                    }
+                    
+                    if ($shouldNotify) {
+                        // Include recipient email and sender name so Lambda doesn't need DB
+                        $recipient = DB::table('users')->select('email','first_name','last_name')->where('id', $profileLikeId)->first();
+                        $sender = DB::table('users')->select('first_name','last_name')->where('id', $id)->first();
+                        $additional = [];
+                        if ($recipient) {
+                            $additional['recipientEmail'] = $recipient->email ?? null;
+                            $additional['recipientFirstName'] = $recipient->first_name ?? null;
+                            $additional['recipientLastName'] = $recipient->last_name ?? null;
                         }
-                    // Include recipient email and sender name so Lambda doesn't need DB
-                    $recipient = DB::table('users')->select('email','first_name','last_name')->where('id', $profileLikeId)->first();
-                    $sender = DB::table('users')->select('first_name','last_name')->where('id', $id)->first();
-                    $additional = [];
-                    if ($recipient) {
-                        $additional['recipientEmail'] = $recipient->email ?? null;
-                        $additional['recipientFirstName'] = $recipient->first_name ?? null;
-                        $additional['recipientLastName'] = $recipient->last_name ?? null;
-                    }
-                    if ($sender) {
-                        $additional['senderFirstName'] = $sender->first_name ?? null;
-                        $additional['senderLastName'] = $sender->last_name ?? null;
-                    }
-                    \Log::info('likeProfile invoking lambda', [
-                        'recipientUserId' => (int)$profileLikeId,
-                        'senderUserId' => (int)$id,
-                        'hasRecipientEmail' => !empty($additional['recipientEmail']),
-                    ]);
-                    try { app(LambdaNotificationService::class)->notifyProfileLiked((int)$profileLikeId, (int)$id, $additional); } catch (\Throwable $e) { }
+                        if ($sender) {
+                            $additional['senderFirstName'] = $sender->first_name ?? null;
+                            $additional['senderLastName'] = $sender->last_name ?? null;
+                        }
+                        \Log::info('likeProfile invoking lambda', [
+                            'recipientUserId' => (int)$profileLikeId,
+                            'senderUserId' => (int)$id,
+                            'hasRecipientEmail' => !empty($additional['recipientEmail']),
+                        ]);
+                        try { 
+                            app(LambdaNotificationService::class)->notifyProfileLiked((int)$profileLikeId, (int)$id, $additional); 
+                        } catch (\Throwable $e) { 
+                            \Log::error('likeProfile lambda notification failed', ['error' => $e->getMessage()]);
+                        }
                     }
                 }
                 // Return success JSON response with like status
@@ -1704,6 +1737,25 @@ class ProfileController extends Controller
                     return response()->json(['message' => 'fail','details' => 'profileLikedId missing'], Response::HTTP_BAD_REQUEST);
                 }
                 $deleted = ProfileLike::where('user_id', $id)->where('profile_id', $profileLikeId)->update(['is_deleted' => 1]);
+                
+                // Update notification tracking for unlike
+                if ($deleted > 0) {
+                    $event = DB::table('profile_like_events')->where('user_id',$id)->where('profile_id',$profileLikeId)->first();
+                    if ($event && $event->notify_count === 1) {
+                        // Allow one more notification if they like again
+                        DB::table('profile_like_events')
+                            ->where('user_id',$id)->where('profile_id',$profileLikeId)
+                            ->update([
+                                'last_unliked_at' => now(),
+                                'can_notify_again' => true
+                            ]);
+                        \Log::info('unlikeProfile enabled can_notify_again', [
+                            'user_id' => $id,
+                            'profile_id' => $profileLikeId,
+                        ]);
+                    }
+                }
+                
                 return response()->json([
                     'success' => true,
                     'deleted' => $deleted > 0,
