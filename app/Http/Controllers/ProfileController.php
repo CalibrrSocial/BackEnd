@@ -11,10 +11,10 @@ use App\Http\Resources\RelationshipResource;
 use App\Http\Resources\ReportResource;
 use App\Models\Relationship;
 use App\Models\Report;
+use App\Models\Like;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
@@ -168,7 +168,7 @@ class ProfileController extends Controller
      * description="Removes a user's account",
      * operationId="removeUserAccount",
      * security={{"bearerAuth":{}}},
-     * tags={"Profile"},
+     * tags={"Authentication"},
      * @OA\Parameter(
      *    name="id",
      *    @OA\Schema(
@@ -711,14 +711,11 @@ class ProfileController extends Controller
     public function getLikes($id)
     {
         if (!$id) {
-            return response()->json([
-                'massage' => 'Fail',
-                'details' => 'Id not found'
-            ], 404);
+            return 0;
         } else {
-            $user = User::Where('id', $id)->first();
+            $user = Like::Where('user_id', $id)->get();
             if ($user) {
-                return $user->likeCount;
+                return count($user);
             } else {
                 return response()->json([
                     'massage' => 'Fail',
@@ -773,23 +770,23 @@ class ProfileController extends Controller
                 'details' => 'Id not found'
             ], 404);
         } else {
-            $user = User::Where('id', $id)->first();
-            $user->update(['liked' => '1']);
-
             $profileLikeId = $request->profileLikeId;
-            $profileLike = User::Where('id', $profileLikeId)->first();
-            $currentProfileLiked = $profileLike->likeCount;
-            $profileLike->update(['likeCount' => $currentProfileLiked + 1]);
-
-            if ($user) {
+            $user = Like::where('user_id', $id)->where('friend_id', $profileLikeId)->get();
+            if (count($user) > 0) {
+                return response()->json([
+                    'massage' => 'Fail',
+                    'details' => 'User and friend is liked'
+                ], 400);
+            } else {
+                $user = Like::create(
+                    [
+                        'user_id' => $id,
+                        'friend_id' => $profileLikeId,
+                    ],
+                );
                 return response()->json([
                     "Success",
                 ], Response::HTTP_OK);
-            } else {
-                return response()->json([
-                    'massage' => 'Fail',
-                    'details' => 'User is not regiter'
-                ], 400);
             }
         }
     }
@@ -839,22 +836,17 @@ class ProfileController extends Controller
                 'details' => 'Id not found'
             ], 404);
         } else {
-            $user = User::Where('id', $id)->first();
-            $user->update(['liked' => '0']);
-
             $profileLikeId = $request->profileLikeId;
-            $profileLike = User::Where('id', $profileLikeId)->first();
-            $currentProfileLiked = $profileLike->likeCount;
-            $profileLike->update(['likeCount' => $currentProfileLiked - 1]);
-
+            $user = Like::where('user_id', $id)->where('friend_id', $profileLikeId)->first();
             if ($user) {
+                $user->delete($user);
                 return response()->json([
-                    'Success'
+                    "Success",
                 ], Response::HTTP_OK);
             } else {
                 return response()->json([
                     'massage' => 'Fail',
-                    'details' => 'User is not regiter'
+                    'details' => 'User and friend is not liked'
                 ], 400);
             }
         }

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\DB;
 
 class UserResource extends JsonResource
 {
@@ -14,6 +15,9 @@ class UserResource extends JsonResource
    */
   public function toArray($request)
   {
+    $user_id = $this->id;
+    $like = DB::table('likes')->select('*')->where('user_id', $user_id)->get();
+    $countLike = count($like);
     return [
       'id' => "$this->id",
       'firstName' => $this->firstname,
@@ -51,7 +55,7 @@ class UserResource extends JsonResource
         'contact' => $this->contact,
       ],
       'liked' => $this->liked,
-      'likeCount' => $this->likeCount,
+      'likeCount' => $countLike,
       'visitCount' => $this->visitCount,
     ];
   }

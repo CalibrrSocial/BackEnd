@@ -197,24 +197,6 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * @OA\Get(
-     * path="/auth/logout",
-     * tags={"Authentication"},
-     * summary="Logout",
-     * description="logout",
-     * security={{"bearerAuth":{}}},
-     * operationId="logout",
-     * @OA\Response(
-     *    response=401,
-     *    description="Wrong credentials response",
-     *    @OA\JsonContent(
-     *       @OA\Property(property="message", type="string", example="Unauthenticated")
-     *        )
-     *     )
-     * )
-     */
-
     public function logout(Request $request)
     {
         return Auth::user()->id;
