@@ -201,14 +201,7 @@ class SearchController extends Controller
                 return $q->select('id')->from($firstQuery, 'accounts');
             })->where('id', '!=', $my_id)->get();
 
-            if (count($user) > 0) {
-                return response()->json(UserResource::collection($user));
-            } else {
-                return response()->json([
-                    'message' => 'fail',
-                    'details' => 'User not found'
-                ], Response::HTTP_BAD_REQUEST);
-            }
+            return response()->json(UserResource::collection($user));
         }
     }
 }
