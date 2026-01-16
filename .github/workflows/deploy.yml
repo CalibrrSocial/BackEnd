@@ -27,9 +27,10 @@ jobs:
             PHPV=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
             sudo apt-get install -y "php${PHPV}-xml" "php${PHPV}-curl" || true
             
-            # Pull latest code
-            git fetch origin
-            git reset --hard origin/${{ secrets.BRANCH }}
+            # Pull latest code using existing repository
+            git stash || true
+            git clean -fd || true
+            git pull origin ${{ secrets.BRANCH }} || git reset --hard origin/${{ secrets.BRANCH }}
             
             # Install dependencies
             composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-dom --ignore-platform-req=ext-simplexml
