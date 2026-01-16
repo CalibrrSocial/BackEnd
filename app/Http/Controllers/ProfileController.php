@@ -1812,7 +1812,8 @@ class ProfileController extends Controller
                 $user->update(['profile_pic' => $avatar_path]);
                 return response()->json([
                     'message' => 'success',
-                    'details' => 'Upload avatar success'
+                    'details' => 'Upload avatar success',
+                    'url' => $avatar_path,
                 ], Response::HTTP_OK);
             } else {
                 return response()->json([
@@ -1889,7 +1890,8 @@ class ProfileController extends Controller
                 $user->update(['cover_image' => $ci_path]);
                 return response()->json([
                     'message' => 'success',
-                    'details' => 'Upload cover image success'
+                    'details' => 'Upload cover image success',
+                    'url' => $ci_path,
                 ], Response::HTTP_OK);
             } else {
                 return response()->json([
