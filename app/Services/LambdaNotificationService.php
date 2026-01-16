@@ -8,17 +8,19 @@ class LambdaNotificationService
 {
     private LambdaClient $client;
     private string $functionName;
+    private bool $debug;
 
     public function __construct()
     {
-        $region = env('LAMBDA_REGION', env('AWS_DEFAULT_REGION', 'us-east-1'));
+        // Use getenv() so this works reliably even when config is cached
+        $region = getenv('LAMBDA_REGION') ?: (getenv('AWS_DEFAULT_REGION') ?: 'us-east-1');
         $config = [
             'version' => 'latest',
             'region' => $region,
         ];
-        $key = env('AWS_ACCESS_KEY_ID');
-        $secret = env('AWS_SECRET_ACCESS_KEY');
-        $token = env('AWS_SESSION_TOKEN');
+        $key = getenv('AWS_ACCESS_KEY_ID') ?: null;
+        $secret = getenv('AWS_SECRET_ACCESS_KEY') ?: null;
+        $token = getenv('AWS_SESSION_TOKEN') ?: null;
         if ($key && $secret) {
             $config['credentials'] = [
                 'key' => $key,
@@ -37,7 +39,8 @@ class LambdaNotificationService
             ]);
         }
         $this->client = new LambdaClient($config);
-        $this->functionName = env('LAMBDA_PROFILE_LIKED_FUNCTION', 'emailNotificationFinal');
+        $this->functionName = getenv('LAMBDA_PROFILE_LIKED_FUNCTION') ?: 'emailNotificationFinal';
+        $this->debug = filter_var(getenv('LAMBDA_DEBUG') ?: 'false', FILTER_VALIDATE_BOOLEAN);
     }
 
     public function notifyProfileLiked(int $recipientUserId, int $senderUserId, array $additionalData = []): void
@@ -50,12 +53,11 @@ class LambdaNotificationService
         ]);
 
         try {
-            $debug = filter_var(env('LAMBDA_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
             $params = [
                 'FunctionName' => $this->functionName,
                 'Payload' => $payload,
             ];
-            if ($debug) {
+            if ($this->debug) {
                 // Synchronous call with logs for troubleshooting
                 $params['InvocationType'] = 'RequestResponse';
                 $params['LogType'] = 'Tail';
