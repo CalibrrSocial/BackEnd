@@ -2,7 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Http\Controllers\Controller;
+use App\Exceptions\Exception;
 use Illuminate\Http\Request;
+use App\Http\Resources\UserResource;
+use App\Http\Resources\RelationshipResource;
+use App\Models\Relationship;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
@@ -29,58 +38,25 @@ class ProfileController extends Controller
      * ),
      * @OA\Response(
      *    response=200,
-     *    description="Login Payload",
-     *    @OA\JsonContent(
-     *          @OA\Property(property="id", type="string"),
-     *          @OA\Property(property="email", type="string"),
-     *          @OA\Property(property="password", type="string"),
-     *          @OA\Property(property="phone", type="string"),
-     *          @OA\Property(property="firstname", type="string"),
-     *          @OA\Property(property="lastname", type="string"),
-     *          @OA\Property(property="ghostMode", type="boolean"),
-     *          @OA\Property(property="subscription", type="string"),
-     *          @OA\Property(property="location", type="object",
-     *              @OA\Property(property="latitude", type="integer"),
-     *              @OA\Property(property="longitude", type="integer"),
-     *          ),
-     *          @OA\Property(property="locationTimestamp", type="string",format ="date-time"),
-     *          @OA\Property(property="pictureProfile", type="string"),
-     *          @OA\Property(property="pictureCover", type="string"),
-     *          @OA\Property(property="personalInfo", type="object",
-     *              @OA\Property(property="dob", type="string",format="date"),
-     *              @OA\Property(property="gender", type="string"),
-     *              @OA\Property(property="bio", type="string"),
-     *              @OA\Property(property="education", type="string"),
-     *              @OA\Property(property="politics", type="string"),
-     *              @OA\Property(property="religion", type="string"),
-     *              @OA\Property(property="occupation", type="string"),
-     *              @OA\Property(property="sexuality", type="string"),
-     *              @OA\Property(property="relationship", type="string"),
-     *          ),
-     *          @OA\Property(property="socialInfo", type="object",
-     *          @OA\Property(property="facebook", type="string"),
-     *          @OA\Property(property="instagram", type="string"),
-     *          @OA\Property(property="snapchat", type="string"),
-     *          @OA\Property(property="linkedIn", type="string"),
-     *          @OA\Property(property="twitter", type="string"),
-     *          @OA\Property(property="resume", type="string"),
-     *          @OA\Property(property="coverLetter", type="string"),
-     *          @OA\Property(property="sexuality", type="string"),
-     *          @OA\Property(property="relationship", type="string"),
-     *          @OA\Property(property="email", type="string"),
-     *          @OA\Property(property="website", type="string"),
-     *          @OA\Property(property="contact", type="string"),
-     *          ),
-     *          @OA\Property(property="liked", type="boolean"),
-     *          @OA\Property(property="likeCount", type="integer"),
-     *          @OA\Property(property="visitCount", type="integer"),
-     *        )
-     *    ),
+     *    description="Success",
+     *   )
      * )
      */
 
-    public function getUser(Request $request)
+    public function getUser($id)
     {
+        $user = User::Where('id', $id)->first();
+        if ($user) {
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::SHOW,
+                'user' => new UserResource($user),
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not registered'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -108,81 +84,50 @@ class ProfileController extends Controller
      *    required=true,
      *    description="Profile",
      *    @OA\JsonContent(
-     *          @OA\Property(property="location", type="object",
-     *              @OA\Property(property="latitude", type="integer"),
-     *              @OA\Property(property="longitude", type="integer"),
-     *          ),
-     *          @OA\Property(property="personalInfo", type="object"),
-     *          @OA\Property(property="socialInfo", type="object",
-     *          @OA\Property(property="facebook", type="string"),
-     *          @OA\Property(property="instagram", type="string"),
-     *          @OA\Property(property="snapchat", type="string"),
-     *          @OA\Property(property="linkedIn", type="string"),
-     *          @OA\Property(property="twitter", type="string"),
-     *          @OA\Property(property="resume", type="string"),
-     *          @OA\Property(property="coverLetter", type="string"),
-     *          @OA\Property(property="sexuality", type="string"),
-     *          @OA\Property(property="relationship", type="string"),
-     *          @OA\Property(property="email", type="string"),
-     *          @OA\Property(property="website", type="string"),
-     *          @OA\Property(property="contact", type="string"),
-     *          ),
+     *          @OA\Property(property="dob", type="string",example="2001/02/20"),
+     *          @OA\Property(property="gender", type="string",example="Nam"),
+     *          @OA\Property(property="bio", type="string",example="Không có"),
+     *          @OA\Property(property="education", type="string",example="SGU"),
+     *          @OA\Property(property="politics", type="string",example="Không có"),
+     *          @OA\Property(property="religion", type="string",example="Không có"),
+     *          @OA\Property(property="occupation", type="string",example="Không có"),
+     *          @OA\Property(property="sexuality", type="string",example="Không có"),
+     *          @OA\Property(property="relationship", type="string",example="Không có"),
+     *          @OA\Property(property="facebook", type="string",example="Không có"),
+     *          @OA\Property(property="instagram", type="string",example="Không có"),
+     *          @OA\Property(property="snapchat", type="string",example="Không có"),
+     *          @OA\Property(property="linkedIn", type="string",example="Không có"),
+     *          @OA\Property(property="twitter", type="string",example="Không có"),
+     *          @OA\Property(property="resume", type="string",example="Không có"),
+     *          @OA\Property(property="coverLetter", type="string",example="Không có"),
+     *          @OA\Property(property="email_2", type="string",example="Không có"),
+     *          @OA\Property(property="website", type="string",example="Không có"),
+     *          @OA\Property(property="contact", type="string",example="Không có"),
      *    ),
      * ),
      * @OA\Response(
      *    response=200,
-     *    description="Login Payload",
-     *    @OA\JsonContent(
-     *          @OA\Property(property="id", type="string"),
-     *          @OA\Property(property="email", type="string"),
-     *          @OA\Property(property="password", type="string"),
-     *          @OA\Property(property="phone", type="string"),
-     *          @OA\Property(property="firstname", type="string"),
-     *          @OA\Property(property="lastname", type="string"),
-     *          @OA\Property(property="ghostMode", type="boolean"),
-     *          @OA\Property(property="subscription", type="string"),
-     *          @OA\Property(property="location", type="object",
-     *              @OA\Property(property="latitude", type="integer"),
-     *              @OA\Property(property="longitude", type="integer"),
-     *          ),
-     *          @OA\Property(property="locationTimestamp", type="string",format ="date-time"),
-     *          @OA\Property(property="pictureProfile", type="string"),
-     *          @OA\Property(property="pictureCover", type="string"),
-     *          @OA\Property(property="personalInfo", type="object",
-     *              @OA\Property(property="dob", type="string",format="date"),
-     *              @OA\Property(property="gender", type="string"),
-     *              @OA\Property(property="bio", type="string"),
-     *              @OA\Property(property="education", type="string"),
-     *              @OA\Property(property="politics", type="string"),
-     *              @OA\Property(property="religion", type="string"),
-     *              @OA\Property(property="occupation", type="string"),
-     *              @OA\Property(property="sexuality", type="string"),
-     *              @OA\Property(property="relationship", type="string"),
-     *          ),
-     *          @OA\Property(property="socialInfo", type="object",
-     *          @OA\Property(property="facebook", type="string"),
-     *          @OA\Property(property="instagram", type="string"),
-     *          @OA\Property(property="snapchat", type="string"),
-     *          @OA\Property(property="linkedIn", type="string"),
-     *          @OA\Property(property="twitter", type="string"),
-     *          @OA\Property(property="resume", type="string"),
-     *          @OA\Property(property="coverLetter", type="string"),
-     *          @OA\Property(property="sexuality", type="string"),
-     *          @OA\Property(property="relationship", type="string"),
-     *          @OA\Property(property="email", type="string"),
-     *          @OA\Property(property="website", type="string"),
-     *          @OA\Property(property="contact", type="string"),
-     *          ),
-     *          @OA\Property(property="liked", type="boolean"),
-     *          @OA\Property(property="likeCount", type="integer"),
-     *          @OA\Property(property="visitCount", type="integer"),
-     *        )
-     *    ),
+     *    description="Success",
+     *   )
      * )
      */
 
-    public function updateUserProfile(Request $request)
+    public function updateUserProfile(Request $request, $id)
     {
+        $user = User::Where('id', $id)->first();
+        if ($user) {
+            $data = $request->all();
+            $user->update($data);
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::UPDATE_SUCCESS,
+                'user' => new UserResource($user),
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not registered'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -216,8 +161,20 @@ class ProfileController extends Controller
      * )
      */
 
-    public function removeUserAccount(Request $request)
+    public function removeUserAccount($id)
     {
+        $user = User::whereid($id)->first();
+        if ($user) {
+            $user->delete($user);
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::DELETE_SUCCESS,
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not registered'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -245,81 +202,33 @@ class ProfileController extends Controller
      *    required=true,
      *    description="Profile",
      *    @OA\JsonContent(
-     *          @OA\Property(property="location", type="object",
-     *              @OA\Property(property="latitude", type="integer"),
-     *              @OA\Property(property="longitude", type="integer"),
-     *          ),
-     *          @OA\Property(property="personalInfo", type="object"),
-     *          @OA\Property(property="socialInfo", type="object",
-     *          @OA\Property(property="facebook", type="string"),
-     *          @OA\Property(property="instagram", type="string"),
-     *          @OA\Property(property="snapchat", type="string"),
-     *          @OA\Property(property="linkedIn", type="string"),
-     *          @OA\Property(property="twitter", type="string"),
-     *          @OA\Property(property="resume", type="string"),
-     *          @OA\Property(property="coverLetter", type="string"),
-     *          @OA\Property(property="sexuality", type="string"),
-     *          @OA\Property(property="relationship", type="string"),
-     *          @OA\Property(property="email", type="string"),
-     *          @OA\Property(property="website", type="string"),
-     *          @OA\Property(property="contact", type="string"),
-     *          ),
+     *          @OA\Property(property="latitude", type="integer", example="198"),
+     *          @OA\Property(property="longitude", type="integer", example="123"),
      *    ),
      * ),
      * @OA\Response(
      *    response=200,
-     *    description="Login Payload",
-     *    @OA\JsonContent(
-     *          @OA\Property(property="id", type="string"),
-     *          @OA\Property(property="email", type="string"),
-     *          @OA\Property(property="password", type="string"),
-     *          @OA\Property(property="phone", type="string"),
-     *          @OA\Property(property="firstname", type="string"),
-     *          @OA\Property(property="lastname", type="string"),
-     *          @OA\Property(property="ghostMode", type="boolean"),
-     *          @OA\Property(property="subscription", type="string"),
-     *          @OA\Property(property="location", type="object",
-     *              @OA\Property(property="latitude", type="integer"),
-     *              @OA\Property(property="longitude", type="integer"),
-     *          ),
-     *          @OA\Property(property="locationTimestamp", type="string",format ="date-time"),
-     *          @OA\Property(property="pictureProfile", type="string"),
-     *          @OA\Property(property="pictureCover", type="string"),
-     *          @OA\Property(property="personalInfo", type="object",
-     *              @OA\Property(property="dob", type="string",format="date"),
-     *              @OA\Property(property="gender", type="string"),
-     *              @OA\Property(property="bio", type="string"),
-     *              @OA\Property(property="education", type="string"),
-     *              @OA\Property(property="politics", type="string"),
-     *              @OA\Property(property="religion", type="string"),
-     *              @OA\Property(property="occupation", type="string"),
-     *              @OA\Property(property="sexuality", type="string"),
-     *              @OA\Property(property="relationship", type="string"),
-     *          ),
-     *          @OA\Property(property="socialInfo", type="object",
-     *          @OA\Property(property="facebook", type="string"),
-     *          @OA\Property(property="instagram", type="string"),
-     *          @OA\Property(property="snapchat", type="string"),
-     *          @OA\Property(property="linkedIn", type="string"),
-     *          @OA\Property(property="twitter", type="string"),
-     *          @OA\Property(property="resume", type="string"),
-     *          @OA\Property(property="coverLetter", type="string"),
-     *          @OA\Property(property="sexuality", type="string"),
-     *          @OA\Property(property="relationship", type="string"),
-     *          @OA\Property(property="email", type="string"),
-     *          @OA\Property(property="website", type="string"),
-     *          @OA\Property(property="contact", type="string"),
-     *          ),
-     *          @OA\Property(property="liked", type="boolean"),
-     *          @OA\Property(property="likeCount", type="integer"),
-     *          @OA\Property(property="visitCount", type="integer"),
-     *        )
-     *    ),
+     *    description="Success",
+     *   )
      * )
      */
 
-    public function updateUserLocation(Request $request)
+    public function updateUserLocation(Request $request, $id)
     {
+        $user = User::Where('id', $id)->first();
+        if ($user) {
+            $data = $request->all();
+            $user->update($data);
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::UPDATE_SUCCESS,
+                'user' => new UserResource($user),
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not registered'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -346,21 +255,20 @@ class ProfileController extends Controller
      * @OA\Response(
      *    response=200,
      *    description="Success",
-     *    @OA\JsonContent(
-     *          @OA\Property(property="userId", type="string"),
-     *          @OA\Property(property="friendId", type="string"),
-     *          @OA\Property(property="status", type="string"),
-     *          @OA\Property(property="dateRequested", type="string", format="date"),
-     *          @OA\Property(property="dateAccepted", type="string", format="date"),
-     *          @OA\Property(property="dateRejected", type="string", format="date"),
-     *          @OA\Property(property="dateBlocked", type="string", format="date"),
-     *        )
      *     )
      * )
      */
 
-    public function getUserRelationships(Request $request)
+    public function getUserRelationships($id)
     {
+        $rela_list = Relationship::where('user_id', '=', $id)->get();
+        if ($rela_list) {
+            return RelationshipResource::collection($rela_list);
+        } else {
+            return response()->json([
+                'message' => 'User is not relationships'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -395,21 +303,27 @@ class ProfileController extends Controller
      * @OA\Response(
      *    response=200,
      *    description="Success",
-     *    @OA\JsonContent(
-     *          @OA\Property(property="userId", type="string"),
-     *          @OA\Property(property="friendId", type="string"),
-     *          @OA\Property(property="status", type="string"),
-     *          @OA\Property(property="dateRequested", type="string", format="date"),
-     *          @OA\Property(property="dateAccepted", type="string", format="date"),
-     *          @OA\Property(property="dateRejected", type="string", format="date"),
-     *          @OA\Property(property="dateBlocked", type="string", format="date"),
-     *        )
-     *     )
+     *    )
      * )
      */
 
-    public function getRelationship(Request $request)
+    public function getRelationship($userId, $friendId)
     {
+        $rela = Relationship::where('user_id', '=', $userId)
+            ->where('friend_id', '=', $friendId)
+            ->first();
+
+        if ($rela) {
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::GET_ALL_DATA,
+                'relationship' => new RelationshipResource($rela)
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not relationships'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -448,8 +362,30 @@ class ProfileController extends Controller
      * )
      */
 
-    public function requestFriend(Request $request)
+    public function requestFriend(Request $request, $userId, $friendId)
     {
+        $status = 'requested';
+        $requestedTime = Carbon::now('Asia/Ho_Chi_Minh');
+
+        $rela = Relationship::where('user_id', '=', $userId)
+            ->where('friend_id', '=', $friendId)
+            ->update(['status' => $status], ['dateRequested' => $requestedTime]);
+
+        $rela = Relationship::where('user_id', '=', $userId)
+            ->where('friend_id', '=', $friendId)
+            ->first();
+
+        if ($rela) {
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::UPDATE_SUCCESS,
+                'relationship' => new RelationshipResource($rela)
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not relationships'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -481,6 +417,13 @@ class ProfileController extends Controller
      *    in="path",
      *    required=true,
      * ),
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Profile",
+     *    @OA\JsonContent(
+     *          @OA\Property(property="status", type="string",example="blocked"),
+     *    ),
+     * ),
      * @OA\Response(
      *    response=200,
      *    description="Success",
@@ -488,8 +431,25 @@ class ProfileController extends Controller
      * )
      */
 
-    public function updateFriend(Request $request)
+    public function updateFriend(Request $request, $userId, $friendId)
     {
+        $rela = Relationship::where('user_id', '=', $userId)
+            ->where('friend_id', '=', $friendId)
+            ->first();
+
+        if ($rela) {
+            $data = $request->all();
+            $rela->update($data);
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::UPDATE_SUCCESS,
+                'relationship' => new RelationshipResource($rela)
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not relationships'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -528,8 +488,23 @@ class ProfileController extends Controller
      * )
      */
 
-    public function unblockUser(Request $request)
+    public function unblockAndDeleteUserRelationship($userId, $friendId)
     {
+        $rela = Relationship::where('user_id', '=', $userId)
+            ->where('friend_id', '=', $friendId)
+            ->first();
+
+        if ($rela->status != 'blocked') {
+            $rela->delete($rela);
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::DELETE_SUCCESS,
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is blocked'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -564,8 +539,20 @@ class ProfileController extends Controller
      * )
      */
 
-    public function getLikes(Request $request)
+    public function getLikes($id)
     {
+        $user = User::Where('id', $id)->first();
+        if ($user) {
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::SHOW,
+                'liked' => $user->liked
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not registered'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**

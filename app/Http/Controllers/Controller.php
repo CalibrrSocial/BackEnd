@@ -27,6 +27,16 @@ use Illuminate\Routing\Controller as BaseController;
  *      url="/api",
  *      description="Demo API Server",
  * )
+ * 
+ * @OA\SecurityScheme(
+ *     type="http",
+ *     description="Login with email and password to get the authentication token",
+ *     name="bearerAuth",
+ *     in="header",
+ *     scheme="Bearer",
+ *     bearerFormat="JWT",
+ *     securityScheme="bearerAuth",
+ * )
  */
 
 

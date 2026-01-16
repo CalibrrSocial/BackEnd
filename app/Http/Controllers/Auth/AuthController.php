@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Social;
+use App\Models\Location;
+use App\Models\Profile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PasswordReset;
@@ -33,7 +36,6 @@ class AuthController extends Controller
      * description="Register user",
      * operationId="registerUser",
      * tags={"Authentication"},
-     * security={{"bearerAuth":{}}},
      * @OA\RequestBody(
      *    required=true,
      *    description="Pass user credentials",
@@ -82,18 +84,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Login user.
-     *
-     * @return json
-     */
-    /**
      * @OA\Post(
      * path="/auth/login",
      * summary="Login User",
      * description="Login user",
      * operationId="loginUser",
      * tags={"Authentication"},
-     * security={{"bearerAuth":{}}},
      * @OA\RequestBody(
      *    required=true,
      *    description="Pass user credentials",
@@ -121,10 +117,9 @@ class AuthController extends Controller
         if (auth()->attempt($data)) {
             $token = auth()->user()->createToken('LaravelAuthApp')->accessToken;
             $user = [
+                'fullname' => Auth::user()->firstname . ' ' . Auth::user()->lastname,
                 'email' => Auth::user()->email,
                 'phone' => Auth::user()->phone,
-                'firstname' => Auth::user()->firstname,
-                'lastname' => Auth::user()->lastname
             ];
             $oauth_access_tokens = DB::table('oauth_access_tokens')
                 ->where('user_id', Auth::user()->id)
@@ -146,12 +141,13 @@ class AuthController extends Controller
         }
     }
 
+
     /**
      * @OA\Get(
      * path="/auth/logout",
      * tags={"Authentication"},
-     * summary="Logout User",
-     * description="Logout User",
+     * summary="Logout",
+     * description="logout",
      * security={{"bearerAuth":{}}},
      * operationId="logout",
      * @OA\Response(
@@ -166,17 +162,12 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        return Auth::user()->id;
         $request->user()->token()->revoke();
         return response()->json([
             'message' => 'Successfully logged out'
         ]);
     }
-
-    /**
-     * Refresh Token.
-     *
-     * @return json
-     */
 
     /**
      * @OA\Post(
@@ -205,81 +196,60 @@ class AuthController extends Controller
 
     public function refresh(Request $request)
     {
-        $token = $request->token;
-        $token_id = app(JwtParser::class)->parse($token)->claims()->get('jti');
-        $oauth_access_tokens = DB::table('oauth_access_tokens')->where('id', $token_id)->first();
-
-        $date = date('Y-m-d H:i:s');
-        $today_stamp = strtotime($date);
-        $expires = $oauth_access_tokens->expires_at;
-        $expires_stamp = strtotime($expires);
-        $revoked = $oauth_access_tokens->revoked;
-        $exp = $expires_stamp - $today_stamp;
-        if ($revoked != 0 || $exp <= 0) {
-            return false;
-        } else {
-            $user_id = $oauth_access_tokens->user_id;
-            $user = User::whereid($user_id)->first();
-
-            return response()->json([
-                'email' => $user->email,
-            ], 200);
-        }
     }
 
     /**
-     * Forgot Password.
-     *
-     * @return json
-     */
-
-    /**
      * @OA\Post(
-     * path="/auth/fortgotpassword",
-     * summary="Forgot Password",
-     * description="Forgot Password",
-     * operationId="forgotPassword",
+     * path="/auth/forgotpassword",
+     * summary="Send mail forgot password",
+     * description="Send mail forgot password",
+     * operationId="SendmailForgotPass",
      * tags={"Authentication"},
-     * @OA\Parameter(
-     *    name="username",
-     *    @OA\Schema(
-     *      type="string",
-     *    ),
-     *    in="query",
+     * @OA\RequestBody(
      *    required=true,
+     *    description="",
+     *    @OA\JsonContent(
+     *       required={"email"},
+     *       @OA\Property(property="email", type="string", format="email", example="bao@gmail.com"),
+     *    ),
      * ),
      * @OA\Response(
-     *    response=200,
-     *    description="Success",
-     *    )
+     *    response=404,
+     *    description="Notfound",
+     *    @OA\JsonContent(
+     *       @OA\Property(property="message", type="string", example="Email not found")
+     *        )
+     *     )
      * )
      */
-
-    public function forgotPassword(Request $request)
+    public function forgotPasswordSendMail(Request $request)
     {
         $user = User::where('email', $request->email)->first();
         if ($user) {
-            $passwordReset = PasswordReset::updateOrCreate([
-                'email' => $user->email,
-            ], [
-                'token' => Str::random(60),
-            ]);
             $data = [
-                'token' => $passwordReset['token'],
-                'router' => env('RESET_PASSWORD_LINK'),
+                'my_password' => Str::random(8),
             ];
             $mail_details = [
-                'email' => $passwordReset['email'],
+                'email' => $request->email,
                 'subject' => 'Forgot password',
             ];
-            Mail::send('forgotPasswordMail', $data, function ($message) use ($mail_details) {
+            $send_result = Mail::send('forgotPasswordMail', $data, function ($message) use ($mail_details) {
                 $message->to($mail_details['email']);
                 $message->subject($mail_details['subject']);
             });
-
-            return response()->json([
-                'message' => 'We have e-mailed your password reset link!'
-            ]);
+            // dd($send_result);
+            if($send_result == null){
+                $updatePasswordUser = $user->update([
+                    'password' => bcrypt($data['my_password'])
+                ]);
+                return response()->json([
+                    'message' => 'We have sent your new password by email'
+                ]);
+            }else{
+                return response()->json([
+                    'message' => 'Send mail fail'
+                ]);
+            }
         } else {
             return response()->json([
                 'message' => 'Email is not registered'
@@ -287,50 +257,65 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Change Password.
-     *
-     * @return json
-     */
 
     /**
      * @OA\Post(
      * path="/auth/changepassword",
-     * summary="Change Password",
-     * description="Change Password",
-     * operationId="changePassword",
+     * summary="change password forgot",
+     * description="change password forgot",
+     * operationId="changePasswordForgot",
+     *     security={{"bearerAuth":{}}},
      * tags={"Authentication"},
      * @OA\RequestBody(
      *    required=true,
-     *    description="Pass user credentials",
+     *    description="changePasswordForgot",
      *    @OA\JsonContent(
-     *       required={"oldPassword", "newPassword"},
-     *       @OA\Property(property="oldPassword", type="string"),
-     *       @OA\Property(property="newPassword", type="string"),
+     *       required={"oldPassword","newPassword"},
+     *       @OA\Property(property="oldPassword", type="string", format="password", example="pix113114"),
+     *       @OA\Property(property="newPassword", type="string", format="password", example="pix111111"),
      *    ),
      * ),
      * @OA\Response(
-     *    response=200,
-     *    description="Success",
-     *    )
-     * )
+     *    response=404,
+     *    description="Notfound",
+     *    @OA\JsonContent(
+     *       @OA\Property(property="message", type="string", example="Email not found")
+     *        )
+     *     )
+     * )    
      */
-
-    public function changePassword(Request $request, $token)
+    public function changePassword(Request $request)
     {
-        $passwordReset = PasswordReset::where('token', $token)->firstOrFail();
-        if (Carbon::parse($passwordReset->updated_at)->addMinutes(4320)->isPast()) {
+        if(!(Hash::check($request->oldPassword, Auth::user()->password))){
             return response()->json([
-                'message' => 'This password reset token is invalid.',
-            ], 422);
-        }
-        $user = User::where('email', $passwordReset->email)->firstOrFail();
-        $password = bcrypt($request->password);
-        $updatePasswordUser = $user->update(['password' => $password]);
-        $passwordReset->delete();
+                'message' => 'Your current password does not matches with the password'
+            ]);
+        }else{
+            $user = User::where('id', Auth::user()->id)->first();
+            $updatePasswordUser = $user->update([
+                'password' => bcrypt($request->newPassword)
+            ]);
+            if($updatePasswordUser == 1){
+                return response()->json([
+                    'message' => 'Update password success'
+                ]);
+            }
 
-        return response()->json([
-            'success' => $updatePasswordUser,
-        ]);
+        }
+    }
+
+    public function updateTokenFirebase(Request $request)
+    {
+        try {
+            $request->user()->update(['fcm_token' => $request->token]);
+            return response()->json([
+                'success' => true
+            ]);
+        } catch (\Exception $e) {
+            report($e);
+            return response()->json([
+                'success' => false
+            ], 500);
+        }
     }
 }
