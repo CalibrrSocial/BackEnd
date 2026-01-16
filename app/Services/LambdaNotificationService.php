@@ -11,10 +11,32 @@ class LambdaNotificationService
 
     public function __construct()
     {
-        $this->client = new LambdaClient([
+        $region = env('LAMBDA_REGION', env('AWS_DEFAULT_REGION', 'us-east-1'));
+        $config = [
             'version' => 'latest',
-            'region' => env('LAMBDA_REGION', env('AWS_DEFAULT_REGION', 'us-east-1')),
-        ]);
+            'region' => $region,
+        ];
+        $key = env('AWS_ACCESS_KEY_ID');
+        $secret = env('AWS_SECRET_ACCESS_KEY');
+        $token = env('AWS_SESSION_TOKEN');
+        if ($key && $secret) {
+            $config['credentials'] = [
+                'key' => $key,
+                'secret' => $secret,
+            ];
+            if (!empty($token)) {
+                $config['credentials']['token'] = $token;
+            }
+            \Log::info('LambdaNotificationService using explicit AWS credentials from env', [
+                'region' => $region,
+                'has_session_token' => !empty($token),
+            ]);
+        } else {
+            \Log::info('LambdaNotificationService relying on instance profile/SDK default credentials', [
+                'region' => $region,
+            ]);
+        }
+        $this->client = new LambdaClient($config);
         $this->functionName = env('LAMBDA_PROFILE_LIKED_FUNCTION', 'emailNotificationFinal');
     }
 
