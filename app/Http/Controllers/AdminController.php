@@ -347,34 +347,56 @@ class AdminController extends Controller
                 return response()->json(['error' => 'New password must be at least 8 characters long'], 400);
             }
             
-            // Find admin user by email
-            $adminUser = User::where('email', $adminEmail)->first();
-            if (!$adminUser) {
-                return response()->json(['error' => 'Admin user not found'], 404);
-            }
+            // Update AWS Cognito password using AWS CLI
+            $userPoolId = 'us-east-1_V8r9Bo2BS';
+            $region = 'us-east-1';
             
-            // Verify current password
-            if (!Hash::check($currentPassword, $adminUser->password)) {
+            // First verify the current password by attempting to authenticate
+            $authCommand = sprintf(
+                'aws cognito-idp admin-initiate-auth --user-pool-id %s --client-id 19uhql4gflvbor8f5hd9hjv0u1 --auth-flow ADMIN_NO_SRP_AUTH --auth-parameters USERNAME=%s,PASSWORD=%s --region %s 2>&1',
+                escapeshellarg($userPoolId),
+                escapeshellarg($adminEmail),
+                escapeshellarg($currentPassword),
+                escapeshellarg($region)
+            );
+            
+            $authResult = shell_exec($authCommand);
+            
+            if (strpos($authResult, 'NotAuthorizedException') !== false || strpos($authResult, 'error') !== false) {
                 return response()->json(['error' => 'Current password is incorrect'], 401);
             }
             
-            DB::beginTransaction();
+            // Update the password in Cognito
+            $updateCommand = sprintf(
+                'aws cognito-idp admin-set-user-password --user-pool-id %s --username %s --password %s --permanent --region %s 2>&1',
+                escapeshellarg($userPoolId),
+                escapeshellarg($adminEmail),
+                escapeshellarg($newPassword),
+                escapeshellarg($region)
+            );
             
-            // Update password
-            $adminUser->password = Hash::make($newPassword);
-            $adminUser->save();
+            $updateResult = shell_exec($updateCommand);
             
-            DB::commit();
+            if (strpos($updateResult, 'error') !== false || strpos($updateResult, 'Exception') !== false) {
+                Log::error('Cognito password update failed: ' . $updateResult);
+                return response()->json(['error' => 'Failed to update password in Cognito'], 500);
+            }
             
-            Log::info("Admin self-service password reset for user {$adminUser->id} by {$adminEmail}");
+            // Also update in local database to keep in sync
+            $adminUser = User::where('email', $adminEmail)->first();
+            if ($adminUser) {
+                $adminUser->password = Hash::make($newPassword);
+                $adminUser->save();
+            }
+            
+            Log::info("Admin Cognito password reset for {$adminEmail}");
             
             return response()->json([
                 'success' => true,
-                'message' => 'Password updated successfully'
+                'message' => 'Password updated successfully in Cognito'
             ]);
             
         } catch (\Exception $e) {
-            DB::rollBack();
             Log::error('Admin resetAdminPassword error: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to reset password'], 500);
         }
@@ -397,37 +419,47 @@ class AdminController extends Controller
                 return response()->json(['error' => 'Valid email address is required'], 400);
             }
             
-            // Find admin user by current email
+            // Update AWS Cognito email using AWS CLI
+            $userPoolId = 'us-east-1_V8r9Bo2BS';
+            $region = 'us-east-1';
+            
+            // Update the email attribute in Cognito
+            $updateCommand = sprintf(
+                'aws cognito-idp admin-update-user-attributes --user-pool-id %s --username %s --user-attributes Name=email,Value=%s Name=email_verified,Value=true --region %s 2>&1',
+                escapeshellarg($userPoolId),
+                escapeshellarg($adminEmail),
+                escapeshellarg($newEmail),
+                escapeshellarg($region)
+            );
+            
+            $updateResult = shell_exec($updateCommand);
+            
+            if (strpos($updateResult, 'error') !== false || strpos($updateResult, 'Exception') !== false) {
+                Log::error('Cognito email update failed: ' . $updateResult);
+                return response()->json(['error' => 'Failed to update email in Cognito'], 500);
+            }
+            
+            // Also update in local database to keep in sync
             $adminUser = User::where('email', $adminEmail)->first();
-            if (!$adminUser) {
-                return response()->json(['error' => 'Admin user not found'], 404);
+            if ($adminUser) {
+                // Check if new email already exists locally
+                $existingUser = User::where('email', $newEmail)->where('id', '!=', $adminUser->id)->first();
+                if (!$existingUser) {
+                    $oldEmail = $adminUser->email;
+                    $adminUser->email = $newEmail;
+                    $adminUser->save();
+                    Log::info("Admin database email update for user {$adminUser->id} from {$oldEmail} to {$newEmail}");
+                }
             }
             
-            // Check if new email already exists
-            $existingUser = User::where('email', $newEmail)->where('id', '!=', $adminUser->id)->first();
-            if ($existingUser) {
-                return response()->json(['error' => 'Email address already in use'], 400);
-            }
-            
-            DB::beginTransaction();
-            
-            $oldEmail = $adminUser->email;
-            
-            // Update email
-            $adminUser->email = $newEmail;
-            $adminUser->save();
-            
-            DB::commit();
-            
-            Log::info("Admin self-service email update for user {$adminUser->id} from {$oldEmail} to {$newEmail}");
+            Log::info("Admin Cognito email update from {$adminEmail} to {$newEmail}");
             
             return response()->json([
                 'success' => true,
-                'message' => 'Email updated successfully'
+                'message' => 'Email updated successfully in Cognito. Please log in with your new email.'
             ]);
             
         } catch (\Exception $e) {
-            DB::rollBack();
             Log::error('Admin updateAdminEmail error: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to update email'], 500);
         }
