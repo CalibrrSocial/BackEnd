@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-use App\Models\Social;
-use App\Models\Location;
-use App\Models\Profile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PasswordReset;
@@ -15,6 +12,7 @@ use Lcobucci\JWT\Parser as JwtParser;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,11 +39,11 @@ class AuthController extends Controller
      *    description="Pass user credentials",
      *    @OA\JsonContent(
      *       required={"email","password","phone","firstname","lastname"},
-     *       @OA\Property(property="email", type="string",example="bao@gmail.com"),
+     *       @OA\Property(property="email", type="string",example="example@gmail.com"),
      *       @OA\Property(property="password", type="string", example="123456"),
      *       @OA\Property(property="phone", type="string", example="0902050807"),
-     *       @OA\Property(property="firstname", type="string", example="admin"),
-     *       @OA\Property(property="lastname", type="string", example="admin"),
+     *       @OA\Property(property="firstname", type="string", example="User"),
+     *       @OA\Property(property="lastname", type="string", example="Name"),
      * 
      *    ),
      * ),
@@ -95,7 +93,7 @@ class AuthController extends Controller
      *    description="Pass user credentials",
      *    @OA\JsonContent(
      *       required={"email","password"},
-     *       @OA\Property(property="email", type="string",example="bao@gmail.com"),
+     *       @OA\Property(property="email", type="string",example="example@gmail.com"),
      *       @OA\Property(property="password", type="string", example="123456"),
      * 
      *    ),
@@ -114,24 +112,35 @@ class AuthController extends Controller
             'password' => $request->password
         ];
 
+        $clients = DB::table('oauth_clients')->select('*')->where('provider', 'users')->orderByRaw('id DESC')->first();
         if (auth()->attempt($data)) {
-            $token = auth()->user()->createToken('LaravelAuthApp')->accessToken;
-            $user = [
+            $path = env('APP_URL') . '/oauth/token';
+            $response = Http::asForm()->post($path, [
+                'grant_type' => 'password',
+                'client_id' => $clients->id,
+                'client_secret' => $clients->secret,
+                'username' => $data['email'],
+                'password' => $data['password'],
+                'scope' => '',
+            ]);
+            $result['token'] = $response->json()['access_token'];
+            $result['refresh_token'] = $response->json()['refresh_token'];
+            $result['user'] = [
                 'fullname' => Auth::user()->firstname . ' ' . Auth::user()->lastname,
                 'email' => Auth::user()->email,
                 'phone' => Auth::user()->phone,
             ];
-            $oauth_access_tokens = DB::table('oauth_access_tokens')
-                ->where('user_id', Auth::user()->id)
-                ->select('expires_at')
-                ->orderByRaw('id DESC')->first();
-            $expires_at = $oauth_access_tokens->expires_at;
-            $expires_at = \Carbon\Carbon::parse($expires_at)->timestamp;
-            $exp_at_timestamp_mili = $expires_at * 1000;
+            // $oauth_access_tokens = DB::table('oauth_access_tokens')
+            //     ->where('user_id', Auth::user()->id)
+            //     ->select('expires_at')
+            //     ->orderByRaw('id DESC')->first();
+            // $expires_at = $oauth_access_tokens->expires_at;
+            // $expires_at = \Carbon\Carbon::parse($expires_at)->timestamp;
+            // $exp_at_timestamp_mili = $expires_at * 1000;
             return response()->json([
-                'token' => $token,
-                'user' => $user,
-                'expires_at' => $exp_at_timestamp_mili,
+                'token' => $result['token'],
+                'refresh_token' => $result['refresh_token'],
+                'user' => $result['user'],
             ], 200);
         } else {
             return response()->json([
@@ -196,6 +205,21 @@ class AuthController extends Controller
 
     public function refresh(Request $request)
     {
+        return Auth::user()->id;
+        $path = env('APP_URL') . '/oauth/token';
+        $response = Http::asForm()->post($path, [
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $request->refreshToken,
+            'client_id' => '2',
+            'client_secret' => 'POU6G4TMVzoFqxNMOqRxJ8Wv8CgmrATLUeUNtGpL',
+            'scope' => '',
+        ]);
+
+        return $response->json();
+        return response()->json([
+            'access_token' => $response->json()['access_token'],
+            'refresh_token' => $response->json()['refresh_token'],
+        ]);
     }
 
     /**
@@ -210,7 +234,7 @@ class AuthController extends Controller
      *    description="",
      *    @OA\JsonContent(
      *       required={"email"},
-     *       @OA\Property(property="email", type="string", format="email", example="bao@gmail.com"),
+     *       @OA\Property(property="email", type="string", format="email", example="example@gmail.com"),
      *    ),
      * ),
      * @OA\Response(
@@ -238,14 +262,14 @@ class AuthController extends Controller
                 $message->subject($mail_details['subject']);
             });
             // dd($send_result);
-            if($send_result == null){
+            if ($send_result == null) {
                 $updatePasswordUser = $user->update([
                     'password' => bcrypt($data['my_password'])
                 ]);
                 return response()->json([
                     'message' => 'We have sent your new password by email'
                 ]);
-            }else{
+            } else {
                 return response()->json([
                     'message' => 'Send mail fail'
                 ]);
@@ -264,15 +288,15 @@ class AuthController extends Controller
      * summary="change password forgot",
      * description="change password forgot",
      * operationId="changePasswordForgot",
-     *     security={{"bearerAuth":{}}},
+     * security={{"bearerAuth":{}}},
      * tags={"Authentication"},
      * @OA\RequestBody(
      *    required=true,
      *    description="changePasswordForgot",
      *    @OA\JsonContent(
      *       required={"oldPassword","newPassword"},
-     *       @OA\Property(property="oldPassword", type="string", format="password", example="pix113114"),
-     *       @OA\Property(property="newPassword", type="string", format="password", example="pix111111"),
+     *       @OA\Property(property="oldPassword", type="string", format="password", example="123456"),
+     *       @OA\Property(property="newPassword", type="string", format="password", example="123456pix"),
      *    ),
      * ),
      * @OA\Response(
@@ -286,21 +310,20 @@ class AuthController extends Controller
      */
     public function changePassword(Request $request)
     {
-        if(!(Hash::check($request->oldPassword, Auth::user()->password))){
+        if (!(Hash::check($request->oldPassword, Auth::user()->password))) {
             return response()->json([
                 'message' => 'Your current password does not matches with the password'
             ]);
-        }else{
+        } else {
             $user = User::where('id', Auth::user()->id)->first();
             $updatePasswordUser = $user->update([
                 'password' => bcrypt($request->newPassword)
             ]);
-            if($updatePasswordUser == 1){
+            if ($updatePasswordUser == 1) {
                 return response()->json([
                     'message' => 'Update password success'
                 ]);
             }
-
         }
     }
 

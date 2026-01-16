@@ -8,7 +8,9 @@ use App\Exceptions\Exception;
 use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\RelationshipResource;
+use App\Http\Resources\ReportResource;
 use App\Models\Relationship;
+use App\Models\Report;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +29,7 @@ class ProfileController extends Controller
      * summary="Get a user's profile",
      * description="Get a user's profile",
      * operationId="getUser",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -71,6 +74,7 @@ class ProfileController extends Controller
      * summary="Update a user's personalInfo and socialInfo",
      * description="Update a user's personalInfo and socialInfo",
      * operationId="updateUserProfile",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -84,10 +88,10 @@ class ProfileController extends Controller
      *    required=true,
      *    description="Profile",
      *    @OA\JsonContent(
-     *          @OA\Property(property="dob", type="string",example="2001/02/20"),
+     *          @OA\Property(property="dob", type="string",example="2000/02/20"),
      *          @OA\Property(property="gender", type="string",example="Nam"),
      *          @OA\Property(property="bio", type="string",example="Không có"),
-     *          @OA\Property(property="education", type="string",example="SGU"),
+     *          @OA\Property(property="education", type="string",example="University"),
      *          @OA\Property(property="politics", type="string",example="Không có"),
      *          @OA\Property(property="religion", type="string",example="Không có"),
      *          @OA\Property(property="occupation", type="string",example="Không có"),
@@ -142,6 +146,7 @@ class ProfileController extends Controller
      * summary="Removes a user's account",
      * description="Removes a user's account",
      * operationId="removeUserAccount",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -189,6 +194,7 @@ class ProfileController extends Controller
      * summary="Update a user's location",
      * description="Update a user's location",
      * operationId="updateUserLocation",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -243,6 +249,7 @@ class ProfileController extends Controller
      * summary="Gets user's relationships",
      * description="Gets user's relationships",
      * operationId="getUserRelationships",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -283,6 +290,7 @@ class ProfileController extends Controller
      * summary="Gets the relationship",
      * description="Gets the relationship",
      * operationId="getRelationship",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -312,12 +320,11 @@ class ProfileController extends Controller
         $rela = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
             ->first();
-
         if ($rela) {
             return response()->json([
                 'status' => "Success",
                 'message' => Exception::GET_ALL_DATA,
-                'relationship' => new RelationshipResource($rela)
+                'relationship' => new RelationshipResource($rela),
             ], Response::HTTP_OK);
         } else {
             return response()->json([
@@ -338,6 +345,7 @@ class ProfileController extends Controller
      * summary="Request user as friend",
      * description="Request user as friend",
      * operationId="requestFriend",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -367,19 +375,29 @@ class ProfileController extends Controller
         $status = 'requested';
         $requestedTime = Carbon::now('Asia/Ho_Chi_Minh');
 
-        $rela = Relationship::where('user_id', '=', $userId)
+        $relaUserToFriend = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
             ->update(['status' => $status], ['dateRequested' => $requestedTime]);
 
-        $rela = Relationship::where('user_id', '=', $userId)
+        $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
+            ->where('friend_id', '=', $userId)
+            ->update(['status' => $status], ['dateRequested' => $requestedTime]);
+
+        $relaUserToFriend = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
             ->first();
 
-        if ($rela) {
+        $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
+            ->where('friend_id', '=', $userId)
+            ->first();
+
+        if ($relaFriendToUser && $relaUserToFriend) {
             return response()->json([
+                $requestedTime,
                 'status' => "Success",
                 'message' => Exception::UPDATE_SUCCESS,
-                'relationship' => new RelationshipResource($rela)
+                'relationship_user_to_friend' => new RelationshipResource($relaUserToFriend),
+                'relationship_friend_to_user' => new RelationshipResource($relaFriendToUser),
             ], Response::HTTP_OK);
         } else {
             return response()->json([
@@ -400,6 +418,7 @@ class ProfileController extends Controller
      * summary="Update user's friend status - accept/reject/block",
      * description="Update user's friend status - accept/reject/block",
      * operationId="updateFriend",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -433,17 +452,23 @@ class ProfileController extends Controller
 
     public function updateFriend(Request $request, $userId, $friendId)
     {
-        $rela = Relationship::where('user_id', '=', $userId)
+        $relaUserToFriend = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
             ->first();
 
-        if ($rela) {
+        $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
+            ->where('friend_id', '=', $userId)
+            ->first();
+
+        if ($relaUserToFriend && $relaFriendToUser) {
             $data = $request->all();
-            $rela->update($data);
+            $relaUserToFriend->update($data);
+            $relaFriendToUser->update($data);
             return response()->json([
                 'status' => "Success",
                 'message' => Exception::UPDATE_SUCCESS,
-                'relationship' => new RelationshipResource($rela)
+                'relationship_user_to_friend' => new RelationshipResource($relaUserToFriend),
+                'relationship_friend_to_user' => new RelationshipResource($relaFriendToUser),
             ], Response::HTTP_OK);
         } else {
             return response()->json([
@@ -464,6 +489,7 @@ class ProfileController extends Controller
      * summary="Unblock user's friend - removing their relationship",
      * description="Unblock user's friend - removing their relationship",
      * operationId="unblockUser",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -490,19 +516,24 @@ class ProfileController extends Controller
 
     public function unblockAndDeleteUserRelationship($userId, $friendId)
     {
-        $rela = Relationship::where('user_id', '=', $userId)
+        $relaUserToFriend = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
             ->first();
 
-        if ($rela->status != 'blocked') {
-            $rela->delete($rela);
+        $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
+            ->where('friend_id', '=', $userId)
+            ->first();
+
+        if ($relaUserToFriend->status != 'blocked' && $relaFriendToUser->status != 'blocked') {
+            $relaUserToFriend->delete($relaUserToFriend);
+            $relaFriendToUser->delete($relaFriendToUser);
             return response()->json([
                 'status' => "Success",
                 'message' => Exception::DELETE_SUCCESS,
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is blocked'
+                'message' => 'User is blocked. Unblock do delete'
             ], Response::HTTP_NOT_FOUND);
         }
     }
@@ -519,6 +550,7 @@ class ProfileController extends Controller
      * summary="Gets the number of likes a user's profile has",
      * description="Gets the number of likes a user's profile has",
      * operationId="getLikes",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -546,7 +578,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => "Success",
                 'message' => Exception::SHOW,
-                'liked' => $user->liked
+                'likeCount' => $user->likeCount
             ], Response::HTTP_OK);
         } else {
             return response()->json([
@@ -567,6 +599,7 @@ class ProfileController extends Controller
      * summary="Like user profile",
      * description="Like user profile",
      * operationId="likeProfile",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -576,13 +609,13 @@ class ProfileController extends Controller
      *    in="path",
      *    required=true,
      * ),
-     * @OA\Parameter(
-     *    name="likeProfileId",
-     *    @OA\Schema(
-     *      type="string",
-     *    ),
-     *    in="path",
+     * @OA\RequestBody(
      *    required=true,
+     *    description="Profile",
+     *    @OA\JsonContent(
+     *       required={"likeProfileId"},
+     *       @OA\Property(property="likeProfileId", type="string",example="2"),
+     *    ),
      * ),
      * @OA\Response(
      *    response=200,
@@ -591,8 +624,34 @@ class ProfileController extends Controller
      * )
      */
 
-    public function likeProfile(Request $request)
+    public function likeProfile(Request $request, $id)
     {
+        $user = User::Where('id', $id)->first();
+        $currentLiked = $user->liked;
+        $userLikeFullname = $user->firstname . ' ' . $user->lastname;
+        $user->update(['liked' => $currentLiked + 1]);
+
+        $data = $request->all();
+        $profileLikeId = $data['profileLikeId'];
+        $profileLike = User::Where('id', $profileLikeId)->first();
+        $currentProfileLiked = $profileLike->likeCount;
+        $profileLike->update(['likeCount' => $currentProfileLiked + 1]);
+
+        if ($user) {
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::SHOW,
+                'username like' => $userLikeFullname,
+                'current liked' => $currentLiked,
+                'liked' => $user->liked,
+                'current profile like' => $currentProfileLiked,
+                'likeCount' => $profileLike->likeCount
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not registered'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -607,6 +666,7 @@ class ProfileController extends Controller
      * summary="Unlike user profile",
      * description="Unlike user profile",
      * operationId="unlikeProfile",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -616,13 +676,13 @@ class ProfileController extends Controller
      *    in="path",
      *    required=true,
      * ),
-     * @OA\Parameter(
-     *    name="likeProfileId",
-     *    @OA\Schema(
-     *      type="string",
-     *    ),
-     *    in="path",
+     * @OA\RequestBody(
      *    required=true,
+     *    description="Profile",
+     *    @OA\JsonContent(
+     *       required={"likeProfileId"},
+     *       @OA\Property(property="likeProfileId", type="string",example="2"),
+     *    ),
      * ),
      * @OA\Response(
      *    response=200,
@@ -631,8 +691,32 @@ class ProfileController extends Controller
      * )
      */
 
-    public function unlikeProfile(Request $request)
+    public function unlikeProfile(Request $request, $id)
     {
+        $user = User::Where('id', $id)->first();
+        $currentLiked = $user->liked;
+        $user->update(['liked' => $currentLiked - 1]);
+
+        $data = $request->all();
+        $profileLikeId = $data['profileLikeId'];
+        $profileLike = User::Where('id', $profileLikeId)->first();
+        $currentProfileLiked = $profileLike->likeCount;
+        $profileLike->update(['likeCount' => $currentProfileLiked - 1]);
+
+        if ($user) {
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::SHOW,
+                'current liked' => $currentLiked,
+                'liked' => $user->liked,
+                'current profile like' => $currentProfileLiked,
+                'likeCount' => $profileLike->likeCount
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not registered'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -647,6 +731,7 @@ class ProfileController extends Controller
      * summary="Gets the reports that were submitted by the user",
      * description="Gets the reports that were submitted by the user",
      * operationId="getUserReports",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -660,16 +745,24 @@ class ProfileController extends Controller
      *    response=200,
      *    description="Success",
      *    @OA\JsonContent(
-     *          @OA\Property(property="userId", type="string"),
-     *          @OA\Property(property="info", type="string"),
-     *          @OA\Property(property="dateCreated", type="string", format="date-time"),
+     *          @OA\Property(property="userId", type="string",example="1"),
+     *       @OA\Property(property="info", type="string",example="Buôn bán hàng kém chất lượng"),
+     *       @OA\Property(property="dateCreated", type="string", example="2022/05/10"),
      *        )
      *     )
      * )
      */
 
-    public function getUserReports(Request $request)
+    public function getUserReports($id)
     {
+        $userReport = Report::where('user_id', $id)->get();
+        if ($userReport) {
+            return ReportResource::collection($userReport);
+        } else {
+            return response()->json([
+                'message' => 'User is not reported'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 
     /**
@@ -684,6 +777,7 @@ class ProfileController extends Controller
      * summary="Report a user",
      * description="Report a user",
      * operationId="reportUser",
+     * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
      *    name="id",
@@ -693,6 +787,15 @@ class ProfileController extends Controller
      *    in="path",
      *    required=true,
      * ),
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Profile",
+     *    @OA\JsonContent(
+     *       required={"info","dateCreated"},
+     *       @OA\Property(property="info", type="string",example="Buôn bán hàng kém chất lượng"),
+     *       @OA\Property(property="dateCreated", type="string", example="2022/05/10"),
+     *    ),
+     * ),
      * @OA\Response(
      *    response=200,
      *    description="Success",
@@ -700,7 +803,21 @@ class ProfileController extends Controller
      * )
      */
 
-    public function reportUser(Request $request)
+    public function reportUser(Request $request, $id)
     {
+        $report = Report::where('id', $id)->first();
+        if ($report) {
+            $data = $request->all();
+            $report->update($data);
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::SHOW,
+                'report' => new ReportResource($report),
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'message' => 'User is not registered'
+            ], Response::HTTP_NOT_FOUND);
+        }
     }
 }

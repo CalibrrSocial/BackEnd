@@ -25,7 +25,7 @@ class CreateUsersTable extends Migration
             $table->string('location')->nullable();
             $table->string('pictureProfile')->nullable();
             $table->string('pictureCover')->nullable();
-            $table->boolean('liked')->default(1);
+            $table->boolean('liked')->default(0);
             $table->integer('likeCount')->default(0);
             $table->integer('visitCount')->default(0);
             $table->string('position')->nullable();

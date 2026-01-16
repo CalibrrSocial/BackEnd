@@ -3,15 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SearchController extends Controller
 {
-    /**
-     * Search By Distance
-     *
-     * @return json
-     */
-
     /**
      * @OA\Post(
      * path="/search/distance",
@@ -26,7 +21,7 @@ class SearchController extends Controller
      *    ),
      *    in="query",
      *    required=true,
-     *    example={"latitude":0, "longitude":0},
+     *    example={"position" = {"latitude":0, "longitude":0}},
      * ),
      * @OA\Parameter(
      *    name="minDistance",
@@ -35,7 +30,7 @@ class SearchController extends Controller
      *    ),
      *    in="query",
      *    required=true,
-     *    example={"type":"feet", "amount":0},
+     *    example={"minDistance" = {"type":"feet", "amount":0}},
      * ),
      * @OA\Parameter(
      *    name="maxDistance",
@@ -44,7 +39,7 @@ class SearchController extends Controller
      *    ),
      *    in="query",
      *    required=true,
-     *    example={"type":"feet", "amount":0},
+     *    example={"maxDistance" = {"type":"feet", "amount":0}},
      * ),
      * @OA\Response(
      *    response=200,
@@ -58,13 +53,44 @@ class SearchController extends Controller
 
     public function searchByDistance(Request $request)
     {
-    }
+        $lat = $request->position['latitude'];
+        $lon = $request->position['longitude'];
+        $min_amount = $request->minDistance['amount'];
+        $max_amount = $request->maxDistance['amount'];
 
-    /**
-     * Search By Name
-     *
-     * @return json
-     */
+        if($request->maxDistance['type'] != $request->minDistance['type']){
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'type is not the same'
+            ], 500);
+        }else{
+            $type = $request->maxDistance['type'];
+        }
+
+        switch ($type) {
+            case "feet":
+              $type_value = 6371000 * 3.2808399;
+              break;
+            case "meters":
+              $type_value = 6371000;
+              break;
+            default:
+              $type_value = 6371;
+        }
+        $result = DB::table("users")
+                ->select("users.id", "email"
+                ,DB::raw("$type_value * acos(cos(radians(" . $lat . ")) 
+                * cos(radians(users.latitude)) 
+                * cos(radians(users.longitude) - radians(" . $lon . ")) 
+                + sin(radians(" .$lat. ")) 
+                * sin(radians(users.latitude))) AS distance"))
+                ->having("distance" , "<=", $max_amount)
+                ->having("distance" , ">=", $min_amount)
+                ->orderBy("distance")
+                ->get();
+       
+        return $result;
+    }
 
     /**
      * @OA\Post(
@@ -72,6 +98,7 @@ class SearchController extends Controller
      * summary="Searches users by name",
      * description="Searches users by name",
      * operationId="searchByName",
+     * security={{"bearerAuth":{}}},
      * tags={"Search"},
      * @OA\Parameter(
      *    name="name",

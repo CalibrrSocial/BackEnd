@@ -18,10 +18,10 @@ class CreateRelationshipTable extends Migration
             $table->string('user_id');
             $table->string('friend_id');
             $table->string('status');
-            $table->dateTime('dateRequested');
-            $table->dateTime('dateAccepted');
-            $table->dateTime('dateRejected');
-            $table->dateTime('dateBlocked');
+            $table->dateTime('dateRequested')->default('null');
+            $table->dateTime('dateAccepted')->default('null');
+            $table->dateTime('dateRejected')->default('null');
+            $table->dateTime('dateBlocked')->default('null');
             $table->timestamps();
         });
     }
