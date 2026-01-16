@@ -18,13 +18,15 @@ class UserResource extends JsonResource
     $user_id = $this->id;
     $like = DB::table('likes')->select('*')->where('friend_id', '=', $user_id)->get();
     $countLike = count($like);
+    $ghostMode = $this->ghostMode == 1 ? true : false;
+    $liked = $this->liked == 1 ? true : false;
     return [
       'id' => "$this->id",
       'firstName' => $this->firstname,
       'lastName' => $this->lastname,
       'email' => $this->email,
       'phone' => $this->phone,
-      'ghostMode' => $this->ghostMode,
+      'ghostMode' => $ghostMode,
       'subscription' => $this->subscription,
       'location' => [
         'latitude' => $this->latitude,
@@ -54,7 +56,7 @@ class UserResource extends JsonResource
         'website' => $this->website,
         'contact' => $this->contact,
       ],
-      'liked' => $this->liked,
+      'liked' => $liked,
       'likeCount' => $countLike,
       'visitCount' => $this->visitCount,
     ];
