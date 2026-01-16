@@ -267,18 +267,19 @@ class AuthController extends Controller
                     'password' => bcrypt($data['my_password'])
                 ]);
                 return response()->json([
-                    'response' => 1, 'message' => 'A mail has been sent to your mail id'
+                    'message' => 'Success',
+                    'details' => 'A mail has been sent to your mail id'
                 ]);
             } else {
                 return response()->json([
-                    'response' => 2,
-                    'message' => 'Unable to send mail'
+                    'message' => 'Fail',
+                    'details' => 'Unable to send mail'
                 ]);
             }
         } else {
             return response()->json([
-                'response' => 2,
-                'message' => 'Email is not registered'
+                'message' => 'Fail',
+                'details' => 'Email is not register'
             ], Response::HTTP_BAD_REQUEST);
         }
     }

@@ -19,6 +19,7 @@ class SearchController extends Controller
      * summary="Searches users by distance from given point",
      * description="Searches users by distance from given point",
      * operationId="searchByDistance",
+     * security={{"bearerAuth":{}}},
      * tags={"Search"},
      * @OA\Parameter(
      *    name="position",
@@ -98,9 +99,9 @@ class SearchController extends Controller
             ->orderBy("distance")
             ->get();
         if (count($result) > 0) {
-            for($i = 0; $i < count($result); $i++){
+            for ($i = 0; $i < count($result); $i++) {
                 unset($result[$i]->distance);
-                if($result[$i]->user_id == $my_id){
+                if ($result[$i]->user_id == $my_id) {
                     $result[$i]->user_id = 0;
                 }
             }
@@ -156,13 +157,13 @@ class SearchController extends Controller
         $data = $request->all();
         $name = $data['name'];
         $my_id = Auth::user()->id;
-        
+
         $user = User::select("*")
             ->Where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $name . "%")
             ->orWhere(DB::raw("concat(first_name, last_name)"), 'LIKE', "%" . $name . "%")
             ->get();
-        for($i = 0; $i < count($user); $i++){
-            if($user[$i]->id == $my_id){
+        for ($i = 0; $i < count($user); $i++) {
+            if ($user[$i]->id == $my_id) {
                 unset($user[$i]);
             }
         }
