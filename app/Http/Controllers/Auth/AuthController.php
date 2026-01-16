@@ -226,11 +226,11 @@ class AuthController extends Controller
             'client_secret' => $clients->secret,
             'scope' => '',
         ]);
-        if ($response['refresh_token']) {
+        if(isset($response->json()['refresh_token'])){
             return response()->json([
                 'refresh_token' => $response->json()['refresh_token'],
             ]);
-        } else {
+        }else{
             return response()->json([
                 'massage' => 'Refresh fail',
                 'details' => 'Incorrect refresh token'
