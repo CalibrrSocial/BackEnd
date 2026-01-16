@@ -84,11 +84,19 @@ class AuthController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $check = DB::table('users')->where('email', $request->email)->where('password', '!=', null)->first();
-        if ($check) {
+        $checkEmail = DB::table('users')->where('email', $request->email)->where('password', '!=', null)->first();
+        if ($checkEmail) {
             return response([
                 "message" => 'fail',
                 "details" => "Email already in use",
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $checkPhone = DB::table('users')->where('phone', $request->phone)->where('password', '!=', null)->first();
+        if ($checkPhone) {
+            return response([
+                "message" => 'fail',
+                "details" => "Phone already in use",
             ], Response::HTTP_BAD_REQUEST);
         }
 
@@ -100,7 +108,6 @@ class AuthController extends Controller
             "last_name" => $request->lastName,
             "dob" => $request->dob,
         ]);
-
         if (!empty($user)) {
             $data = [
                 'email' => $request->email,
@@ -121,8 +128,8 @@ class AuthController extends Controller
      *    required=true,
      *    description="Pass user credentials",
      *    @OA\JsonContent(
-     *       required={"email","password"},
-     *       @OA\Property(property="email", type="string",example="example@gmail.com"),
+     *       required={"username","password"},
+     *       @OA\Property(property="username", type="string",example="example@gmail.com"),
      *       @OA\Property(property="password", type="string", example="123456aA"),
      * 
      *    ),
@@ -137,11 +144,24 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $data = [
-            'email' => $request->email,
-            'password' => $request->password
-        ];
+        $username = $request->username;
 
+        $user = User::where('email', $username)
+            ->orWhere('phone', $username)
+            ->first();
+
+        if (!empty($user)) {
+            $email = $user->email;
+            $data = [
+                'email' => $email,
+                'password' => $request->password
+            ];
+        } else {
+            return response()->json([
+                'message' => 'fail',
+                'details' => 'Incorrect username or password'
+            ], Response::HTTP_BAD_REQUEST);
+        }
         return $this->login_return($data);
     }
     private function login_return($data)
@@ -157,7 +177,6 @@ class AuthController extends Controller
                 'password' => $data['password'],
                 'scope' => '',
             ]);
-
             $result['token'] = $response->json()['access_token'];
             $result['refresh_token'] = $response->json()['refresh_token'];
 
@@ -168,11 +187,11 @@ class AuthController extends Controller
                 'token' => $result['token'],
                 'refreshToken' => $result['refresh_token'],
                 'user' => $user_data,
-            ], 200);
+            ], Response::HTTP_OK);
         } else {
             return response()->json([
                 'message' => 'fail',
-                'details' => 'Incorrect email or password'
+                'details' => 'Incorrect username or password'
             ], Response::HTTP_BAD_REQUEST);
         }
     }
