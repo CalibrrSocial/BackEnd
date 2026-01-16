@@ -8,7 +8,7 @@ use App\Models\UserModerationAction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Response;
-
+use Illuminate\Support\Facades\Hash;
 class AdminController extends Controller
 {
     /**
@@ -222,6 +222,111 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             Log::error('Admin getStats error: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch statistics'], 500);
+        }
+    }
+}
+
+    /**
+     * Reset user password
+     */
+    public function resetUserPassword(Request $request, $id)
+    {
+        try {
+            $user = User::find($id);
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            
+            $newPassword = $request->input('password');
+            $adminEmail = $request->input('adminEmail');
+            
+            if (!$newPassword || strlen($newPassword) < 6) {
+                return response()->json(['error' => 'Password must be at least 6 characters long'], 400);
+            }
+            
+            DB::beginTransaction();
+            
+            // Update password
+            $user->password = Hash::make($newPassword);
+            $user->save();
+            
+            // Log the action
+            UserModerationAction::create([
+                'user_id' => $id,
+                'action' => 'password_reset',
+                'reason' => 'Password reset by admin',
+                'admin_email' => $adminEmail
+            ]);
+            
+            DB::commit();
+            
+            Log::info("Admin password reset for user {$id} by {$adminEmail}");
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Password reset successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin resetUserPassword error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to reset password'], 500);
+        }
+    }
+    
+    /**
+     * Update user email
+     */
+    public function updateUserEmail(Request $request, $id)
+    {
+        try {
+            $user = User::find($id);
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            
+            $newEmail = $request->input('email');
+            $adminEmail = $request->input('adminEmail');
+            
+            if (!$newEmail || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+                return response()->json(['error' => 'Valid email address is required'], 400);
+            }
+            
+            // Check if email already exists
+            $existingUser = User::where('email', $newEmail)->where('id', '!=', $id)->first();
+            if ($existingUser) {
+                return response()->json(['error' => 'Email address already in use'], 400);
+            }
+            
+            DB::beginTransaction();
+            
+            $oldEmail = $user->email;
+            
+            // Update email
+            $user->email = $newEmail;
+            $user->save();
+            
+            // Log the action
+            UserModerationAction::create([
+                'user_id' => $id,
+                'action' => 'email_update',
+                'reason' => "Email changed from {$oldEmail} to {$newEmail}",
+                'admin_email' => $adminEmail
+            ]);
+            
+            DB::commit();
+            
+            Log::info("Admin email update for user {$id} from {$oldEmail} to {$newEmail} by {$adminEmail}");
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Email updated successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin updateUserEmail error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update email'], 500);
         }
     }
 }

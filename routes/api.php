@@ -75,6 +75,7 @@ Route::group(['prefix' => 'admin'], function () {
   Route::get('/users', [AdminController::class, 'getUsers'])->name('admin.getUsers');
   Route::get('/users/{id}', [AdminController::class, 'getUser'])->name('admin.getUser');
   Route::post('/users/{id}/moderate', [AdminController::class, 'moderateUser'])->name('admin.moderateUser');
-  Route::get('/moderation-history', [AdminController::class, 'getModerationHistory'])->name('admin.getModerationHistory');
+  Route::post('/users/{id}/reset-password', [AdminController::class, 'resetUserPassword'])->name('admin.resetUserPassword');
+  Route::post('/users/{id}/update-email', [AdminController::class, 'updateUserEmail'])->name('admin.updateUserEmail');  Route::get('/moderation-history', [AdminController::class, 'getModerationHistory'])->name('admin.getModerationHistory');
   Route::get('/stats', [AdminController::class, 'getStats'])->name('admin.getStats');
 });
