@@ -744,7 +744,7 @@ class ProfileController extends Controller
      *    @OA\Schema(
      *      type="string",
      *    ),
-     *    in="path",
+     *    in="query",
      *    required=true,
      * ),
      * @OA\Parameter(
@@ -810,7 +810,7 @@ class ProfileController extends Controller
      *    @OA\Schema(
      *      type="string",
      *    ),
-     *    in="path",
+     *    in="query",
      *    required=true,
      * ),
      * @OA\Parameter(
