@@ -541,22 +541,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['facebook']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['facebook']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['facebook']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['facebook']
                                 ]
                             );
                         }
@@ -573,22 +573,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['instagram']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['instagram']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['instagram']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['instagram']
                                 ]
                             );
                         }
@@ -605,22 +605,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['snapchat']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['snapchat']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['snapchat']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['snapchat']
                                 ]
                             );
                         }
@@ -637,22 +637,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['vsco']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['vsco']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['vsco']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['vsco']
                                 ]
                             );
                         }
@@ -669,22 +669,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['tiktok']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['tiktok']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['tiktok']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['tiktok']
                                 ]
                             );
                         }
@@ -701,22 +701,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['twitter']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['twitter']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['twitter']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['twitter']
                                 ]
                             );
                         }
@@ -733,22 +733,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['resume']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['resume']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['resume']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['resume']
                                 ]
                             );
                         }
@@ -765,22 +765,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['coverLetter']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['coverLetter']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['coverLetter']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['coverLetter']
                                 ]
                             );
                         }
@@ -797,22 +797,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['email']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['email']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['email']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['email']
                                 ]
                             );
                         }
@@ -829,22 +829,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['website']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['website']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['website']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['website']
                                 ]
                             );
                         }
@@ -861,22 +861,22 @@ class ProfileController extends Controller
 
                         $userSocialInfo = SocialSiteInfo::select('*')
                             ->where('user_id', '=', $id)
-                            ->where('socila_site_row_id', $social_id)
+                            ->where('social_id', $social_id)
                             ->first();
 
                         if ($userSocialInfo) {
                             $userSocialInfo->update(
                                 [
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['contact']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['contact']
                                 ]
                             );
                         } else {
                             $userSocialInfo = SocialSiteInfo::create(
                                 [
                                     'user_id' => $id,
-                                    'socila_site_row_id' => $social_name->id,
-                                    'social_siteUsername' => $dataSocial['contact']
+                                    'social_id' => $social_name->id,
+                                    'social_username' => $dataSocial['contact']
                                 ]
                             );
                         }
