@@ -120,8 +120,8 @@ class UserResource extends JsonResource
       'liked' => $like,
       'likeCount' => $countLike,
       'visitCount' => $count_visit,
-      'bestFriends' => $this->bestFriends,
-      'courses' => $this->courses
+      'bestFriends' => $this->bestFriends ?? [],
+      'courses' => $this->courses ?? []
     ];
   }
 }
