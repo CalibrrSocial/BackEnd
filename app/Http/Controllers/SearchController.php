@@ -186,8 +186,15 @@ class SearchController extends Controller
 
         $fields = ['users.id', 'first_name', 'last_name', 'profile_pic', 'location', 'city', 'dob', 'studying', 'education', 'club', 'jersey_number', 'greek_life'];
 
+        $courseNames = Course::where('user_id', $user->id)->get();
+        $courseNames = $courseNames->map(function ($i) {
+            return $i->name;
+        });
+
         if (!$request->search_in_course && !$request->search_in_studying) {
-            $users = User::select($fields)->with('courses')->where('ghost_mode_flag', false)
+            $users = User::select($fields)->with(['courses' => function ($q) use ($courseNames) {
+                return $q->whereIn('courses.name', $courseNames);
+            }])->where('ghost_mode_flag', false)
             ->where(DB::raw("concat(first_name, ' ', last_name)"), 'LIKE', "%" . $request->name . "%")
             ->get();
 
@@ -215,10 +222,7 @@ class SearchController extends Controller
             return response()->json([]);
         }
 
-        $courseNames = Course::where('user_id', $user->id)->get();
-        $courseNames = $courseNames->map(function ($i) {
-            return $i->name;
-        });
+
 
         $users = User::select($fields)->with(['courses' => function ($qr) use ($courseNames) {
             return $qr->whereIn('courses.name', $courseNames);
