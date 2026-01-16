@@ -15,8 +15,8 @@ class CreateUserBlocksTable extends Migration
     {
         Schema::create('user_blocks', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('blocker_id'); // User who is doing the blocking
-            $table->unsignedBigInteger('blocked_id'); // User who is being blocked
+            $table->integer('blocker_id')->unsigned(); // User who is doing the blocking
+            $table->integer('blocked_id')->unsigned(); // User who is being blocked
             $table->string('reason')->nullable(); // Optional reason for blocking
             $table->boolean('is_active')->default(true); // For soft unblocking
             $table->timestamps();
