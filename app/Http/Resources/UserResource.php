@@ -104,8 +104,9 @@ class UserResource extends JsonResource
         'longitude' => $longitude,
       ],
       'locationTimestamp' => $this->locationTimestamp,
-      'pictureProfile' => $this->profile_pic,
-      'pictureCover' => $this->cover_image,
+      // Read from either new or legacy columns
+      'pictureProfile' => $this->profile_pic ?? $this->pictureProfile ?? null,
+      'pictureCover' => $this->cover_image ?? $this->pictureCover ?? null,
       'personalInfo' => [
         'dob' => $this->dob,
         'gender' => $this->gender,

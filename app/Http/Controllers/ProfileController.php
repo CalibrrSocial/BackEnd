@@ -2088,7 +2088,9 @@ class ProfileController extends Controller
                     $disk = config('filesystems.disks.s3.bucket') ? 's3' : 'public';
                     $stored = $avatar->store('profile', $disk);
                     $avatar_path = $disk === 's3' ? Storage::disk('s3')->url($stored) : Storage::disk('public')->url($stored);
-                    $user->update(['profile_pic' => $avatar_path]);
+                    // Support legacy column names if present
+                    $avatarColumn = Schema::hasColumn('users', 'profile_pic') ? 'profile_pic' : (Schema::hasColumn('users', 'pictureProfile') ? 'pictureProfile' : null);
+                    if ($avatarColumn) { $user->update([$avatarColumn => $avatar_path]); }
                     return response()->json([
                         'message' => 'success',
                         'details' => 'Upload avatar success',
@@ -2175,7 +2177,9 @@ class ProfileController extends Controller
                     $disk = config('filesystems.disks.s3.bucket') ? 's3' : 'public';
                     $stored = $avatar->store('banner', $disk);
                     $ci_path = $disk === 's3' ? Storage::disk('s3')->url($stored) : Storage::disk('public')->url($stored);
-                    $user->update(['cover_image' => $ci_path]);
+                    // Support legacy column names if present
+                    $coverColumn = Schema::hasColumn('users', 'cover_image') ? 'cover_image' : (Schema::hasColumn('users', 'pictureCover') ? 'pictureCover' : null);
+                    if ($coverColumn) { $user->update([$coverColumn => $ci_path]); }
                     return response()->json([
                         'message' => 'success',
                         'details' => 'Upload cover image success',
