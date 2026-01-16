@@ -302,7 +302,7 @@ class ProfileController extends Controller
      *    required=true,
      * ),
      * @OA\Parameter(
-     *    name="friendId",
+     *    name="friend",
      *    @OA\Schema(
      *      type="string",
      *    ),
@@ -357,7 +357,7 @@ class ProfileController extends Controller
      *    required=true,
      * ),
      * @OA\Parameter(
-     *    name="friendId",
+     *    name="friend",
      *    @OA\Schema(
      *      type="string",
      *    ),
@@ -373,15 +373,40 @@ class ProfileController extends Controller
 
     public function requestFriend($userId, $friendId)
     {
+        $relaUserToFriend = $relaFriendToUser = '';
         $status = 'requested';
         $time_zone = env('TIME_ZONE');
         $requestedTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
 
-        $relaUserToFriend = Relationship::where('user_id', '!=', $userId)
-            ->where('friend_id', '!=', $friendId)
-            ->orWhereNull('user_id')
-            ->orWhereNull('friend_id')
-            ->create(
+        $countRela = Relationship::where('user_id', $userId)
+            ->where('friend_id', $friendId)
+            ->get();
+
+
+        if (count($countRela) > 0) {
+            $relaUserToFriend = Relationship::where('user_id', '=', $userId)
+                ->where('friend_id', '=', $friendId)
+                ->update([
+                    'status' => $status,
+                    'dateRequested' => $requestedTime
+                ]);
+
+            $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
+                ->where('friend_id', '=', $userId)
+                ->update([
+                    'status' => $status,
+                    'dateRequested' => $requestedTime
+                ]);
+
+            $relaUserToFriend = Relationship::where('user_id', '=', $userId)
+                ->where('friend_id', '=', $friendId)
+                ->first();
+
+            $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
+                ->where('friend_id', '=', $userId)
+                ->first();
+        } else {
+            $relaUserToFriend = Relationship::create(
                 [
                     'user_id' => $userId,
                     'friend_id' => $friendId,
@@ -390,11 +415,7 @@ class ProfileController extends Controller
                 ],
             );
 
-        $relaFriendToUser = Relationship::where('user_id', '!=', $friendId)
-            ->where('friend_id', '!=', $userId)
-            ->orWhereNull('user_id')
-            ->orWhereNull('friend_id')
-            ->create(
+            $relaFriendToUser = Relationship::create(
                 [
                     'user_id' => $friendId,
                     'friend_id' => $userId,
@@ -402,29 +423,7 @@ class ProfileController extends Controller
                     "dateRequested" => $requestedTime,
                 ],
             );
-
-        $relaUserToFriend = Relationship::where('user_id', '=', $userId)
-            ->where('friend_id', '=', $friendId)
-            ->update([
-                'status' => $status,
-                'dateRequested' => $requestedTime
-            ]);
-
-        $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
-            ->where('friend_id', '=', $userId)
-            ->update([
-                'status' => $status,
-                'dateRequested' => $requestedTime
-            ]);
-
-        $relaUserToFriend = Relationship::where('user_id', '=', $userId)
-            ->where('friend_id', '=', $friendId)
-            ->first();
-
-        $relaFriendToUser = Relationship::where('user_id', '=', $friendId)
-            ->where('friend_id', '=', $userId)
-            ->first();
-
+        }
 
         if ($relaFriendToUser && $relaUserToFriend) {
             return response()->json([
@@ -463,7 +462,7 @@ class ProfileController extends Controller
      *    required=true,
      * ),
      * @OA\Parameter(
-     *    name="friendId",
+     *    name="friend",
      *    @OA\Schema(
      *      type="string",
      *    ),
@@ -488,6 +487,7 @@ class ProfileController extends Controller
     {
         $time_zone = env('TIME_ZONE');
         $actionTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
+
         $relaUserToFriend = Relationship::where('user_id', '=', $userId)
             ->where('friend_id', '=', $friendId)
             ->first();
@@ -499,21 +499,21 @@ class ProfileController extends Controller
         if ($relaUserToFriend && $relaFriendToUser) {
 
             $data = $request->all();
+
             $relaUserToFriend->update($data);
             $relaFriendToUser->update($data);
 
-            if ($request->status == 'accepted') {
+            if ($request->status === 'accepted') {
                 $relaUserToFriend->update(['dateAccepted' => $actionTime]);
                 $relaFriendToUser->update(['dateAccepted' => $actionTime]);
-            } else if ($request->status == 'rejected') {
+            }
+            if ($request->status === 'rejected') {
                 $relaUserToFriend->update(['dateRejected' => $actionTime]);
                 $relaFriendToUser->update(['dateRejected' => $actionTime]);
-            } else if ($request->status == 'blocked') {
+            }
+            if ($request->status === 'blocked') {
                 $relaUserToFriend->update(['dateBlocked' => $actionTime]);
                 $relaFriendToUser->update(['dateBlocked' => $actionTime]);
-            } else {
-                $relaUserToFriend->update(['dateBlocked' => '']);
-                $relaFriendToUser->update(['dateBlocked' => '']);
             }
 
             return response()->json([
@@ -552,7 +552,7 @@ class ProfileController extends Controller
      *    required=true,
      * ),
      * @OA\Parameter(
-     *    name="friendId",
+     *    name="friend",
      *    @OA\Schema(
      *      type="string",
      *    ),
@@ -615,10 +615,6 @@ class ProfileController extends Controller
      * @OA\Response(
      *    response=200,
      *    description="Count",
-     *    @OA\Property(
-     *       property="count",
-     *       type="integer",
-     *    )
      *   ),
      * )
      */
@@ -727,6 +723,14 @@ class ProfileController extends Controller
      *    ),
      *    in="path",
      *    required=true,
+     * ),
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Profile",
+     *    @OA\JsonContent(
+     *       required={"profileLikeId"},
+     *       @OA\Property(property="profileLikeId", type="string",example="2"),
+     *    ),
      * ),
      * @OA\Response(
      *    response=200,
@@ -849,17 +853,42 @@ class ProfileController extends Controller
 
     public function reportUser(Request $request, $id)
     {
+        $time_zone = env('TIME_ZONE');
+        $createdTime = Carbon::now($time_zone)->format('Y-m-d H:i:s');
         $user_id = Auth::user()->id;
-        $report = Report::where('id', $id)
+        $existReport = Report::where('id', $id)
             ->where('user_id', $user_id)
             ->first();
-        if ($report && $user_id) {
-            $data = $request->all();
-            $report->update($data);
+
+        $noExistReport = Report::where('user_id', $user_id)
+            ->where('id', '!=', $id)
+            ->first();
+
+        if ($existReport) {
+            $existReport->update(
+                [
+                    'info' => $request->info,
+                    'dateCreated' => $createdTime,
+                ]
+            );
             return response()->json([
                 'status' => "Success",
                 'message' => Exception::SHOW,
-                'report' => new ReportResource($report),
+                'report' => new ReportResource($existReport),
+            ], Response::HTTP_OK);
+        } else if ($noExistReport) {
+            $noExistReport->create(
+                [
+                    'id' => $id,
+                    'user_id' => $user_id,
+                    'info' => $request->info,
+                    'dateCreated' => $createdTime
+                ]
+            );
+            return response()->json([
+                'status' => "Success",
+                'message' => Exception::SHOW,
+                'report' => new ReportResource($noExistReport),
             ], Response::HTTP_OK);
         } else {
             return response()->json([

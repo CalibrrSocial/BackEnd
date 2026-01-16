@@ -130,13 +130,6 @@ class AuthController extends Controller
                 'email' => Auth::user()->email,
                 'phone' => Auth::user()->phone,
             ];
-            // $oauth_access_tokens = DB::table('oauth_access_tokens')
-            //     ->where('user_id', Auth::user()->id)
-            //     ->select('expires_at')
-            //     ->orderByRaw('id DESC')->first();
-            // $expires_at = $oauth_access_tokens->expires_at;
-            // $expires_at = \Carbon\Carbon::parse($expires_at)->timestamp;
-            // $exp_at_timestamp_mili = $expires_at * 1000;
             return response()->json([
                 'token' => $result['token'],
                 'refresh_token' => $result['refresh_token'],
