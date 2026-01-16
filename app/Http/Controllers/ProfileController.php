@@ -1990,7 +1990,7 @@ class ProfileController extends Controller
                     'message' => 'fail',
                     'details' => 'Authorization'
                 ], Response::HTTP_BAD_REQUEST);
-            }A
+            }
         }
     }
 }
