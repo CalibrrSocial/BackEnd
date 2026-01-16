@@ -49,18 +49,17 @@ class ProfileController extends Controller
 
     public function getUser($id)
     {
+
         $user = User::Where('id', $id)->first();
         if ($user) {
-            // return response()->json([
-            //     'status' => "Success",
-            //     'message' => Exception::SHOW,
-            //     'user' => new UserResource($user),
-            // ], Response::HTTP_OK);
-            return response()->json(new UserResource($user), Response::HTTP_OK);
+            return response()->json([
+                'user' => new UserResource($user),
+            ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not registered'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not registered'
+            ], 400);
         }
     }
 
@@ -90,15 +89,14 @@ class ProfileController extends Controller
      *    required=true,
      *    description="Profile",
      *    @OA\JsonContent(
-     *          @OA\Property(property="dob", type="string",example="2000/02/20"),
-     *          @OA\Property(property="gender", type="string",example="Nam"),
-     *          @OA\Property(property="bio", type="string",example="Không có"),
-     *          @OA\Property(property="education", type="string",example="University"),
-     *          @OA\Property(property="politics", type="string",example="Không có"),
-     *          @OA\Property(property="religion", type="string",example="Không có"),
-     *          @OA\Property(property="occupation", type="string",example="Không có"),
-     *          @OA\Property(property="sexuality", type="string",example="Không có"),
-     *          @OA\Property(property="relationship", type="string",example="Không có"),
+     *          @OA\Property(property="location", type="object", 
+     *          @OA\Property(property="latitude", type="integer", example="198"),
+     *          @OA\Property(property="longitude", type="integer", example="123"),
+     *          ),
+     * 
+     *          @OA\Property(property="personalInfo", type="object"),
+     * 
+     *          @OA\Property(property="socialInfo", type="object", 
      *          @OA\Property(property="facebook", type="string",example="Không có"),
      *          @OA\Property(property="instagram", type="string",example="Không có"),
      *          @OA\Property(property="snapchat", type="string",example="Không có"),
@@ -109,6 +107,7 @@ class ProfileController extends Controller
      *          @OA\Property(property="email_2", type="string",example="Không có"),
      *          @OA\Property(property="website", type="string",example="Không có"),
      *          @OA\Property(property="contact", type="string",example="Không có"),
+     *          )
      *    ),
      * ),
      * @OA\Response(
@@ -125,14 +124,13 @@ class ProfileController extends Controller
             $data = $request->all();
             $user->update($data);
             return response()->json([
-                'status' => "Success",
-                'message' => Exception::UPDATE_SUCCESS,
                 'user' => new UserResource($user),
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not registered'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not registered'
+            ], 400);
         }
     }
 
@@ -174,13 +172,13 @@ class ProfileController extends Controller
         if ($user) {
             $user->delete($user);
             return response()->json([
-                'status' => "Success",
                 'message' => Exception::DELETE_SUCCESS,
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not registered'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not registered'
+            ], 400);
         }
     }
 
@@ -210,8 +208,25 @@ class ProfileController extends Controller
      *    required=true,
      *    description="Profile",
      *    @OA\JsonContent(
+     *          @OA\Property(property="location", type="object", 
      *          @OA\Property(property="latitude", type="integer", example="198"),
      *          @OA\Property(property="longitude", type="integer", example="123"),
+     *          ),
+     * 
+     *          @OA\Property(property="personalInfo", type="object"),
+     * 
+     *          @OA\Property(property="socialInfo", type="object", 
+     *          @OA\Property(property="facebook", type="string",example="Không có"),
+     *          @OA\Property(property="instagram", type="string",example="Không có"),
+     *          @OA\Property(property="snapchat", type="string",example="Không có"),
+     *          @OA\Property(property="linkedIn", type="string",example="Không có"),
+     *          @OA\Property(property="twitter", type="string",example="Không có"),
+     *          @OA\Property(property="resume", type="string",example="Không có"),
+     *          @OA\Property(property="coverLetter", type="string",example="Không có"),
+     *          @OA\Property(property="email_2", type="string",example="Không có"),
+     *          @OA\Property(property="website", type="string",example="Không có"),
+     *          @OA\Property(property="contact", type="string",example="Không có"),
+     *          )
      *    ),
      * ),
      * @OA\Response(
@@ -228,14 +243,13 @@ class ProfileController extends Controller
             $data = $request->all();
             $user->update($data);
             return response()->json([
-                'status' => "Success",
-                'message' => Exception::UPDATE_SUCCESS,
                 'user' => new UserResource($user),
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not registered'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not registered'
+            ], 400);
         }
     }
 
@@ -275,8 +289,9 @@ class ProfileController extends Controller
             return RelationshipResource::collection($rela_list);
         } else {
             return response()->json([
-                'message' => 'User is not relationships'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not registered'
+            ], 400);
         }
     }
 
@@ -288,7 +303,7 @@ class ProfileController extends Controller
 
     /**
      * @OA\Get(
-     * path="/profile/{id}/relationships/{friend}",
+     * path="/profile/{id}/relationships/{friendId}",
      * summary="Gets the relationship",
      * description="Gets the relationship",
      * operationId="getRelationship",
@@ -303,7 +318,7 @@ class ProfileController extends Controller
      *    required=true,
      * ),
      * @OA\Parameter(
-     *    name="friend",
+     *    name="friendId",
      *    @OA\Schema(
      *      type="string",
      *    ),
@@ -324,14 +339,13 @@ class ProfileController extends Controller
             ->first();
         if ($rela) {
             return response()->json([
-                'status' => "Success",
-                'message' => Exception::GET_ALL_DATA,
-                'relationship' => new RelationshipResource($rela),
+                'relationships' => new RelationshipResource($rela),
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not relationships'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not relationships'
+            ], 400);
         }
     }
 
@@ -343,7 +357,7 @@ class ProfileController extends Controller
 
     /**
      * @OA\Put(
-     * path="/profile/{id}/relationships/{friend}",
+     * path="/profile/{id}/relationships/{friendId}",
      * summary="Request user as friend",
      * description="Request user as friend",
      * operationId="requestFriend",
@@ -358,7 +372,7 @@ class ProfileController extends Controller
      *    required=true,
      * ),
      * @OA\Parameter(
-     *    name="friend",
+     *    name="friendId",
      *    @OA\Schema(
      *      type="string",
      *    ),
@@ -428,15 +442,13 @@ class ProfileController extends Controller
 
         if ($relaFriendToUser && $relaUserToFriend) {
             return response()->json([
-                'status' => "Success",
-                'message' => Exception::UPDATE_SUCCESS,
-                'relationship_user_to_friend' => new RelationshipResource($relaUserToFriend),
-                'relationship_friend_to_user' => new RelationshipResource($relaFriendToUser),
+                'Success'
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not relationships'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not relationships'
+            ], 400);
         }
     }
 
@@ -448,7 +460,7 @@ class ProfileController extends Controller
 
     /**
      * @OA\Post(
-     * path="/profile/{id}/relationships/{friend}",
+     * path="/profile/{id}/relationships/{friendId}",
      * summary="Update user's friend status - accept/reject/block",
      * description="Update user's friend status - accept/reject/block",
      * operationId="updateFriend",
@@ -463,7 +475,7 @@ class ProfileController extends Controller
      *    required=true,
      * ),
      * @OA\Parameter(
-     *    name="friend",
+     *    name="friendId",
      *    @OA\Schema(
      *      type="string",
      *    ),
@@ -518,15 +530,13 @@ class ProfileController extends Controller
             }
 
             return response()->json([
-                'status' => "Success",
-                'message' => Exception::UPDATE_SUCCESS,
-                'relationship_user_to_friend' => new RelationshipResource($relaUserToFriend),
-                'relationship_friend_to_user' => new RelationshipResource($relaFriendToUser),
+                "Success"
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not relationships'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not relationships'
+            ], 400);
         }
     }
 
@@ -538,7 +548,7 @@ class ProfileController extends Controller
 
     /**
      * @OA\Delete(
-     * path="/profile/{id}/relationships/{friend}",
+     * path="/profile/{id}/relationships/{friendId}",
      * summary="Unblock user's friend - removing their relationship",
      * description="Unblock user's friend - removing their relationship",
      * operationId="unblockUser",
@@ -553,7 +563,7 @@ class ProfileController extends Controller
      *    required=true,
      * ),
      * @OA\Parameter(
-     *    name="friend",
+     *    name="friendId",
      *    @OA\Schema(
      *      type="string",
      *    ),
@@ -581,13 +591,13 @@ class ProfileController extends Controller
             $relaUserToFriend->delete($relaUserToFriend);
             $relaFriendToUser->delete($relaFriendToUser);
             return response()->json([
-                'status' => "Success",
-                'message' => Exception::DELETE_SUCCESS,
+                "Success"
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is blocked. Unblock do delete'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not relationships'
+            ], 400);
         }
     }
 
@@ -624,15 +634,12 @@ class ProfileController extends Controller
     {
         $user = User::Where('id', $id)->first();
         if ($user) {
-            return response()->json([
-                'status' => "Success",
-                'message' => Exception::SHOW,
-                'likeCount' => $user->likeCount
-            ], Response::HTTP_OK);
+            return $user->likeCount;
         } else {
             return response()->json([
-                'message' => 'User is not registered'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not regiter'
+            ], 400);
         }
     }
 
@@ -651,20 +658,20 @@ class ProfileController extends Controller
      * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
-     *    name="id",
+     *    name="profileLikeId",
      *    @OA\Schema(
      *      type="string",
      *    ),
      *    in="path",
      *    required=true,
      * ),
-     * @OA\RequestBody(
-     *    required=true,
-     *    description="Profile",
-     *    @OA\JsonContent(
-     *       required={"profileLikeId"},
-     *       @OA\Property(property="profileLikeId", type="string",example="2"),
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(
+     *      type="string",
      *    ),
+     *    in="path",
+     *    required=true,
      * ),
      * @OA\Response(
      *    response=200,
@@ -676,30 +683,22 @@ class ProfileController extends Controller
     public function likeProfile(Request $request, $id)
     {
         $user = User::Where('id', $id)->first();
-        $currentLiked = $user->liked;
-        $userLikeFullname = $user->firstname . ' ' . $user->lastname;
-        $user->update(['liked' => $currentLiked + 1]);
+        $user->update(['liked' => 'true']);
 
-        $data = $request->all();
-        $profileLikeId = $data['profileLikeId'];
+        $profileLikeId = $request->profileLikeId;
         $profileLike = User::Where('id', $profileLikeId)->first();
         $currentProfileLiked = $profileLike->likeCount;
         $profileLike->update(['likeCount' => $currentProfileLiked + 1]);
 
         if ($user) {
             return response()->json([
-                'status' => "Success",
-                'message' => Exception::SHOW,
-                'username like' => $userLikeFullname,
-                'current liked' => $currentLiked,
-                'liked' => $user->liked,
-                'current profile like' => $currentProfileLiked,
-                'likeCount' => $profileLike->likeCount
+                "Success",
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not registered'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not regiter'
+            ], 400);
         }
     }
 
@@ -718,20 +717,20 @@ class ProfileController extends Controller
      * security={{"bearerAuth":{}}},
      * tags={"Profile"},
      * @OA\Parameter(
-     *    name="id",
+     *    name="profileLikeId",
      *    @OA\Schema(
      *      type="string",
      *    ),
      *    in="path",
      *    required=true,
      * ),
-     * @OA\RequestBody(
-     *    required=true,
-     *    description="Profile",
-     *    @OA\JsonContent(
-     *       required={"profileLikeId"},
-     *       @OA\Property(property="profileLikeId", type="string",example="2"),
+     * @OA\Parameter(
+     *    name="id",
+     *    @OA\Schema(
+     *      type="string",
      *    ),
+     *    in="path",
+     *    required=true,
      * ),
      * @OA\Response(
      *    response=200,
@@ -743,28 +742,22 @@ class ProfileController extends Controller
     public function unlikeProfile(Request $request, $id)
     {
         $user = User::Where('id', $id)->first();
-        $currentLiked = $user->liked;
-        $user->update(['liked' => $currentLiked - 1]);
+        $user->update(['liked' => 'false']);
 
-        $data = $request->all();
-        $profileLikeId = $data['profileLikeId'];
+        $profileLikeId = $request->proprofileLikeId;
         $profileLike = User::Where('id', $profileLikeId)->first();
         $currentProfileLiked = $profileLike->likeCount;
         $profileLike->update(['likeCount' => $currentProfileLiked - 1]);
 
         if ($user) {
             return response()->json([
-                'status' => "Success",
-                'message' => Exception::SHOW,
-                'current liked' => $currentLiked,
-                'liked' => $user->liked,
-                'current profile like' => $currentProfileLiked,
-                'likeCount' => $profileLike->likeCount
+                'Success'
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not registered'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not regiter'
+            ], 400);
         }
     }
 
@@ -809,8 +802,9 @@ class ProfileController extends Controller
             return ReportResource::collection($userReport);
         } else {
             return response()->json([
-                'message' => 'User is not reported'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not reported'
+            ], 400);
         }
     }
 
@@ -887,14 +881,13 @@ class ProfileController extends Controller
                 ]
             );
             return response()->json([
-                'status' => "Success",
-                'message' => Exception::SHOW,
-                'report' => new ReportResource($noExistReport),
+                "Success",
             ], Response::HTTP_OK);
         } else {
             return response()->json([
-                'message' => 'User is not registered'
-            ], Response::HTTP_NOT_FOUND);
+                'massage' => 'Fail',
+                'details' => 'User is not reported'
+            ], 400);
         }
     }
 }

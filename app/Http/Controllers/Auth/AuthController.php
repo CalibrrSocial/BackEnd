@@ -38,7 +38,7 @@ class AuthController extends Controller
      *    required=true,
      *    description="Pass user credentials",
      *    @OA\JsonContent(
-     *       required={"email","password","phone","firstName","lastname"},
+     *       required={"email","password","phone","firstName","lastName"},
      *       @OA\Property(property="email", type="string",example="example@gmail.com"),
      *       @OA\Property(property="password", type="string", example="123456"),
      *       @OA\Property(property="phone", type="string", example="0902050807"),
@@ -60,9 +60,9 @@ class AuthController extends Controller
             'email' => 'email:rfc,dns',
         ]);
         $check = DB::table('users')->where('email', $request->email)->where('password', '!=', null)->first();
-        if($check){
+        if ($check) {
             return response([
-                "status" =>'error',
+                "status" => 'error',
                 "message" => "Email already in use",
             ], Response::HTTP_BAD_REQUEST);
         }
@@ -73,7 +73,7 @@ class AuthController extends Controller
             "firstname" => $request->firstName,
             "lastname" => $request->lastName,
         ]);
-        if(!empty($user)){
+        if (!empty($user)) {
             $data = [
                 'email' => $request->email,
                 'password' => $request->password
@@ -106,7 +106,7 @@ class AuthController extends Controller
      * )
      */
 
-    
+
     public function login(Request $request)
     {
         $data = [
@@ -116,7 +116,8 @@ class AuthController extends Controller
 
         return $this->login_return($data);
     }
-    private function login_return($data){
+    private function login_return($data)
+    {
         $clients = DB::table('oauth_clients')->select('*')->where('provider', 'users')->orderByRaw('id DESC')->first();
         if (auth()->attempt($data)) {
             $path = env('APP_URL') . '/oauth/token';
@@ -128,14 +129,14 @@ class AuthController extends Controller
                 'password' => $data['password'],
                 'scope' => '',
             ]);
-            
+
             $result['token'] = $response->json()['access_token'];
             $result['refresh_token'] = $response->json()['refresh_token'];
-            // dd(Auth::user());
+
             $gost = Auth::user()->ghostMode;
-            if($gost == 1){
+            if ($gost == 1) {
                 $gost = true;
-            }else{
+            } else {
                 $gost = false;
             }
             $user_id = Auth::user()->id;
@@ -153,7 +154,7 @@ class AuthController extends Controller
                     'longitude' => Auth::user()->longitude
                 ],
                 'locationTimestamp' => $locationTimestamp,
-                "pictureProfile"=> null,
+                "pictureProfile" => null,
                 "pictureCover" => null,
                 "personalInfo" => [
                     "dob" => null,
@@ -182,7 +183,7 @@ class AuthController extends Controller
                 "likeCount" => 0,
                 "visitCount" => 0
             ];
-            
+
             return response()->json([
                 'token' => $result['token'],
                 'refreshToken' => $result['refresh_token'],
@@ -190,9 +191,9 @@ class AuthController extends Controller
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Login fail',
-                'message' => 'Incorrect email or password'
-            ], 401);
+                'massage' => 'Login fail',
+                'details' => 'Incorrect email or password'
+            ], 400);
         }
     }
 
@@ -222,7 +223,7 @@ class AuthController extends Controller
             'message' => 'Successfully logged out'
         ]);
     }
-    
+
 
     /**
      * @OA\Post(

@@ -39,10 +39,10 @@ Route::group(['prefix' => 'profile'], function () {
 
     //Relationship Information
     Route::get('/{id}/relationships', [ProfileController::class, 'getUserRelationships'])->name('getUserRelationships');
-    Route::get('/{id}/relationships/{friend}', [ProfileController::class, 'getRelationship'])->name('getRelationship');
-    Route::put('/{id}/relationships/{friend}', [ProfileController::class, 'requestFriend'])->name('requestFriend');
-    Route::post('/{id}/relationships/{friend}', [ProfileController::class, 'updateFriend'])->name('updateFriend');
-    Route::delete('/{id}/relationships/{friend}', [ProfileController::class, 'unblockAndDeleteUserRelationship'])->name('unblockAndDeleteUserRelationship');
+    Route::get('/{id}/relationships/{friendId}', [ProfileController::class, 'getRelationship'])->name('getRelationship');
+    Route::put('/{id}/relationships/{friendId}', [ProfileController::class, 'requestFriend'])->name('requestFriend');
+    Route::post('/{id}/relationships/{friendId}', [ProfileController::class, 'updateFriend'])->name('updateFriend');
+    Route::delete('/{id}/relationships/{friendId}', [ProfileController::class, 'unblockAndDeleteUserRelationship'])->name('unblockAndDeleteUserRelationship');
 
     //Like Information
     Route::get('/{id}/likes', [ProfileController::class, 'getLikes'])->name('getLikes');
