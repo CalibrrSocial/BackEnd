@@ -73,85 +73,12 @@ class AuthController extends Controller
             "firstname" => $request->firstName,
             "lastname" => $request->lastName,
         ]);
-        $data = [
-            'email' => $request->email,
-            'password' => $request->password
-        ];
-        $clients = DB::table('oauth_clients')->select('*')->where('provider', 'users')->orderByRaw('id DESC')->first();
-        if (auth()->attempt($data)) {
-            $path = env('APP_URL') . '/oauth/token';
-            $response = Http::asForm()->post($path, [
-                'grant_type' => 'password',
-                'client_id' => $clients->id,
-                'client_secret' => $clients->secret,
-                'username' => $data['email'],
-                'password' => $data['password'],
-                'scope' => '',
-            ]);
-            
-            $result['token'] = $response->json()['access_token'];
-            $result['refresh_token'] = $response->json()['refresh_token'];
-            // dd(Auth::user());
-            $gost = Auth::user()->ghostMode;
-            if($gost == 1){
-                $gost = true;
-            }else{
-                $gost = false;
-            }
-            $user_id = Auth::user()->id;
-            $result['user'] = [
-                'id' => "$user_id",
-                'firstName' => Auth::user()->firstname,
-                'lastName' => Auth::user()->lastname,
-                'ghostMode' => $gost,
-                'email' => Auth::user()->email,
-                'phone' => Auth::user()->phone,
-                'subscription' => Auth::user()->subscription,
-                'location' => [
-                    'latitude' => Auth::user()->latitude,
-                    'longitude' => Auth::user()->longitude
-                ]
+        if(!empty($user)){
+            $data = [
+                'email' => $request->email,
+                'password' => $request->password
             ];
-            $result['locationTimestamp'] = Auth::user()->created_at;
-            return response()->json([
-                'token' => $result['token'],
-                'refresh_token' => $result['refresh_token'],
-                'user' => $result['user'],
-                'locationTimestamp' => $result['locationTimestamp'],
-                "pictureProfile"=> "string",
-                "pictureCover" => "string",
-                "personalInfo" => [
-                "dob" => null,
-                "gender" => null,
-                "bio" => null,
-                "education" => null,
-                "politics" => null,
-                "religion" => null,
-                "occupation" => null,
-                "sexuality" => null,
-                "relationship" => null,
-                ],
-                "socialInfo" => [
-                    "facebook" => null,
-                    "instagram" => null,
-                    "snapchat" => null,
-                    "linkedIn" => null,
-                    "twitter" => null,
-                    "resume" => null,
-                    "coverLetter" => null,
-                    "email" => null,
-                    "website" => null,
-                    "contact" => null
-                ],
-                  "liked" => true,
-                  "likeCount" => 0,
-                  "visitCount" => 0
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => 'Login fail',
-                'message' => 'Incorrect email or password'
-            ], 401);
+            return $this->login_return($data);
         }
     }
 
@@ -179,6 +106,7 @@ class AuthController extends Controller
      * )
      */
 
+    
     public function login(Request $request)
     {
         $data = [
@@ -186,6 +114,9 @@ class AuthController extends Controller
             'password' => $request->password
         ];
 
+        return $this->login_return($data);
+    }
+    private function login_return($data){
         $clients = DB::table('oauth_clients')->select('*')->where('provider', 'users')->orderByRaw('id DESC')->first();
         if (auth()->attempt($data)) {
             $path = env('APP_URL') . '/oauth/token';
@@ -197,16 +128,64 @@ class AuthController extends Controller
                 'password' => $data['password'],
                 'scope' => '',
             ]);
+            
             $result['token'] = $response->json()['access_token'];
             $result['refresh_token'] = $response->json()['refresh_token'];
+            // dd(Auth::user());
+            $gost = Auth::user()->ghostMode;
+            if($gost == 1){
+                $gost = true;
+            }else{
+                $gost = false;
+            }
+            $user_id = Auth::user()->id;
+            $locationTimestamp = Auth::user()->created_at;
             $result['user'] = [
-                'fullname' => Auth::user()->firstname . ' ' . Auth::user()->lastname,
+                'id' => "$user_id",
+                'firstName' => Auth::user()->firstname,
+                'lastName' => Auth::user()->lastname,
+                'ghostMode' => $gost,
                 'email' => Auth::user()->email,
                 'phone' => Auth::user()->phone,
+                'subscription' => Auth::user()->subscription,
+                'location' => [
+                    'latitude' => Auth::user()->latitude,
+                    'longitude' => Auth::user()->longitude
+                ],
+                'locationTimestamp' => $locationTimestamp,
+                "pictureProfile"=> null,
+                "pictureCover" => null,
+                "personalInfo" => [
+                    "dob" => null,
+                    "gender" => null,
+                    "bio" => null,
+                    "education" => null,
+                    "politics" => null,
+                    "religion" => null,
+                    "occupation" => null,
+                    "sexuality" => null,
+                    "relationship" => null,
+                ],
+                "socialInfo" => [
+                    "facebook" => null,
+                    "instagram" => null,
+                    "snapchat" => null,
+                    "linkedIn" => null,
+                    "twitter" => null,
+                    "resume" => null,
+                    "coverLetter" => null,
+                    "email" => null,
+                    "website" => null,
+                    "contact" => null
+                ],
+                "liked" => true,
+                "likeCount" => 0,
+                "visitCount" => 0
             ];
+            
             return response()->json([
                 'token' => $result['token'],
-                'refresh_token' => $result['refresh_token'],
+                'refreshToken' => $result['refresh_token'],
                 'user' => $result['user'],
             ], 200);
         } else {
@@ -216,7 +195,6 @@ class AuthController extends Controller
             ], 401);
         }
     }
-
 
     /**
      * @OA\Get(
@@ -244,6 +222,7 @@ class AuthController extends Controller
             'message' => 'Successfully logged out'
         ]);
     }
+    
 
     /**
      * @OA\Post(
