@@ -561,7 +561,7 @@ class ProfileController extends Controller
         } else {
             $user = User::whereid($id)->first();
             $userLocation = LocationInfo::Where('user_id', $id)->first();
-            $userSocial = SocialSiteInfo::Where('user_id', $id)->first();
+            $userSocial = SocialSiteInfo::Where('user_id', $id)->get();
             if ($user) {
                 $user->delete($user);
                 $userLocation->delete($userLocation);
@@ -1703,7 +1703,7 @@ class ProfileController extends Controller
                     "Success",
                 ], Response::HTTP_OK);
             } else if ($noExistReport) {
-                $noExistReport->create(
+                $noExistReport = Report::create(
                     [
                         'id' => $id,
                         'user_id' => "$user_id",
