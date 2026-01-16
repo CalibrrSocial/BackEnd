@@ -25,13 +25,13 @@ class LambdaNotificationService
         $token = getenv('AWS_SESSION_TOKEN') ?: env('AWS_SESSION_TOKEN');
         if ($key && $secret) {
             $config['credentials'] = new Credentials($key, $secret, $token ?: null);
-            \Log::info('LambdaNotificationService using explicit AWS credentials from env', [
+            \Log::warning('LambdaNotificationService using explicit AWS credentials from env', [
                 'region' => $region,
                 'access_key_prefix' => substr($key, 0, 4),
                 'has_session_token' => !empty($token),
             ]);
         } else {
-            \Log::info('LambdaNotificationService relying on instance profile/SDK default credentials', [
+            \Log::warning('LambdaNotificationService no static AWS keys found; relying on instance profile/default provider chain', [
                 'region' => $region,
             ]);
         }
