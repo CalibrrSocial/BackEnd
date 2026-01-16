@@ -164,7 +164,7 @@ class SearchController extends Controller
             return response()->json([
                 'message' => 'Search failed',
                 'details' => 'User not found'
-            ], Response::HTTP_NOT_FOUND);
+            ], 400);
         }
     }
 }
